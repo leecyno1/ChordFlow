@@ -1,0 +1,4170 @@
+{
+  "metadata": {
+    "source": "POP909",
+    "sourceUrl": "https://github.com/music-x-lab/POP909-Dataset",
+    "sourceCommit": "d83e6edba6872a704f5d3b8b32f5cb540088dae6",
+    "generatedAt": "2026-07-27T10:52:34.439529+00:00",
+    "songCount": 909,
+    "collapsedChordEventCount": 100233,
+    "transitionCount": 99324,
+    "annotatedDurationSeconds": 223023.114,
+    "skippedLabelCount": 0,
+    "license": "MIT repository license; retain citation and verify downstream data-distribution requirements.",
+    "method": "Key-relative Roman numerals; consecutive duplicate chords collapsed; song coverage counted once per song; exact contiguous progression matching.",
+    "scope": "909 Chinese pop arrangements; not a global usage estimate."
+  },
+  "chords": {
+    "V": {
+      "eventCount": 14975,
+      "eventShare": 0.149402,
+      "durationSeconds": 32800.359,
+      "durationShare": 0.147072,
+      "songCount": 833,
+      "songCoverage": 0.916392
+    },
+    "I": {
+      "eventCount": 13050,
+      "eventShare": 0.130197,
+      "durationSeconds": 37241.599,
+      "durationShare": 0.166985,
+      "songCount": 841,
+      "songCoverage": 0.925193
+    },
+    "IV": {
+      "eventCount": 9957,
+      "eventShare": 0.099339,
+      "durationSeconds": 21131.297,
+      "durationShare": 0.094749,
+      "songCount": 753,
+      "songCoverage": 0.828383
+    },
+    "i": {
+      "eventCount": 9640,
+      "eventShare": 0.096176,
+      "durationSeconds": 26300.849,
+      "durationShare": 0.117929,
+      "songCount": 438,
+      "songCoverage": 0.481848
+    },
+    "VII": {
+      "eventCount": 7828,
+      "eventShare": 0.078098,
+      "durationSeconds": 15024.729,
+      "durationShare": 0.067368,
+      "songCount": 442,
+      "songCoverage": 0.486249
+    },
+    "vi": {
+      "eventCount": 7710,
+      "eventShare": 0.076921,
+      "durationSeconds": 16394.286,
+      "durationShare": 0.073509,
+      "songCount": 529,
+      "songCoverage": 0.581958
+    },
+    "VI": {
+      "eventCount": 7652,
+      "eventShare": 0.076342,
+      "durationSeconds": 14559.52,
+      "durationShare": 0.065283,
+      "songCount": 698,
+      "songCoverage": 0.767877
+    },
+    "III": {
+      "eventCount": 5915,
+      "eventShare": 0.059013,
+      "durationSeconds": 12633.903,
+      "durationShare": 0.056648,
+      "songCount": 647,
+      "songCoverage": 0.711771
+    },
+    "iii": {
+      "eventCount": 5450,
+      "eventShare": 0.054373,
+      "durationSeconds": 10725.781,
+      "durationShare": 0.048093,
+      "songCount": 474,
+      "songCoverage": 0.521452
+    },
+    "ii": {
+      "eventCount": 4912,
+      "eventShare": 0.049006,
+      "durationSeconds": 10009.186,
+      "durationShare": 0.04488,
+      "songCount": 532,
+      "songCoverage": 0.585259
+    },
+    "iv": {
+      "eventCount": 4879,
+      "eventShare": 0.048677,
+      "durationSeconds": 10642.327,
+      "durationShare": 0.047718,
+      "songCount": 498,
+      "songCoverage": 0.547855
+    },
+    "v": {
+      "eventCount": 4430,
+      "eventShare": 0.044197,
+      "durationSeconds": 8641.359,
+      "durationShare": 0.038746,
+      "songCount": 429,
+      "songCoverage": 0.471947
+    },
+    "II": {
+      "eventCount": 1272,
+      "eventShare": 0.01269,
+      "durationSeconds": 2133.068,
+      "durationShare": 0.009564,
+      "songCount": 341,
+      "songCoverage": 0.375138
+    },
+    "bVII": {
+      "eventCount": 481,
+      "eventShare": 0.004799,
+      "durationSeconds": 1069.592,
+      "durationShare": 0.004796,
+      "songCount": 186,
+      "songCoverage": 0.20462
+    },
+    "bII": {
+      "eventCount": 259,
+      "eventShare": 0.002584,
+      "durationSeconds": 428.569,
+      "durationShare": 0.001922,
+      "songCount": 120,
+      "songCoverage": 0.132013
+    },
+    "bVI": {
+      "eventCount": 237,
+      "eventShare": 0.002364,
+      "durationSeconds": 486.997,
+      "durationShare": 0.002184,
+      "songCount": 125,
+      "songCoverage": 0.137514
+    },
+    "#iv°": {
+      "eventCount": 161,
+      "eventShare": 0.001606,
+      "durationSeconds": 307.033,
+      "durationShare": 0.001377,
+      "songCount": 64,
+      "songCoverage": 0.070407
+    },
+    "vii": {
+      "eventCount": 161,
+      "eventShare": 0.001606,
+      "durationSeconds": 231.056,
+      "durationShare": 0.001036,
+      "songCount": 72,
+      "songCoverage": 0.079208
+    },
+    "#vi°": {
+      "eventCount": 146,
+      "eventShare": 0.001457,
+      "durationSeconds": 289.989,
+      "durationShare": 0.0013,
+      "songCount": 39,
+      "songCoverage": 0.042904
+    },
+    "ii°": {
+      "eventCount": 139,
+      "eventShare": 0.001387,
+      "durationSeconds": 244.696,
+      "durationShare": 0.001097,
+      "songCount": 43,
+      "songCoverage": 0.047305
+    },
+    "bIII": {
+      "eventCount": 108,
+      "eventShare": 0.001077,
+      "durationSeconds": 191.993,
+      "durationShare": 0.000861,
+      "songCount": 67,
+      "songCoverage": 0.073707
+    },
+    "iiø": {
+      "eventCount": 90,
+      "eventShare": 0.000898,
+      "durationSeconds": 164.247,
+      "durationShare": 0.000736,
+      "songCount": 35,
+      "songCoverage": 0.038504
+    },
+    "#iii": {
+      "eventCount": 75,
+      "eventShare": 0.000748,
+      "durationSeconds": 188.118,
+      "durationShare": 0.000843,
+      "songCount": 25,
+      "songCoverage": 0.027503
+    },
+    "#VII": {
+      "eventCount": 51,
+      "eventShare": 0.000509,
+      "durationSeconds": 83.731,
+      "durationShare": 0.000375,
+      "songCount": 31,
+      "songCoverage": 0.034103
+    },
+    "#vii": {
+      "eventCount": 49,
+      "eventShare": 0.000489,
+      "durationSeconds": 143.045,
+      "durationShare": 0.000641,
+      "songCount": 8,
+      "songCoverage": 0.008801
+    },
+    "bV": {
+      "eventCount": 43,
+      "eventShare": 0.000429,
+      "durationSeconds": 60.133,
+      "durationShare": 0.00027,
+      "songCount": 25,
+      "songCoverage": 0.027503
+    },
+    "bii": {
+      "eventCount": 43,
+      "eventShare": 0.000429,
+      "durationSeconds": 49.741,
+      "durationShare": 0.000223,
+      "songCount": 24,
+      "songCoverage": 0.026403
+    },
+    "#ivø": {
+      "eventCount": 39,
+      "eventShare": 0.000389,
+      "durationSeconds": 73.039,
+      "durationShare": 0.000327,
+      "songCount": 18,
+      "songCoverage": 0.019802
+    },
+    "#viø": {
+      "eventCount": 39,
+      "eventShare": 0.000389,
+      "durationSeconds": 64.026,
+      "durationShare": 0.000287,
+      "songCount": 18,
+      "songCoverage": 0.019802
+    },
+    "vii°": {
+      "eventCount": 37,
+      "eventShare": 0.000369,
+      "durationSeconds": 49.685,
+      "durationShare": 0.000223,
+      "songCount": 19,
+      "songCoverage": 0.020902
+    },
+    "#VI": {
+      "eventCount": 36,
+      "eventShare": 0.000359,
+      "durationSeconds": 58.139,
+      "durationShare": 0.000261,
+      "songCount": 18,
+      "songCoverage": 0.019802
+    },
+    "bvi°": {
+      "eventCount": 36,
+      "eventShare": 0.000359,
+      "durationSeconds": 52.697,
+      "durationShare": 0.000236,
+      "songCount": 18,
+      "songCoverage": 0.019802
+    },
+    "#iv": {
+      "eventCount": 35,
+      "eventShare": 0.000349,
+      "durationSeconds": 55.57,
+      "durationShare": 0.000249,
+      "songCount": 24,
+      "songCoverage": 0.026403
+    },
+    "#vi": {
+      "eventCount": 32,
+      "eventShare": 0.000319,
+      "durationSeconds": 54.395,
+      "durationShare": 0.000244,
+      "songCount": 17,
+      "songCoverage": 0.018702
+    },
+    "#IV": {
+      "eventCount": 28,
+      "eventShare": 0.000279,
+      "durationSeconds": 42.684,
+      "durationShare": 0.000191,
+      "songCount": 20,
+      "songCoverage": 0.022002
+    },
+    "#vii°": {
+      "eventCount": 26,
+      "eventShare": 0.000259,
+      "durationSeconds": 42.97,
+      "durationShare": 0.000193,
+      "songCount": 11,
+      "songCoverage": 0.012101
+    },
+    "viiø": {
+      "eventCount": 22,
+      "eventShare": 0.000219,
+      "durationSeconds": 32.001,
+      "durationShare": 0.000143,
+      "songCount": 10,
+      "songCoverage": 0.011001
+    },
+    "iv°": {
+      "eventCount": 21,
+      "eventShare": 0.00021,
+      "durationSeconds": 42.186,
+      "durationShare": 0.000189,
+      "songCount": 15,
+      "songCoverage": 0.016502
+    },
+    "bii°": {
+      "eventCount": 18,
+      "eventShare": 0.00018,
+      "durationSeconds": 30.748,
+      "durationShare": 0.000138,
+      "songCount": 10,
+      "songCoverage": 0.011001
+    },
+    "bvii°": {
+      "eventCount": 17,
+      "eventShare": 0.00017,
+      "durationSeconds": 36.866,
+      "durationShare": 0.000165,
+      "songCount": 10,
+      "songCoverage": 0.011001
+    },
+    "bvi": {
+      "eventCount": 17,
+      "eventShare": 0.00017,
+      "durationSeconds": 18.05,
+      "durationShare": 8.1e-05,
+      "songCount": 12,
+      "songCoverage": 0.013201
+    },
+    "vi°": {
+      "eventCount": 17,
+      "eventShare": 0.00017,
+      "durationSeconds": 20.155,
+      "durationShare": 9e-05,
+      "songCount": 10,
+      "songCoverage": 0.011001
+    },
+    "#III": {
+      "eventCount": 16,
+      "eventShare": 0.00016,
+      "durationSeconds": 26.211,
+      "durationShare": 0.000118,
+      "songCount": 12,
+      "songCoverage": 0.013201
+    },
+    "iii°": {
+      "eventCount": 14,
+      "eventShare": 0.00014,
+      "durationSeconds": 21.297,
+      "durationShare": 9.5e-05,
+      "songCount": 9,
+      "songCoverage": 0.009901
+    },
+    "biii°": {
+      "eventCount": 11,
+      "eventShare": 0.00011,
+      "durationSeconds": 20.769,
+      "durationShare": 9.3e-05,
+      "songCount": 6,
+      "songCoverage": 0.006601
+    },
+    "bv": {
+      "eventCount": 8,
+      "eventShare": 8e-05,
+      "durationSeconds": 13.633,
+      "durationShare": 6.1e-05,
+      "songCount": 4,
+      "songCoverage": 0.0044
+    },
+    "bv°": {
+      "eventCount": 8,
+      "eventShare": 8e-05,
+      "durationSeconds": 11.028,
+      "durationShare": 4.9e-05,
+      "songCount": 4,
+      "songCoverage": 0.0044
+    },
+    "v°": {
+      "eventCount": 8,
+      "eventShare": 8e-05,
+      "durationSeconds": 15.474,
+      "durationShare": 6.9e-05,
+      "songCount": 4,
+      "songCoverage": 0.0044
+    },
+    "#iii°": {
+      "eventCount": 7,
+      "eventShare": 7e-05,
+      "durationSeconds": 15.76,
+      "durationShare": 7.1e-05,
+      "songCount": 4,
+      "songCoverage": 0.0044
+    },
+    "biii": {
+      "eventCount": 6,
+      "eventShare": 6e-05,
+      "durationSeconds": 8.67,
+      "durationShare": 3.9e-05,
+      "songCount": 5,
+      "songCoverage": 0.005501
+    },
+    "bvii": {
+      "eventCount": 4,
+      "eventShare": 4e-05,
+      "durationSeconds": 8.191,
+      "durationShare": 3.7e-05,
+      "songCount": 4,
+      "songCoverage": 0.0044
+    },
+    "vø": {
+      "eventCount": 4,
+      "eventShare": 4e-05,
+      "durationSeconds": 10.674,
+      "durationShare": 4.8e-05,
+      "songCount": 1,
+      "songCoverage": 0.0011
+    },
+    "i°": {
+      "eventCount": 4,
+      "eventShare": 4e-05,
+      "durationSeconds": 5.739,
+      "durationShare": 2.6e-05,
+      "songCount": 2,
+      "songCoverage": 0.0022
+    },
+    "ivø": {
+      "eventCount": 2,
+      "eventShare": 2e-05,
+      "durationSeconds": 4.842,
+      "durationShare": 2.2e-05,
+      "songCount": 2,
+      "songCoverage": 0.0022
+    },
+    "bviø": {
+      "eventCount": 2,
+      "eventShare": 2e-05,
+      "durationSeconds": 1.833,
+      "durationShare": 8e-06,
+      "songCount": 1,
+      "songCoverage": 0.0011
+    },
+    "viø": {
+      "eventCount": 2,
+      "eventShare": 2e-05,
+      "durationSeconds": 3.714,
+      "durationShare": 1.7e-05,
+      "songCount": 1,
+      "songCoverage": 0.0011
+    },
+    "iø": {
+      "eventCount": 1,
+      "eventShare": 1e-05,
+      "durationSeconds": 2.224,
+      "durationShare": 1e-05,
+      "songCount": 1,
+      "songCoverage": 0.0011
+    },
+    "biiø": {
+      "eventCount": 1,
+      "eventShare": 1e-05,
+      "durationSeconds": 0.898,
+      "durationShare": 4e-06,
+      "songCount": 1,
+      "songCoverage": 0.0011
+    },
+    "iiiø": {
+      "eventCount": 1,
+      "eventShare": 1e-05,
+      "durationSeconds": 0.632,
+      "durationShare": 3e-06,
+      "songCount": 1,
+      "songCoverage": 0.0011
+    },
+    "#iiiø": {
+      "eventCount": 1,
+      "eventShare": 1e-05,
+      "durationSeconds": 1.111,
+      "durationShare": 5e-06,
+      "songCount": 1,
+      "songCoverage": 0.0011
+    }
+  },
+  "transitions": {
+    "#III": [
+      {
+        "to": "I",
+        "count": 3,
+        "probability": 0.1875,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bV",
+        "count": 3,
+        "probability": 0.1875,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "i",
+        "count": 3,
+        "probability": 0.1875,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "V",
+        "count": 2,
+        "probability": 0.125,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "#VII",
+        "count": 1,
+        "probability": 0.0625,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "III",
+        "count": 1,
+        "probability": 0.0625,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 1,
+        "probability": 0.0625,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.0625,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vi",
+        "count": 1,
+        "probability": 0.0625,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#IV": [
+      {
+        "to": "V",
+        "count": 10,
+        "probability": 0.357143,
+        "songCount": 9,
+        "songCoverage": 0.009901
+      },
+      {
+        "to": "IV",
+        "count": 9,
+        "probability": 0.321429,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "I",
+        "count": 4,
+        "probability": 0.142857,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "bVI",
+        "count": 2,
+        "probability": 0.071429,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "III",
+        "count": 1,
+        "probability": 0.035714,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.035714,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iv",
+        "count": 1,
+        "probability": 0.035714,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#VI": [
+      {
+        "to": "II",
+        "count": 8,
+        "probability": 0.222222,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "i",
+        "count": 6,
+        "probability": 0.166667,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "VI",
+        "count": 5,
+        "probability": 0.138889,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "#vii",
+        "count": 4,
+        "probability": 0.111111,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "bv",
+        "count": 3,
+        "probability": 0.083333,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "I",
+        "count": 2,
+        "probability": 0.055556,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "V",
+        "count": 2,
+        "probability": 0.055556,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VII",
+        "count": 2,
+        "probability": 0.055556,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "ii",
+        "count": 2,
+        "probability": 0.055556,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#III",
+        "count": 1,
+        "probability": 0.027778,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 1,
+        "probability": 0.027778,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#VII": [
+      {
+        "to": "III",
+        "count": 11,
+        "probability": 0.215686,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      },
+      {
+        "to": "i",
+        "count": 11,
+        "probability": 0.215686,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "VII",
+        "count": 7,
+        "probability": 0.137255,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "IV",
+        "count": 6,
+        "probability": 0.117647,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "bII",
+        "count": 3,
+        "probability": 0.058824,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#iii",
+        "count": 2,
+        "probability": 0.039216,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "V",
+        "count": 2,
+        "probability": 0.039216,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bV",
+        "count": 2,
+        "probability": 0.039216,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "vi",
+        "count": 2,
+        "probability": 0.039216,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#VI",
+        "count": 1,
+        "probability": 0.019608,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "I",
+        "count": 1,
+        "probability": 0.019608,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.019608,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#iii": [
+      {
+        "to": "II",
+        "count": 19,
+        "probability": 0.260274,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "i",
+        "count": 15,
+        "probability": 0.205479,
+        "songCount": 9,
+        "songCoverage": 0.009901
+      },
+      {
+        "to": "V",
+        "count": 14,
+        "probability": 0.191781,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      },
+      {
+        "to": "#vii",
+        "count": 10,
+        "probability": 0.136986,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "I",
+        "count": 6,
+        "probability": 0.082192,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "bv",
+        "count": 2,
+        "probability": 0.027397,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "iv",
+        "count": 2,
+        "probability": 0.027397,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#VI",
+        "count": 1,
+        "probability": 0.013699,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "III",
+        "count": 1,
+        "probability": 0.013699,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 1,
+        "probability": 0.013699,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "ii",
+        "count": 1,
+        "probability": 0.013699,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.013699,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#iii°": [
+      {
+        "to": "III",
+        "count": 2,
+        "probability": 0.285714,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bII",
+        "count": 2,
+        "probability": 0.285714,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bii°",
+        "count": 1,
+        "probability": 0.142857,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.142857,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vii",
+        "count": 1,
+        "probability": 0.142857,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#iiiø": [
+      {
+        "to": "I",
+        "count": 1,
+        "probability": 1.0,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#iv": [
+      {
+        "to": "ii",
+        "count": 10,
+        "probability": 0.285714,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "V",
+        "count": 7,
+        "probability": 0.2,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "IV",
+        "count": 6,
+        "probability": 0.171429,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "iii",
+        "count": 3,
+        "probability": 0.085714,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#iv°",
+        "count": 2,
+        "probability": 0.057143,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "I",
+        "count": 2,
+        "probability": 0.057143,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "II",
+        "count": 2,
+        "probability": 0.057143,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.028571,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VII",
+        "count": 1,
+        "probability": 0.028571,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vi",
+        "count": 1,
+        "probability": 0.028571,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#iv°": [
+      {
+        "to": "IV",
+        "count": 59,
+        "probability": 0.36646,
+        "songCount": 21,
+        "songCoverage": 0.023102
+      },
+      {
+        "to": "V",
+        "count": 43,
+        "probability": 0.267081,
+        "songCount": 24,
+        "songCoverage": 0.026403
+      },
+      {
+        "to": "ii",
+        "count": 39,
+        "probability": 0.242236,
+        "songCount": 17,
+        "songCoverage": 0.018702
+      },
+      {
+        "to": "II",
+        "count": 8,
+        "probability": 0.049689,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "vi",
+        "count": 5,
+        "probability": 0.031056,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "#ivø",
+        "count": 2,
+        "probability": 0.012422,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "I",
+        "count": 2,
+        "probability": 0.012422,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#IV",
+        "count": 1,
+        "probability": 0.006211,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "III",
+        "count": 1,
+        "probability": 0.006211,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bVII",
+        "count": 1,
+        "probability": 0.006211,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#ivø": [
+      {
+        "to": "IV",
+        "count": 12,
+        "probability": 0.307692,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      },
+      {
+        "to": "V",
+        "count": 12,
+        "probability": 0.307692,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      },
+      {
+        "to": "I",
+        "count": 4,
+        "probability": 0.102564,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "II",
+        "count": 4,
+        "probability": 0.102564,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "iii",
+        "count": 3,
+        "probability": 0.076923,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "#iv°",
+        "count": 2,
+        "probability": 0.051282,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "ii",
+        "count": 1,
+        "probability": 0.025641,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vi",
+        "count": 1,
+        "probability": 0.025641,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#vi": [
+      {
+        "to": "I",
+        "count": 8,
+        "probability": 0.258065,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "i",
+        "count": 4,
+        "probability": 0.129032,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "iv",
+        "count": 4,
+        "probability": 0.129032,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "III",
+        "count": 3,
+        "probability": 0.096774,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "II",
+        "count": 2,
+        "probability": 0.064516,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VI",
+        "count": 2,
+        "probability": 0.064516,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 2,
+        "probability": 0.064516,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#iii",
+        "count": 1,
+        "probability": 0.032258,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "#vii°",
+        "count": 1,
+        "probability": 0.032258,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 1,
+        "probability": 0.032258,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bII",
+        "count": 1,
+        "probability": 0.032258,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "ii",
+        "count": 1,
+        "probability": 0.032258,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#vii": [
+      {
+        "to": "#VI",
+        "count": 12,
+        "probability": 0.244898,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#iii",
+        "count": 12,
+        "probability": 0.244898,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "II",
+        "count": 8,
+        "probability": 0.163265,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "i",
+        "count": 6,
+        "probability": 0.122449,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "VI",
+        "count": 5,
+        "probability": 0.102041,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "V",
+        "count": 4,
+        "probability": 0.081633,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "I",
+        "count": 1,
+        "probability": 0.020408,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VII",
+        "count": 1,
+        "probability": 0.020408,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#vii°": [
+      {
+        "to": "i",
+        "count": 12,
+        "probability": 0.461538,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "VII",
+        "count": 7,
+        "probability": 0.269231,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "V",
+        "count": 2,
+        "probability": 0.076923,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VI",
+        "count": 2,
+        "probability": 0.076923,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "#vii",
+        "count": 1,
+        "probability": 0.038462,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "I",
+        "count": 1,
+        "probability": 0.038462,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.038462,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#vi°": [
+      {
+        "to": "VI",
+        "count": 51,
+        "probability": 0.349315,
+        "songCount": 17,
+        "songCoverage": 0.018702
+      },
+      {
+        "to": "iv",
+        "count": 39,
+        "probability": 0.267123,
+        "songCount": 11,
+        "songCoverage": 0.012101
+      },
+      {
+        "to": "IV",
+        "count": 13,
+        "probability": 0.089041,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      },
+      {
+        "to": "V",
+        "count": 13,
+        "probability": 0.089041,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "VII",
+        "count": 12,
+        "probability": 0.082192,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "i",
+        "count": 4,
+        "probability": 0.027397,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "v",
+        "count": 4,
+        "probability": 0.027397,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "vi",
+        "count": 3,
+        "probability": 0.020548,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#viø",
+        "count": 2,
+        "probability": 0.013699,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "III",
+        "count": 2,
+        "probability": 0.013699,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#vi",
+        "count": 1,
+        "probability": 0.006849,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "II",
+        "count": 1,
+        "probability": 0.006849,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "#viø": [
+      {
+        "to": "iv",
+        "count": 18,
+        "probability": 0.461538,
+        "songCount": 11,
+        "songCoverage": 0.012101
+      },
+      {
+        "to": "VI",
+        "count": 11,
+        "probability": 0.282051,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "#vi°",
+        "count": 3,
+        "probability": 0.076923,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 3,
+        "probability": 0.076923,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "II",
+        "count": 2,
+        "probability": 0.051282,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "III",
+        "count": 2,
+        "probability": 0.051282,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "I": [
+      {
+        "to": "V",
+        "count": 2498,
+        "probability": 0.199028,
+        "songCount": 394,
+        "songCoverage": 0.433443
+      },
+      {
+        "to": "IV",
+        "count": 2337,
+        "probability": 0.1862,
+        "songCount": 428,
+        "songCoverage": 0.470847
+      },
+      {
+        "to": "vi",
+        "count": 2091,
+        "probability": 0.1666,
+        "songCount": 352,
+        "songCoverage": 0.387239
+      },
+      {
+        "to": "iii",
+        "count": 1300,
+        "probability": 0.103577,
+        "songCount": 271,
+        "songCoverage": 0.29813
+      },
+      {
+        "to": "ii",
+        "count": 910,
+        "probability": 0.072504,
+        "songCount": 245,
+        "songCoverage": 0.269527
+      },
+      {
+        "to": "i",
+        "count": 834,
+        "probability": 0.066449,
+        "songCount": 239,
+        "songCoverage": 0.262926
+      },
+      {
+        "to": "VI",
+        "count": 552,
+        "probability": 0.043981,
+        "songCount": 220,
+        "songCoverage": 0.242024
+      },
+      {
+        "to": "III",
+        "count": 498,
+        "probability": 0.039678,
+        "songCount": 159,
+        "songCoverage": 0.174917
+      },
+      {
+        "to": "iv",
+        "count": 390,
+        "probability": 0.031073,
+        "songCount": 138,
+        "songCoverage": 0.151815
+      },
+      {
+        "to": "II",
+        "count": 260,
+        "probability": 0.020715,
+        "songCount": 123,
+        "songCoverage": 0.135314
+      },
+      {
+        "to": "VII",
+        "count": 249,
+        "probability": 0.019839,
+        "songCount": 98,
+        "songCoverage": 0.107811
+      },
+      {
+        "to": "v",
+        "count": 172,
+        "probability": 0.013704,
+        "songCount": 66,
+        "songCoverage": 0.072607
+      }
+    ],
+    "II": [
+      {
+        "to": "V",
+        "count": 581,
+        "probability": 0.45748,
+        "songCount": 206,
+        "songCoverage": 0.226623
+      },
+      {
+        "to": "ii",
+        "count": 158,
+        "probability": 0.124409,
+        "songCount": 73,
+        "songCoverage": 0.080308
+      },
+      {
+        "to": "IV",
+        "count": 133,
+        "probability": 0.104724,
+        "songCount": 71,
+        "songCoverage": 0.078108
+      },
+      {
+        "to": "I",
+        "count": 106,
+        "probability": 0.083465,
+        "songCount": 61,
+        "songCoverage": 0.067107
+      },
+      {
+        "to": "iii",
+        "count": 68,
+        "probability": 0.053543,
+        "songCount": 39,
+        "songCoverage": 0.042904
+      },
+      {
+        "to": "vi",
+        "count": 44,
+        "probability": 0.034646,
+        "songCount": 28,
+        "songCoverage": 0.030803
+      },
+      {
+        "to": "VI",
+        "count": 38,
+        "probability": 0.029921,
+        "songCount": 22,
+        "songCoverage": 0.024202
+      },
+      {
+        "to": "III",
+        "count": 31,
+        "probability": 0.024409,
+        "songCount": 23,
+        "songCoverage": 0.025303
+      },
+      {
+        "to": "iv",
+        "count": 24,
+        "probability": 0.018898,
+        "songCount": 12,
+        "songCoverage": 0.013201
+      },
+      {
+        "to": "i",
+        "count": 18,
+        "probability": 0.014173,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      },
+      {
+        "to": "#iii",
+        "count": 12,
+        "probability": 0.009449,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "bVII",
+        "count": 10,
+        "probability": 0.007874,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      }
+    ],
+    "III": [
+      {
+        "to": "i",
+        "count": 1126,
+        "probability": 0.192019,
+        "songCount": 218,
+        "songCoverage": 0.239824
+      },
+      {
+        "to": "VII",
+        "count": 888,
+        "probability": 0.151432,
+        "songCount": 156,
+        "songCoverage": 0.171617
+      },
+      {
+        "to": "VI",
+        "count": 848,
+        "probability": 0.144611,
+        "songCount": 216,
+        "songCoverage": 0.237624
+      },
+      {
+        "to": "iv",
+        "count": 807,
+        "probability": 0.137619,
+        "songCount": 180,
+        "songCoverage": 0.19802
+      },
+      {
+        "to": "vi",
+        "count": 451,
+        "probability": 0.07691,
+        "songCount": 151,
+        "songCoverage": 0.166117
+      },
+      {
+        "to": "V",
+        "count": 447,
+        "probability": 0.076228,
+        "songCount": 136,
+        "songCoverage": 0.149615
+      },
+      {
+        "to": "v",
+        "count": 379,
+        "probability": 0.064632,
+        "songCount": 103,
+        "songCoverage": 0.113311
+      },
+      {
+        "to": "IV",
+        "count": 326,
+        "probability": 0.055593,
+        "songCount": 129,
+        "songCoverage": 0.141914
+      },
+      {
+        "to": "I",
+        "count": 210,
+        "probability": 0.035812,
+        "songCount": 101,
+        "songCoverage": 0.111111
+      },
+      {
+        "to": "ii",
+        "count": 86,
+        "probability": 0.014666,
+        "songCount": 41,
+        "songCoverage": 0.045105
+      },
+      {
+        "to": "iii",
+        "count": 78,
+        "probability": 0.013302,
+        "songCount": 38,
+        "songCoverage": 0.041804
+      },
+      {
+        "to": "II",
+        "count": 45,
+        "probability": 0.007674,
+        "songCount": 30,
+        "songCoverage": 0.033003
+      }
+    ],
+    "IV": [
+      {
+        "to": "V",
+        "count": 4081,
+        "probability": 0.411391,
+        "songCount": 505,
+        "songCoverage": 0.555556
+      },
+      {
+        "to": "I",
+        "count": 1969,
+        "probability": 0.198488,
+        "songCount": 366,
+        "songCoverage": 0.40264
+      },
+      {
+        "to": "iii",
+        "count": 1438,
+        "probability": 0.14496,
+        "songCount": 285,
+        "songCoverage": 0.313531
+      },
+      {
+        "to": "ii",
+        "count": 397,
+        "probability": 0.04002,
+        "songCount": 137,
+        "songCoverage": 0.150715
+      },
+      {
+        "to": "iv",
+        "count": 345,
+        "probability": 0.034778,
+        "songCount": 124,
+        "songCoverage": 0.136414
+      },
+      {
+        "to": "vi",
+        "count": 284,
+        "probability": 0.028629,
+        "songCount": 120,
+        "songCoverage": 0.132013
+      },
+      {
+        "to": "III",
+        "count": 255,
+        "probability": 0.025706,
+        "songCount": 119,
+        "songCoverage": 0.130913
+      },
+      {
+        "to": "VI",
+        "count": 241,
+        "probability": 0.024294,
+        "songCount": 99,
+        "songCoverage": 0.108911
+      },
+      {
+        "to": "VII",
+        "count": 208,
+        "probability": 0.020968,
+        "songCount": 80,
+        "songCoverage": 0.088009
+      },
+      {
+        "to": "i",
+        "count": 183,
+        "probability": 0.018448,
+        "songCount": 73,
+        "songCoverage": 0.080308
+      },
+      {
+        "to": "v",
+        "count": 166,
+        "probability": 0.016734,
+        "songCount": 54,
+        "songCoverage": 0.059406
+      },
+      {
+        "to": "II",
+        "count": 128,
+        "probability": 0.012903,
+        "songCount": 63,
+        "songCoverage": 0.069307
+      }
+    ],
+    "V": [
+      {
+        "to": "I",
+        "count": 6622,
+        "probability": 0.443269,
+        "songCount": 613,
+        "songCoverage": 0.674367
+      },
+      {
+        "to": "vi",
+        "count": 2054,
+        "probability": 0.137492,
+        "songCount": 338,
+        "songCoverage": 0.371837
+      },
+      {
+        "to": "IV",
+        "count": 1860,
+        "probability": 0.124506,
+        "songCount": 380,
+        "songCoverage": 0.418042
+      },
+      {
+        "to": "i",
+        "count": 1611,
+        "probability": 0.107839,
+        "songCount": 274,
+        "songCoverage": 0.30143
+      },
+      {
+        "to": "iii",
+        "count": 958,
+        "probability": 0.064127,
+        "songCount": 213,
+        "songCoverage": 0.234323
+      },
+      {
+        "to": "VI",
+        "count": 585,
+        "probability": 0.039159,
+        "songCount": 232,
+        "songCoverage": 0.255226
+      },
+      {
+        "to": "ii",
+        "count": 289,
+        "probability": 0.019345,
+        "songCount": 113,
+        "songCoverage": 0.124312
+      },
+      {
+        "to": "III",
+        "count": 219,
+        "probability": 0.01466,
+        "songCount": 100,
+        "songCoverage": 0.110011
+      },
+      {
+        "to": "iv",
+        "count": 198,
+        "probability": 0.013254,
+        "songCount": 76,
+        "songCoverage": 0.083608
+      },
+      {
+        "to": "II",
+        "count": 89,
+        "probability": 0.005958,
+        "songCount": 45,
+        "songCoverage": 0.049505
+      },
+      {
+        "to": "v",
+        "count": 82,
+        "probability": 0.005489,
+        "songCount": 38,
+        "songCoverage": 0.041804
+      },
+      {
+        "to": "#iv°",
+        "count": 50,
+        "probability": 0.003347,
+        "songCount": 25,
+        "songCoverage": 0.027503
+      }
+    ],
+    "VI": [
+      {
+        "to": "VII",
+        "count": 3109,
+        "probability": 0.407738,
+        "songCount": 293,
+        "songCoverage": 0.322332
+      },
+      {
+        "to": "V",
+        "count": 749,
+        "probability": 0.09823,
+        "songCount": 213,
+        "songCoverage": 0.234323
+      },
+      {
+        "to": "III",
+        "count": 700,
+        "probability": 0.091803,
+        "songCount": 160,
+        "songCoverage": 0.176018
+      },
+      {
+        "to": "v",
+        "count": 697,
+        "probability": 0.09141,
+        "songCount": 176,
+        "songCoverage": 0.193619
+      },
+      {
+        "to": "i",
+        "count": 472,
+        "probability": 0.061902,
+        "songCount": 146,
+        "songCoverage": 0.160616
+      },
+      {
+        "to": "IV",
+        "count": 383,
+        "probability": 0.05023,
+        "songCount": 151,
+        "songCoverage": 0.166117
+      },
+      {
+        "to": "iv",
+        "count": 379,
+        "probability": 0.049705,
+        "songCount": 115,
+        "songCoverage": 0.126513
+      },
+      {
+        "to": "ii",
+        "count": 328,
+        "probability": 0.043016,
+        "songCount": 127,
+        "songCoverage": 0.139714
+      },
+      {
+        "to": "vi",
+        "count": 308,
+        "probability": 0.040393,
+        "songCount": 127,
+        "songCoverage": 0.139714
+      },
+      {
+        "to": "I",
+        "count": 225,
+        "probability": 0.029508,
+        "songCount": 127,
+        "songCoverage": 0.139714
+      },
+      {
+        "to": "iii",
+        "count": 71,
+        "probability": 0.009311,
+        "songCount": 39,
+        "songCoverage": 0.042904
+      },
+      {
+        "to": "II",
+        "count": 57,
+        "probability": 0.007475,
+        "songCount": 34,
+        "songCoverage": 0.037404
+      }
+    ],
+    "VII": [
+      {
+        "to": "i",
+        "count": 2412,
+        "probability": 0.308637,
+        "songCount": 299,
+        "songCoverage": 0.328933
+      },
+      {
+        "to": "III",
+        "count": 2335,
+        "probability": 0.298784,
+        "songCount": 317,
+        "songCoverage": 0.348735
+      },
+      {
+        "to": "VI",
+        "count": 1081,
+        "probability": 0.138324,
+        "songCount": 228,
+        "songCoverage": 0.250825
+      },
+      {
+        "to": "v",
+        "count": 756,
+        "probability": 0.096737,
+        "songCount": 164,
+        "songCoverage": 0.180418
+      },
+      {
+        "to": "I",
+        "count": 359,
+        "probability": 0.045937,
+        "songCount": 141,
+        "songCoverage": 0.155116
+      },
+      {
+        "to": "iv",
+        "count": 287,
+        "probability": 0.036724,
+        "songCount": 94,
+        "songCoverage": 0.10341
+      },
+      {
+        "to": "V",
+        "count": 215,
+        "probability": 0.027511,
+        "songCount": 91,
+        "songCoverage": 0.10011
+      },
+      {
+        "to": "IV",
+        "count": 129,
+        "probability": 0.016507,
+        "songCount": 53,
+        "songCoverage": 0.058306
+      },
+      {
+        "to": "ii",
+        "count": 72,
+        "probability": 0.009213,
+        "songCount": 18,
+        "songCoverage": 0.019802
+      },
+      {
+        "to": "#vi°",
+        "count": 40,
+        "probability": 0.005118,
+        "songCount": 21,
+        "songCoverage": 0.023102
+      },
+      {
+        "to": "vi",
+        "count": 39,
+        "probability": 0.00499,
+        "songCount": 18,
+        "songCoverage": 0.019802
+      },
+      {
+        "to": "bII",
+        "count": 10,
+        "probability": 0.00128,
+        "songCount": 9,
+        "songCoverage": 0.009901
+      }
+    ],
+    "bII": [
+      {
+        "to": "V",
+        "count": 37,
+        "probability": 0.144531,
+        "songCount": 21,
+        "songCoverage": 0.023102
+      },
+      {
+        "to": "I",
+        "count": 29,
+        "probability": 0.113281,
+        "songCount": 19,
+        "songCoverage": 0.020902
+      },
+      {
+        "to": "i",
+        "count": 28,
+        "probability": 0.109375,
+        "songCount": 18,
+        "songCoverage": 0.019802
+      },
+      {
+        "to": "VII",
+        "count": 27,
+        "probability": 0.105469,
+        "songCount": 17,
+        "songCoverage": 0.018702
+      },
+      {
+        "to": "IV",
+        "count": 23,
+        "probability": 0.089844,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      },
+      {
+        "to": "III",
+        "count": 22,
+        "probability": 0.085938,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "v",
+        "count": 22,
+        "probability": 0.085938,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      },
+      {
+        "to": "VI",
+        "count": 16,
+        "probability": 0.0625,
+        "songCount": 12,
+        "songCoverage": 0.013201
+      },
+      {
+        "to": "vi",
+        "count": 7,
+        "probability": 0.027344,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "iii",
+        "count": 6,
+        "probability": 0.023438,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "iv",
+        "count": 6,
+        "probability": 0.023438,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "#VII",
+        "count": 4,
+        "probability": 0.015625,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      }
+    ],
+    "bIII": [
+      {
+        "to": "ii",
+        "count": 24,
+        "probability": 0.224299,
+        "songCount": 15,
+        "songCoverage": 0.016502
+      },
+      {
+        "to": "IV",
+        "count": 17,
+        "probability": 0.158879,
+        "songCount": 11,
+        "songCoverage": 0.012101
+      },
+      {
+        "to": "I",
+        "count": 15,
+        "probability": 0.140187,
+        "songCount": 11,
+        "songCoverage": 0.012101
+      },
+      {
+        "to": "V",
+        "count": 13,
+        "probability": 0.121495,
+        "songCount": 11,
+        "songCoverage": 0.012101
+      },
+      {
+        "to": "II",
+        "count": 6,
+        "probability": 0.056075,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "bVII",
+        "count": 6,
+        "probability": 0.056075,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "bII",
+        "count": 4,
+        "probability": 0.037383,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "bVI",
+        "count": 4,
+        "probability": 0.037383,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "VII",
+        "count": 3,
+        "probability": 0.028037,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "v",
+        "count": 3,
+        "probability": 0.028037,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "i",
+        "count": 2,
+        "probability": 0.018692,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "iii",
+        "count": 2,
+        "probability": 0.018692,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      }
+    ],
+    "bV": [
+      {
+        "to": "III",
+        "count": 7,
+        "probability": 0.162791,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "iv",
+        "count": 6,
+        "probability": 0.139535,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "#VII",
+        "count": 4,
+        "probability": 0.093023,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "#vii",
+        "count": 4,
+        "probability": 0.093023,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "V",
+        "count": 4,
+        "probability": 0.093023,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VI",
+        "count": 4,
+        "probability": 0.093023,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "IV",
+        "count": 3,
+        "probability": 0.069767,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "#vi°",
+        "count": 2,
+        "probability": 0.046512,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "i",
+        "count": 2,
+        "probability": 0.046512,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "v",
+        "count": 2,
+        "probability": 0.046512,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#VI",
+        "count": 1,
+        "probability": 0.023256,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "I",
+        "count": 1,
+        "probability": 0.023256,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bVI": [
+      {
+        "to": "V",
+        "count": 64,
+        "probability": 0.279476,
+        "songCount": 40,
+        "songCoverage": 0.044004
+      },
+      {
+        "to": "I",
+        "count": 51,
+        "probability": 0.222707,
+        "songCount": 37,
+        "songCoverage": 0.040704
+      },
+      {
+        "to": "bVII",
+        "count": 45,
+        "probability": 0.196507,
+        "songCount": 32,
+        "songCoverage": 0.035204
+      },
+      {
+        "to": "vi",
+        "count": 19,
+        "probability": 0.082969,
+        "songCount": 13,
+        "songCoverage": 0.014301
+      },
+      {
+        "to": "IV",
+        "count": 8,
+        "probability": 0.034934,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      },
+      {
+        "to": "bIII",
+        "count": 7,
+        "probability": 0.030568,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "ii",
+        "count": 6,
+        "probability": 0.026201,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "iii",
+        "count": 4,
+        "probability": 0.017467,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "v",
+        "count": 4,
+        "probability": 0.017467,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "VI",
+        "count": 3,
+        "probability": 0.0131,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "bII",
+        "count": 3,
+        "probability": 0.0131,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "II",
+        "count": 2,
+        "probability": 0.008734,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      }
+    ],
+    "bVII": [
+      {
+        "to": "V",
+        "count": 115,
+        "probability": 0.240586,
+        "songCount": 68,
+        "songCoverage": 0.074807
+      },
+      {
+        "to": "I",
+        "count": 112,
+        "probability": 0.23431,
+        "songCount": 70,
+        "songCoverage": 0.077008
+      },
+      {
+        "to": "IV",
+        "count": 79,
+        "probability": 0.165272,
+        "songCount": 43,
+        "songCoverage": 0.047305
+      },
+      {
+        "to": "vi",
+        "count": 48,
+        "probability": 0.100418,
+        "songCount": 31,
+        "songCoverage": 0.034103
+      },
+      {
+        "to": "bVI",
+        "count": 22,
+        "probability": 0.046025,
+        "songCount": 16,
+        "songCoverage": 0.017602
+      },
+      {
+        "to": "VI",
+        "count": 18,
+        "probability": 0.037657,
+        "songCount": 13,
+        "songCoverage": 0.014301
+      },
+      {
+        "to": "iii",
+        "count": 18,
+        "probability": 0.037657,
+        "songCount": 10,
+        "songCoverage": 0.011001
+      },
+      {
+        "to": "ii",
+        "count": 17,
+        "probability": 0.035565,
+        "songCount": 13,
+        "songCoverage": 0.014301
+      },
+      {
+        "to": "v",
+        "count": 16,
+        "probability": 0.033473,
+        "songCount": 13,
+        "songCoverage": 0.014301
+      },
+      {
+        "to": "iv",
+        "count": 10,
+        "probability": 0.020921,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "bIII",
+        "count": 6,
+        "probability": 0.012552,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "bII",
+        "count": 3,
+        "probability": 0.006276,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      }
+    ],
+    "bii": [
+      {
+        "to": "vi",
+        "count": 18,
+        "probability": 0.418605,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      },
+      {
+        "to": "ii",
+        "count": 5,
+        "probability": 0.116279,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "III",
+        "count": 4,
+        "probability": 0.093023,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "IV",
+        "count": 4,
+        "probability": 0.093023,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "V",
+        "count": 3,
+        "probability": 0.069767,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "II",
+        "count": 2,
+        "probability": 0.046512,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VII",
+        "count": 2,
+        "probability": 0.046512,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.023256,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bII",
+        "count": 1,
+        "probability": 0.023256,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bVII",
+        "count": 1,
+        "probability": 0.023256,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bvii°",
+        "count": 1,
+        "probability": 0.023256,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "i",
+        "count": 1,
+        "probability": 0.023256,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "biii": [
+      {
+        "to": "ii",
+        "count": 3,
+        "probability": 0.5,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "V",
+        "count": 1,
+        "probability": 0.166667,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bII",
+        "count": 1,
+        "probability": 0.166667,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "i",
+        "count": 1,
+        "probability": 0.166667,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "biii°": [
+      {
+        "to": "ii",
+        "count": 4,
+        "probability": 0.363636,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "V",
+        "count": 3,
+        "probability": 0.272727,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iii",
+        "count": 2,
+        "probability": 0.181818,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bVII",
+        "count": 1,
+        "probability": 0.090909,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.090909,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bii°": [
+      {
+        "to": "I",
+        "count": 6,
+        "probability": 0.333333,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "ii",
+        "count": 6,
+        "probability": 0.333333,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "IV",
+        "count": 3,
+        "probability": 0.166667,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.055556,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VII",
+        "count": 1,
+        "probability": 0.055556,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bvii",
+        "count": 1,
+        "probability": 0.055556,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "biiø": [
+      {
+        "to": "VII",
+        "count": 1,
+        "probability": 1.0,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bv": [
+      {
+        "to": "#vii",
+        "count": 5,
+        "probability": 0.625,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "v",
+        "count": 2,
+        "probability": 0.25,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "i",
+        "count": 1,
+        "probability": 0.125,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bvi": [
+      {
+        "to": "vi",
+        "count": 9,
+        "probability": 0.529412,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      },
+      {
+        "to": "bVII",
+        "count": 3,
+        "probability": 0.176471,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bVI",
+        "count": 2,
+        "probability": 0.117647,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "bII",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "ii",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bvii": [
+      {
+        "to": "I",
+        "count": 1,
+        "probability": 0.25,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "V",
+        "count": 1,
+        "probability": 0.25,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bVI",
+        "count": 1,
+        "probability": 0.25,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vii",
+        "count": 1,
+        "probability": 0.25,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bvii°": [
+      {
+        "to": "IV",
+        "count": 8,
+        "probability": 0.470588,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "ii",
+        "count": 3,
+        "probability": 0.176471,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "bVII",
+        "count": 2,
+        "probability": 0.117647,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "II",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bIII",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vi",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bvi°": [
+      {
+        "to": "vi",
+        "count": 12,
+        "probability": 0.333333,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      },
+      {
+        "to": "V",
+        "count": 8,
+        "probability": 0.222222,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "IV",
+        "count": 5,
+        "probability": 0.138889,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "I",
+        "count": 4,
+        "probability": 0.111111,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "iii",
+        "count": 3,
+        "probability": 0.083333,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "III",
+        "count": 1,
+        "probability": 0.027778,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.027778,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bVI",
+        "count": 1,
+        "probability": 0.027778,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "ii",
+        "count": 1,
+        "probability": 0.027778,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bviø": [
+      {
+        "to": "ii",
+        "count": 2,
+        "probability": 1.0,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "bv°": [
+      {
+        "to": "V",
+        "count": 4,
+        "probability": 0.5,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "v",
+        "count": 4,
+        "probability": 0.5,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "i": [
+      {
+        "to": "VI",
+        "count": 2188,
+        "probability": 0.231241,
+        "songCount": 295,
+        "songCoverage": 0.324532
+      },
+      {
+        "to": "iv",
+        "count": 1769,
+        "probability": 0.186958,
+        "songCount": 270,
+        "songCoverage": 0.29703
+      },
+      {
+        "to": "VII",
+        "count": 1548,
+        "probability": 0.163602,
+        "songCount": 260,
+        "songCoverage": 0.286029
+      },
+      {
+        "to": "v",
+        "count": 1143,
+        "probability": 0.120799,
+        "songCount": 207,
+        "songCoverage": 0.227723
+      },
+      {
+        "to": "III",
+        "count": 907,
+        "probability": 0.095857,
+        "songCount": 189,
+        "songCoverage": 0.207921
+      },
+      {
+        "to": "I",
+        "count": 902,
+        "probability": 0.095329,
+        "songCount": 221,
+        "songCoverage": 0.243124
+      },
+      {
+        "to": "IV",
+        "count": 416,
+        "probability": 0.043965,
+        "songCount": 131,
+        "songCoverage": 0.144114
+      },
+      {
+        "to": "V",
+        "count": 287,
+        "probability": 0.030332,
+        "songCount": 92,
+        "songCoverage": 0.10121
+      },
+      {
+        "to": "ii",
+        "count": 61,
+        "probability": 0.006447,
+        "songCount": 31,
+        "songCoverage": 0.034103
+      },
+      {
+        "to": "bII",
+        "count": 37,
+        "probability": 0.00391,
+        "songCount": 17,
+        "songCoverage": 0.018702
+      },
+      {
+        "to": "#vi°",
+        "count": 35,
+        "probability": 0.003699,
+        "songCount": 14,
+        "songCoverage": 0.015402
+      },
+      {
+        "to": "ii°",
+        "count": 31,
+        "probability": 0.003276,
+        "songCount": 9,
+        "songCoverage": 0.009901
+      }
+    ],
+    "ii": [
+      {
+        "to": "V",
+        "count": 3139,
+        "probability": 0.639698,
+        "songCount": 441,
+        "songCoverage": 0.485149
+      },
+      {
+        "to": "iii",
+        "count": 364,
+        "probability": 0.07418,
+        "songCount": 124,
+        "songCoverage": 0.136414
+      },
+      {
+        "to": "IV",
+        "count": 318,
+        "probability": 0.064805,
+        "songCount": 125,
+        "songCoverage": 0.137514
+      },
+      {
+        "to": "I",
+        "count": 316,
+        "probability": 0.064398,
+        "songCount": 134,
+        "songCoverage": 0.147415
+      },
+      {
+        "to": "II",
+        "count": 199,
+        "probability": 0.040554,
+        "songCount": 86,
+        "songCoverage": 0.094609
+      },
+      {
+        "to": "vi",
+        "count": 191,
+        "probability": 0.038924,
+        "songCount": 68,
+        "songCoverage": 0.074807
+      },
+      {
+        "to": "III",
+        "count": 85,
+        "probability": 0.017322,
+        "songCount": 40,
+        "songCoverage": 0.044004
+      },
+      {
+        "to": "iv",
+        "count": 64,
+        "probability": 0.013043,
+        "songCount": 32,
+        "songCoverage": 0.035204
+      },
+      {
+        "to": "i",
+        "count": 50,
+        "probability": 0.01019,
+        "songCount": 25,
+        "songCoverage": 0.027503
+      },
+      {
+        "to": "VI",
+        "count": 42,
+        "probability": 0.008559,
+        "songCount": 21,
+        "songCoverage": 0.023102
+      },
+      {
+        "to": "bVII",
+        "count": 36,
+        "probability": 0.007336,
+        "songCount": 23,
+        "songCoverage": 0.025303
+      },
+      {
+        "to": "v",
+        "count": 32,
+        "probability": 0.006521,
+        "songCount": 12,
+        "songCoverage": 0.013201
+      }
+    ],
+    "iii": [
+      {
+        "to": "vi",
+        "count": 1988,
+        "probability": 0.365106,
+        "songCount": 334,
+        "songCoverage": 0.367437
+      },
+      {
+        "to": "IV",
+        "count": 1371,
+        "probability": 0.251791,
+        "songCount": 270,
+        "songCoverage": 0.29703
+      },
+      {
+        "to": "ii",
+        "count": 874,
+        "probability": 0.160514,
+        "songCount": 216,
+        "songCoverage": 0.237624
+      },
+      {
+        "to": "I",
+        "count": 304,
+        "probability": 0.055831,
+        "songCount": 131,
+        "songCoverage": 0.144114
+      },
+      {
+        "to": "VI",
+        "count": 266,
+        "probability": 0.048852,
+        "songCount": 110,
+        "songCoverage": 0.121012
+      },
+      {
+        "to": "V",
+        "count": 188,
+        "probability": 0.034527,
+        "songCount": 93,
+        "songCoverage": 0.10231
+      },
+      {
+        "to": "III",
+        "count": 166,
+        "probability": 0.030487,
+        "songCount": 69,
+        "songCoverage": 0.075908
+      },
+      {
+        "to": "II",
+        "count": 125,
+        "probability": 0.022957,
+        "songCount": 68,
+        "songCoverage": 0.074807
+      },
+      {
+        "to": "bVII",
+        "count": 27,
+        "probability": 0.004959,
+        "songCount": 23,
+        "songCoverage": 0.025303
+      },
+      {
+        "to": "bIII",
+        "count": 25,
+        "probability": 0.004591,
+        "songCount": 17,
+        "songCoverage": 0.018702
+      },
+      {
+        "to": "#iv°",
+        "count": 13,
+        "probability": 0.002388,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      },
+      {
+        "to": "iv",
+        "count": 13,
+        "probability": 0.002388,
+        "songCount": 8,
+        "songCoverage": 0.008801
+      }
+    ],
+    "iii°": [
+      {
+        "to": "IV",
+        "count": 4,
+        "probability": 0.285714,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "vi",
+        "count": 4,
+        "probability": 0.285714,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "#vi°",
+        "count": 2,
+        "probability": 0.142857,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "III",
+        "count": 1,
+        "probability": 0.071429,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bIII",
+        "count": 1,
+        "probability": 0.071429,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "i",
+        "count": 1,
+        "probability": 0.071429,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.071429,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "iiiø": [
+      {
+        "to": "iii°",
+        "count": 1,
+        "probability": 1.0,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "ii°": [
+      {
+        "to": "V",
+        "count": 106,
+        "probability": 0.76259,
+        "songCount": 31,
+        "songCoverage": 0.034103
+      },
+      {
+        "to": "I",
+        "count": 9,
+        "probability": 0.064748,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "v",
+        "count": 8,
+        "probability": 0.057554,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "i",
+        "count": 6,
+        "probability": 0.043165,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "III",
+        "count": 3,
+        "probability": 0.021583,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 2,
+        "probability": 0.014388,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VI",
+        "count": 2,
+        "probability": 0.014388,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VII",
+        "count": 1,
+        "probability": 0.007194,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iii",
+        "count": 1,
+        "probability": 0.007194,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iv°",
+        "count": 1,
+        "probability": 0.007194,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "iiø": [
+      {
+        "to": "V",
+        "count": 65,
+        "probability": 0.722222,
+        "songCount": 24,
+        "songCoverage": 0.026403
+      },
+      {
+        "to": "I",
+        "count": 8,
+        "probability": 0.088889,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "VI",
+        "count": 5,
+        "probability": 0.055556,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "ii°",
+        "count": 4,
+        "probability": 0.044444,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VII",
+        "count": 2,
+        "probability": 0.022222,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "i",
+        "count": 2,
+        "probability": 0.022222,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "iv",
+        "count": 2,
+        "probability": 0.022222,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "#vii°",
+        "count": 1,
+        "probability": 0.011111,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iii",
+        "count": 1,
+        "probability": 0.011111,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "iv": [
+      {
+        "to": "VII",
+        "count": 1434,
+        "probability": 0.294395,
+        "songCount": 235,
+        "songCoverage": 0.258526
+      },
+      {
+        "to": "v",
+        "count": 839,
+        "probability": 0.172244,
+        "songCount": 167,
+        "songCoverage": 0.183718
+      },
+      {
+        "to": "V",
+        "count": 670,
+        "probability": 0.137549,
+        "songCount": 184,
+        "songCoverage": 0.20242
+      },
+      {
+        "to": "i",
+        "count": 653,
+        "probability": 0.134059,
+        "songCount": 142,
+        "songCoverage": 0.156216
+      },
+      {
+        "to": "VI",
+        "count": 370,
+        "probability": 0.07596,
+        "songCount": 109,
+        "songCoverage": 0.119912
+      },
+      {
+        "to": "I",
+        "count": 259,
+        "probability": 0.053172,
+        "songCount": 98,
+        "songCoverage": 0.107811
+      },
+      {
+        "to": "III",
+        "count": 249,
+        "probability": 0.051119,
+        "songCount": 85,
+        "songCoverage": 0.093509
+      },
+      {
+        "to": "IV",
+        "count": 174,
+        "probability": 0.035722,
+        "songCount": 79,
+        "songCoverage": 0.086909
+      },
+      {
+        "to": "iii",
+        "count": 60,
+        "probability": 0.012318,
+        "songCount": 22,
+        "songCoverage": 0.024202
+      },
+      {
+        "to": "bII",
+        "count": 36,
+        "probability": 0.007391,
+        "songCount": 18,
+        "songCoverage": 0.019802
+      },
+      {
+        "to": "ii°",
+        "count": 27,
+        "probability": 0.005543,
+        "songCount": 12,
+        "songCoverage": 0.013201
+      },
+      {
+        "to": "vi",
+        "count": 24,
+        "probability": 0.004927,
+        "songCount": 16,
+        "songCoverage": 0.017602
+      }
+    ],
+    "iv°": [
+      {
+        "to": "I",
+        "count": 5,
+        "probability": 0.238095,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "ii",
+        "count": 3,
+        "probability": 0.142857,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iii",
+        "count": 3,
+        "probability": 0.142857,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "vi",
+        "count": 3,
+        "probability": 0.142857,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "IV",
+        "count": 2,
+        "probability": 0.095238,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "V",
+        "count": 2,
+        "probability": 0.095238,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VII",
+        "count": 1,
+        "probability": 0.047619,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bII",
+        "count": 1,
+        "probability": 0.047619,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vii",
+        "count": 1,
+        "probability": 0.047619,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "ivø": [
+      {
+        "to": "III",
+        "count": 1,
+        "probability": 0.5,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VII",
+        "count": 1,
+        "probability": 0.5,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "i°": [
+      {
+        "to": "V",
+        "count": 3,
+        "probability": 0.75,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "I",
+        "count": 1,
+        "probability": 0.25,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "iø": [
+      {
+        "to": "vi",
+        "count": 1,
+        "probability": 1.0,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "v": [
+      {
+        "to": "i",
+        "count": 1933,
+        "probability": 0.436442,
+        "songCount": 285,
+        "songCoverage": 0.313531
+      },
+      {
+        "to": "VI",
+        "count": 835,
+        "probability": 0.18853,
+        "songCount": 173,
+        "songCoverage": 0.190319
+      },
+      {
+        "to": "iv",
+        "count": 459,
+        "probability": 0.103635,
+        "songCount": 119,
+        "songCoverage": 0.130913
+      },
+      {
+        "to": "I",
+        "count": 412,
+        "probability": 0.093023,
+        "songCount": 162,
+        "songCoverage": 0.178218
+      },
+      {
+        "to": "VII",
+        "count": 222,
+        "probability": 0.050124,
+        "songCount": 67,
+        "songCoverage": 0.073707
+      },
+      {
+        "to": "III",
+        "count": 199,
+        "probability": 0.044931,
+        "songCount": 69,
+        "songCoverage": 0.075908
+      },
+      {
+        "to": "IV",
+        "count": 160,
+        "probability": 0.036126,
+        "songCount": 58,
+        "songCoverage": 0.063806
+      },
+      {
+        "to": "V",
+        "count": 129,
+        "probability": 0.029126,
+        "songCount": 67,
+        "songCoverage": 0.073707
+      },
+      {
+        "to": "ii",
+        "count": 10,
+        "probability": 0.002258,
+        "songCount": 7,
+        "songCoverage": 0.007701
+      },
+      {
+        "to": "#vi°",
+        "count": 9,
+        "probability": 0.002032,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      },
+      {
+        "to": "II",
+        "count": 9,
+        "probability": 0.002032,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "bII",
+        "count": 9,
+        "probability": 0.002032,
+        "songCount": 5,
+        "songCoverage": 0.005501
+      }
+    ],
+    "vi": [
+      {
+        "to": "IV",
+        "count": 1991,
+        "probability": 0.259211,
+        "songCount": 327,
+        "songCoverage": 0.359736
+      },
+      {
+        "to": "ii",
+        "count": 1569,
+        "probability": 0.20427,
+        "songCount": 300,
+        "songCoverage": 0.330033
+      },
+      {
+        "to": "V",
+        "count": 1414,
+        "probability": 0.184091,
+        "songCount": 302,
+        "songCoverage": 0.332233
+      },
+      {
+        "to": "iii",
+        "count": 1040,
+        "probability": 0.135399,
+        "songCount": 218,
+        "songCoverage": 0.239824
+      },
+      {
+        "to": "I",
+        "count": 623,
+        "probability": 0.081109,
+        "songCount": 190,
+        "songCoverage": 0.209021
+      },
+      {
+        "to": "VI",
+        "count": 397,
+        "probability": 0.051686,
+        "songCount": 134,
+        "songCoverage": 0.147415
+      },
+      {
+        "to": "II",
+        "count": 251,
+        "probability": 0.032678,
+        "songCount": 99,
+        "songCoverage": 0.108911
+      },
+      {
+        "to": "III",
+        "count": 112,
+        "probability": 0.014581,
+        "songCount": 54,
+        "songCoverage": 0.059406
+      },
+      {
+        "to": "bVII",
+        "count": 64,
+        "probability": 0.008332,
+        "songCount": 35,
+        "songCoverage": 0.038504
+      },
+      {
+        "to": "v",
+        "count": 64,
+        "probability": 0.008332,
+        "songCount": 26,
+        "songCoverage": 0.028603
+      },
+      {
+        "to": "bVI",
+        "count": 31,
+        "probability": 0.004036,
+        "songCount": 20,
+        "songCoverage": 0.022002
+      },
+      {
+        "to": "iv",
+        "count": 28,
+        "probability": 0.003645,
+        "songCount": 16,
+        "songCoverage": 0.017602
+      }
+    ],
+    "vii": [
+      {
+        "to": "I",
+        "count": 38,
+        "probability": 0.236025,
+        "songCount": 26,
+        "songCoverage": 0.028603
+      },
+      {
+        "to": "vi",
+        "count": 33,
+        "probability": 0.204969,
+        "songCount": 15,
+        "songCoverage": 0.016502
+      },
+      {
+        "to": "V",
+        "count": 21,
+        "probability": 0.130435,
+        "songCount": 10,
+        "songCoverage": 0.011001
+      },
+      {
+        "to": "III",
+        "count": 12,
+        "probability": 0.074534,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "VI",
+        "count": 12,
+        "probability": 0.074534,
+        "songCount": 9,
+        "songCoverage": 0.009901
+      },
+      {
+        "to": "IV",
+        "count": 11,
+        "probability": 0.068323,
+        "songCount": 9,
+        "songCoverage": 0.009901
+      },
+      {
+        "to": "iii",
+        "count": 8,
+        "probability": 0.049689,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "i",
+        "count": 6,
+        "probability": 0.037267,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "II",
+        "count": 4,
+        "probability": 0.024845,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "ii",
+        "count": 4,
+        "probability": 0.024845,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "iv",
+        "count": 3,
+        "probability": 0.018634,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "VII",
+        "count": 2,
+        "probability": 0.012422,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      }
+    ],
+    "vii°": [
+      {
+        "to": "III",
+        "count": 17,
+        "probability": 0.459459,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "I",
+        "count": 6,
+        "probability": 0.162162,
+        "songCount": 6,
+        "songCoverage": 0.006601
+      },
+      {
+        "to": "vi",
+        "count": 6,
+        "probability": 0.162162,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "i",
+        "count": 3,
+        "probability": 0.081081,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "bii°",
+        "count": 2,
+        "probability": 0.054054,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 1,
+        "probability": 0.027027,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "VI",
+        "count": 1,
+        "probability": 0.027027,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.027027,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "viiø": [
+      {
+        "to": "III",
+        "count": 10,
+        "probability": 0.454545,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "vi",
+        "count": 6,
+        "probability": 0.272727,
+        "songCount": 3,
+        "songCoverage": 0.0033
+      },
+      {
+        "to": "IV",
+        "count": 3,
+        "probability": 0.136364,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "iii",
+        "count": 2,
+        "probability": 0.090909,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "V",
+        "count": 1,
+        "probability": 0.045455,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "vi°": [
+      {
+        "to": "VI",
+        "count": 8,
+        "probability": 0.470588,
+        "songCount": 4,
+        "songCoverage": 0.0044
+      },
+      {
+        "to": "V",
+        "count": 3,
+        "probability": 0.176471,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "I",
+        "count": 2,
+        "probability": 0.117647,
+        "songCount": 2,
+        "songCoverage": 0.0022
+      },
+      {
+        "to": "II",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iii",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "iv",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 1,
+        "probability": 0.058824,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "viø": [
+      {
+        "to": "vi",
+        "count": 2,
+        "probability": 1.0,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "v°": [
+      {
+        "to": "I",
+        "count": 3,
+        "probability": 0.375,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "v",
+        "count": 2,
+        "probability": 0.25,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "IV",
+        "count": 1,
+        "probability": 0.125,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "bV",
+        "count": 1,
+        "probability": 0.125,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      },
+      {
+        "to": "vii°",
+        "count": 1,
+        "probability": 0.125,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ],
+    "vø": [
+      {
+        "to": "iv",
+        "count": 4,
+        "probability": 1.0,
+        "songCount": 1,
+        "songCoverage": 0.0011
+      }
+    ]
+  },
+  "progressions": {
+    "axis": {
+      "pattern": [
+        "I",
+        "V",
+        "vi",
+        "IV"
+      ],
+      "occurrenceCount": 360,
+      "songCount": 74,
+      "songCoverage": 0.081408
+    },
+    "sensitive-loop": {
+      "pattern": [
+        "vi",
+        "IV",
+        "I",
+        "V"
+      ],
+      "occurrenceCount": 254,
+      "songCount": 42,
+      "songCoverage": 0.046205
+    },
+    "doo-wop": {
+      "pattern": [
+        "I",
+        "vi",
+        "IV",
+        "V"
+      ],
+      "occurrenceCount": 434,
+      "songCount": 102,
+      "songCoverage": 0.112211
+    },
+    "royal-road": {
+      "pattern": [
+        "IV",
+        "V",
+        "iii",
+        "vi"
+      ],
+      "occurrenceCount": 463,
+      "songCount": 102,
+      "songCoverage": 0.112211
+    },
+    "canon": {
+      "pattern": [
+        "I",
+        "V",
+        "vi",
+        "iii",
+        "IV",
+        "I",
+        "IV",
+        "V"
+      ],
+      "occurrenceCount": 12,
+      "songCount": 5,
+      "songCoverage": 0.005501
+    },
+    "one-six-two-five": {
+      "pattern": [
+        "I",
+        "vi",
+        "ii",
+        "V"
+      ],
+      "occurrenceCount": 355,
+      "songCount": 74,
+      "songCoverage": 0.081408
+    },
+    "two-five-one": {
+      "pattern": [
+        "ii",
+        "V",
+        "I"
+      ],
+      "occurrenceCount": 2338,
+      "songCount": 406,
+      "songCoverage": 0.446645
+    },
+    "dream-borrow": {
+      "pattern": [
+        "I",
+        "iii",
+        "IV",
+        "iv"
+      ],
+      "occurrenceCount": 20,
+      "songCount": 9,
+      "songCoverage": 0.009901
+    },
+    "plagal-fall": {
+      "pattern": [
+        "I",
+        "IV",
+        "iv",
+        "I"
+      ],
+      "occurrenceCount": 32,
+      "songCount": 16,
+      "songCoverage": 0.017602
+    },
+    "chromatic-mediant": {
+      "pattern": [
+        "I",
+        "bIII",
+        "bVI",
+        "V"
+      ],
+      "occurrenceCount": 0,
+      "songCount": 0,
+      "songCoverage": 0.0
+    },
+    "minor-cinema": {
+      "pattern": [
+        "i",
+        "VI",
+        "III",
+        "VII"
+      ],
+      "occurrenceCount": 50,
+      "songCount": 12,
+      "songCoverage": 0.013201
+    },
+    "andalusian": {
+      "pattern": [
+        "i",
+        "VII",
+        "VI",
+        "V"
+      ],
+      "occurrenceCount": 119,
+      "songCount": 34,
+      "songCoverage": 0.037404
+    },
+    "minor-plagal": {
+      "pattern": [
+        "i",
+        "iv",
+        "VI",
+        "V"
+      ],
+      "occurrenceCount": 32,
+      "songCount": 13,
+      "songCoverage": 0.014301
+    }
+  }
+}

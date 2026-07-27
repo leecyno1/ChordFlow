@@ -1,0 +1,1381 @@
+{
+  "metadata": {
+    "source": "Harmonix Set",
+    "sourceUrl": "https://github.com/urinieto/harmonixset",
+    "sourceCommit": "64abeb509429e73d74559fb98e621dac866efea1",
+    "generatedAt": "2026-07-27T11:35:26.181615+00:00",
+    "songCount": 912,
+    "segmentCount": 9675,
+    "license": "MIT repository license; audio is not redistributed.",
+    "method": "Functional labels normalized; adjacent equal labels collapsed for transitions; repeated core boundaries are preserved for A/B/C patterns, which use verse, chorus, and bridge only; each song is assigned to its nearest preset family when edit similarity is at least 70%.",
+    "scope": "912 Western pop tracks; structure statistics, not chord statistics."
+  },
+  "roles": {
+    "intro": {
+      "segmentCount": 872,
+      "songCount": 786,
+      "songCoverage": 0.861842,
+      "averageDurationSeconds": 15.652,
+      "medianDurationSeconds": 13.357,
+      "averageStartPosition": 0.051739,
+      "averageOccurrencesPerContainingSong": 1.109
+    },
+    "verse": {
+      "segmentCount": 2192,
+      "songCount": 892,
+      "songCoverage": 0.97807,
+      "averageDurationSeconds": 23.988,
+      "medianDurationSeconds": 22.407,
+      "averageStartPosition": 0.296932,
+      "averageOccurrencesPerContainingSong": 2.457
+    },
+    "prechorus": {
+      "segmentCount": 744,
+      "songCount": 353,
+      "songCoverage": 0.387061,
+      "averageDurationSeconds": 14.543,
+      "medianDurationSeconds": 14.846,
+      "averageStartPosition": 0.383388,
+      "averageOccurrencesPerContainingSong": 2.108
+    },
+    "chorus": {
+      "segmentCount": 3197,
+      "songCount": 890,
+      "songCoverage": 0.975877,
+      "averageDurationSeconds": 21.708,
+      "medianDurationSeconds": 20.2,
+      "averageStartPosition": 0.502596,
+      "averageOccurrencesPerContainingSong": 3.592
+    },
+    "postchorus": {
+      "segmentCount": 406,
+      "songCount": 197,
+      "songCoverage": 0.216009,
+      "averageDurationSeconds": 16.19,
+      "medianDurationSeconds": 15.0,
+      "averageStartPosition": 0.576571,
+      "averageOccurrencesPerContainingSong": 2.061
+    },
+    "bridge": {
+      "segmentCount": 702,
+      "songCount": 614,
+      "songCoverage": 0.673246,
+      "averageDurationSeconds": 23.417,
+      "medianDurationSeconds": 21.173,
+      "averageStartPosition": 0.613562,
+      "averageOccurrencesPerContainingSong": 1.143
+    },
+    "solo": {
+      "segmentCount": 156,
+      "songCount": 126,
+      "songCoverage": 0.138158,
+      "averageDurationSeconds": 28.932,
+      "medianDurationSeconds": 22.176,
+      "averageStartPosition": 0.607918,
+      "averageOccurrencesPerContainingSong": 1.238
+    },
+    "instrumental": {
+      "segmentCount": 460,
+      "songCount": 225,
+      "songCoverage": 0.246711,
+      "averageDurationSeconds": 17.698,
+      "medianDurationSeconds": 15.0,
+      "averageStartPosition": 0.457745,
+      "averageOccurrencesPerContainingSong": 2.044
+    },
+    "breakdown": {
+      "segmentCount": 107,
+      "songCount": 84,
+      "songCoverage": 0.092105,
+      "averageDurationSeconds": 18.701,
+      "medianDurationSeconds": 15.0,
+      "averageStartPosition": 0.547077,
+      "averageOccurrencesPerContainingSong": 1.274
+    },
+    "interlude": {
+      "segmentCount": 70,
+      "songCount": 41,
+      "songCoverage": 0.044956,
+      "averageDurationSeconds": 14.698,
+      "medianDurationSeconds": 14.545,
+      "averageStartPosition": 0.482603,
+      "averageOccurrencesPerContainingSong": 1.707
+    },
+    "outro": {
+      "segmentCount": 425,
+      "songCount": 401,
+      "songCoverage": 0.439693,
+      "averageDurationSeconds": 18.609,
+      "medianDurationSeconds": 15.001,
+      "averageStartPosition": 0.886527,
+      "averageOccurrencesPerContainingSong": 1.06
+    },
+    "silence": {
+      "segmentCount": 221,
+      "songCount": 221,
+      "songCoverage": 0.242325,
+      "averageDurationSeconds": 4.022,
+      "medianDurationSeconds": 3.848,
+      "averageStartPosition": 0.0,
+      "averageOccurrencesPerContainingSong": 1.0
+    },
+    "other": {
+      "segmentCount": 123,
+      "songCount": 39,
+      "songCoverage": 0.042763,
+      "averageDurationSeconds": 23.068,
+      "medianDurationSeconds": 15.177,
+      "averageStartPosition": 0.4802,
+      "averageOccurrencesPerContainingSong": 3.154
+    }
+  },
+  "transitions": {
+    "breakdown": [
+      {
+        "to": "chorus",
+        "count": 38,
+        "probability": 0.368932,
+        "songCount": 38,
+        "songCoverage": 0.041667
+      },
+      {
+        "to": "verse",
+        "count": 19,
+        "probability": 0.184466,
+        "songCount": 18,
+        "songCoverage": 0.019737
+      },
+      {
+        "to": "instrumental",
+        "count": 14,
+        "probability": 0.135922,
+        "songCount": 13,
+        "songCoverage": 0.014254
+      },
+      {
+        "to": "interlude",
+        "count": 7,
+        "probability": 0.067961,
+        "songCount": 6,
+        "songCoverage": 0.006579
+      },
+      {
+        "to": "bridge",
+        "count": 5,
+        "probability": 0.048544,
+        "songCount": 5,
+        "songCoverage": 0.005482
+      },
+      {
+        "to": "other",
+        "count": 5,
+        "probability": 0.048544,
+        "songCount": 3,
+        "songCoverage": 0.003289
+      },
+      {
+        "to": "solo",
+        "count": 5,
+        "probability": 0.048544,
+        "songCount": 5,
+        "songCoverage": 0.005482
+      },
+      {
+        "to": "outro",
+        "count": 4,
+        "probability": 0.038835,
+        "songCount": 4,
+        "songCoverage": 0.004386
+      }
+    ],
+    "bridge": [
+      {
+        "to": "chorus",
+        "count": 387,
+        "probability": 0.600932,
+        "songCount": 379,
+        "songCoverage": 0.41557
+      },
+      {
+        "to": "verse",
+        "count": 89,
+        "probability": 0.138199,
+        "songCount": 86,
+        "songCoverage": 0.094298
+      },
+      {
+        "to": "prechorus",
+        "count": 47,
+        "probability": 0.072981,
+        "songCount": 47,
+        "songCoverage": 0.051535
+      },
+      {
+        "to": "solo",
+        "count": 30,
+        "probability": 0.046584,
+        "songCount": 27,
+        "songCoverage": 0.029605
+      },
+      {
+        "to": "instrumental",
+        "count": 26,
+        "probability": 0.040373,
+        "songCount": 23,
+        "songCoverage": 0.025219
+      },
+      {
+        "to": "breakdown",
+        "count": 19,
+        "probability": 0.029503,
+        "songCount": 19,
+        "songCoverage": 0.020833
+      },
+      {
+        "to": "outro",
+        "count": 17,
+        "probability": 0.026398,
+        "songCount": 17,
+        "songCoverage": 0.01864
+      },
+      {
+        "to": "postchorus",
+        "count": 11,
+        "probability": 0.017081,
+        "songCount": 11,
+        "songCoverage": 0.012061
+      }
+    ],
+    "chorus": [
+      {
+        "to": "verse",
+        "count": 801,
+        "probability": 0.340706,
+        "songCount": 599,
+        "songCoverage": 0.656798
+      },
+      {
+        "to": "bridge",
+        "count": 456,
+        "probability": 0.19396,
+        "songCount": 437,
+        "songCoverage": 0.479167
+      },
+      {
+        "to": "postchorus",
+        "count": 349,
+        "probability": 0.148447,
+        "songCount": 190,
+        "songCoverage": 0.208333
+      },
+      {
+        "to": "outro",
+        "count": 294,
+        "probability": 0.125053,
+        "songCount": 293,
+        "songCoverage": 0.321272
+      },
+      {
+        "to": "instrumental",
+        "count": 245,
+        "probability": 0.104211,
+        "songCount": 171,
+        "songCoverage": 0.1875
+      },
+      {
+        "to": "solo",
+        "count": 81,
+        "probability": 0.034453,
+        "songCount": 75,
+        "songCoverage": 0.082237
+      },
+      {
+        "to": "intro",
+        "count": 37,
+        "probability": 0.015738,
+        "songCount": 31,
+        "songCoverage": 0.033991
+      },
+      {
+        "to": "interlude",
+        "count": 30,
+        "probability": 0.012761,
+        "songCount": 25,
+        "songCoverage": 0.027412
+      }
+    ],
+    "instrumental": [
+      {
+        "to": "verse",
+        "count": 210,
+        "probability": 0.555556,
+        "songCount": 160,
+        "songCoverage": 0.175439
+      },
+      {
+        "to": "chorus",
+        "count": 60,
+        "probability": 0.15873,
+        "songCount": 49,
+        "songCoverage": 0.053728
+      },
+      {
+        "to": "bridge",
+        "count": 40,
+        "probability": 0.10582,
+        "songCount": 37,
+        "songCoverage": 0.04057
+      },
+      {
+        "to": "outro",
+        "count": 26,
+        "probability": 0.068783,
+        "songCount": 26,
+        "songCoverage": 0.028509
+      },
+      {
+        "to": "breakdown",
+        "count": 14,
+        "probability": 0.037037,
+        "songCount": 14,
+        "songCoverage": 0.015351
+      },
+      {
+        "to": "solo",
+        "count": 11,
+        "probability": 0.029101,
+        "songCount": 9,
+        "songCoverage": 0.009868
+      },
+      {
+        "to": "prechorus",
+        "count": 6,
+        "probability": 0.015873,
+        "songCount": 6,
+        "songCoverage": 0.006579
+      },
+      {
+        "to": "other",
+        "count": 4,
+        "probability": 0.010582,
+        "songCount": 3,
+        "songCoverage": 0.003289
+      }
+    ],
+    "interlude": [
+      {
+        "to": "chorus",
+        "count": 30,
+        "probability": 0.47619,
+        "songCount": 21,
+        "songCoverage": 0.023026
+      },
+      {
+        "to": "verse",
+        "count": 20,
+        "probability": 0.31746,
+        "songCount": 18,
+        "songCoverage": 0.019737
+      },
+      {
+        "to": "bridge",
+        "count": 5,
+        "probability": 0.079365,
+        "songCount": 5,
+        "songCoverage": 0.005482
+      },
+      {
+        "to": "breakdown",
+        "count": 4,
+        "probability": 0.063492,
+        "songCount": 4,
+        "songCoverage": 0.004386
+      },
+      {
+        "to": "other",
+        "count": 3,
+        "probability": 0.047619,
+        "songCount": 3,
+        "songCoverage": 0.003289
+      },
+      {
+        "to": "outro",
+        "count": 1,
+        "probability": 0.015873,
+        "songCount": 1,
+        "songCoverage": 0.001096
+      }
+    ],
+    "intro": [
+      {
+        "to": "verse",
+        "count": 575,
+        "probability": 0.688623,
+        "songCount": 552,
+        "songCoverage": 0.605263
+      },
+      {
+        "to": "chorus",
+        "count": 167,
+        "probability": 0.2,
+        "songCount": 165,
+        "songCoverage": 0.180921
+      },
+      {
+        "to": "instrumental",
+        "count": 50,
+        "probability": 0.05988,
+        "songCount": 49,
+        "songCoverage": 0.053728
+      },
+      {
+        "to": "prechorus",
+        "count": 14,
+        "probability": 0.016766,
+        "songCount": 14,
+        "songCoverage": 0.015351
+      },
+      {
+        "to": "bridge",
+        "count": 9,
+        "probability": 0.010778,
+        "songCount": 9,
+        "songCoverage": 0.009868
+      },
+      {
+        "to": "other",
+        "count": 9,
+        "probability": 0.010778,
+        "songCount": 9,
+        "songCoverage": 0.009868
+      },
+      {
+        "to": "postchorus",
+        "count": 5,
+        "probability": 0.005988,
+        "songCount": 5,
+        "songCoverage": 0.005482
+      },
+      {
+        "to": "breakdown",
+        "count": 2,
+        "probability": 0.002395,
+        "songCount": 2,
+        "songCoverage": 0.002193
+      }
+    ],
+    "other": [
+      {
+        "to": "instrumental",
+        "count": 11,
+        "probability": 0.234043,
+        "songCount": 9,
+        "songCoverage": 0.009868
+      },
+      {
+        "to": "chorus",
+        "count": 9,
+        "probability": 0.191489,
+        "songCount": 9,
+        "songCoverage": 0.009868
+      },
+      {
+        "to": "verse",
+        "count": 8,
+        "probability": 0.170213,
+        "songCount": 8,
+        "songCoverage": 0.008772
+      },
+      {
+        "to": "outro",
+        "count": 6,
+        "probability": 0.12766,
+        "songCount": 6,
+        "songCoverage": 0.006579
+      },
+      {
+        "to": "breakdown",
+        "count": 5,
+        "probability": 0.106383,
+        "songCount": 3,
+        "songCoverage": 0.003289
+      },
+      {
+        "to": "intro",
+        "count": 3,
+        "probability": 0.06383,
+        "songCount": 3,
+        "songCoverage": 0.003289
+      },
+      {
+        "to": "bridge",
+        "count": 2,
+        "probability": 0.042553,
+        "songCount": 2,
+        "songCoverage": 0.002193
+      },
+      {
+        "to": "interlude",
+        "count": 1,
+        "probability": 0.021277,
+        "songCount": 1,
+        "songCoverage": 0.001096
+      }
+    ],
+    "outro": [
+      {
+        "to": "chorus",
+        "count": 6,
+        "probability": 0.666667,
+        "songCount": 6,
+        "songCoverage": 0.006579
+      },
+      {
+        "to": "other",
+        "count": 1,
+        "probability": 0.111111,
+        "songCount": 1,
+        "songCoverage": 0.001096
+      },
+      {
+        "to": "solo",
+        "count": 1,
+        "probability": 0.111111,
+        "songCount": 1,
+        "songCoverage": 0.001096
+      },
+      {
+        "to": "verse",
+        "count": 1,
+        "probability": 0.111111,
+        "songCount": 1,
+        "songCoverage": 0.001096
+      }
+    ],
+    "postchorus": [
+      {
+        "to": "verse",
+        "count": 121,
+        "probability": 0.382911,
+        "songCount": 100,
+        "songCoverage": 0.109649
+      },
+      {
+        "to": "bridge",
+        "count": 69,
+        "probability": 0.218354,
+        "songCount": 69,
+        "songCoverage": 0.075658
+      },
+      {
+        "to": "chorus",
+        "count": 42,
+        "probability": 0.132911,
+        "songCount": 39,
+        "songCoverage": 0.042763
+      },
+      {
+        "to": "outro",
+        "count": 31,
+        "probability": 0.098101,
+        "songCount": 31,
+        "songCoverage": 0.033991
+      },
+      {
+        "to": "instrumental",
+        "count": 19,
+        "probability": 0.060127,
+        "songCount": 15,
+        "songCoverage": 0.016447
+      },
+      {
+        "to": "intro",
+        "count": 12,
+        "probability": 0.037975,
+        "songCount": 9,
+        "songCoverage": 0.009868
+      },
+      {
+        "to": "breakdown",
+        "count": 7,
+        "probability": 0.022152,
+        "songCount": 6,
+        "songCoverage": 0.006579
+      },
+      {
+        "to": "solo",
+        "count": 7,
+        "probability": 0.022152,
+        "songCount": 7,
+        "songCoverage": 0.007675
+      }
+    ],
+    "prechorus": [
+      {
+        "to": "chorus",
+        "count": 650,
+        "probability": 0.912921,
+        "songCount": 339,
+        "songCoverage": 0.371711
+      },
+      {
+        "to": "verse",
+        "count": 28,
+        "probability": 0.039326,
+        "songCount": 17,
+        "songCoverage": 0.01864
+      },
+      {
+        "to": "bridge",
+        "count": 12,
+        "probability": 0.016854,
+        "songCount": 11,
+        "songCoverage": 0.012061
+      },
+      {
+        "to": "breakdown",
+        "count": 7,
+        "probability": 0.009831,
+        "songCount": 6,
+        "songCoverage": 0.006579
+      },
+      {
+        "to": "instrumental",
+        "count": 7,
+        "probability": 0.009831,
+        "songCount": 7,
+        "songCoverage": 0.007675
+      },
+      {
+        "to": "postchorus",
+        "count": 3,
+        "probability": 0.004213,
+        "songCount": 2,
+        "songCoverage": 0.002193
+      },
+      {
+        "to": "outro",
+        "count": 2,
+        "probability": 0.002809,
+        "songCount": 2,
+        "songCoverage": 0.002193
+      },
+      {
+        "to": "intro",
+        "count": 1,
+        "probability": 0.001404,
+        "songCount": 1,
+        "songCoverage": 0.001096
+      }
+    ],
+    "solo": [
+      {
+        "to": "chorus",
+        "count": 43,
+        "probability": 0.313869,
+        "songCount": 43,
+        "songCoverage": 0.047149
+      },
+      {
+        "to": "verse",
+        "count": 36,
+        "probability": 0.262774,
+        "songCount": 33,
+        "songCoverage": 0.036184
+      },
+      {
+        "to": "bridge",
+        "count": 22,
+        "probability": 0.160584,
+        "songCount": 22,
+        "songCoverage": 0.024123
+      },
+      {
+        "to": "outro",
+        "count": 10,
+        "probability": 0.072993,
+        "songCount": 10,
+        "songCoverage": 0.010965
+      },
+      {
+        "to": "prechorus",
+        "count": 9,
+        "probability": 0.065693,
+        "songCount": 9,
+        "songCoverage": 0.009868
+      },
+      {
+        "to": "breakdown",
+        "count": 7,
+        "probability": 0.051095,
+        "songCount": 7,
+        "songCoverage": 0.007675
+      },
+      {
+        "to": "instrumental",
+        "count": 6,
+        "probability": 0.043796,
+        "songCount": 6,
+        "songCoverage": 0.006579
+      },
+      {
+        "to": "other",
+        "count": 3,
+        "probability": 0.021898,
+        "songCount": 3,
+        "songCoverage": 0.003289
+      }
+    ],
+    "verse": [
+      {
+        "to": "chorus",
+        "count": 1172,
+        "probability": 0.605372,
+        "songCount": 587,
+        "songCoverage": 0.64364
+      },
+      {
+        "to": "prechorus",
+        "count": 606,
+        "probability": 0.313017,
+        "songCount": 341,
+        "songCoverage": 0.373904
+      },
+      {
+        "to": "bridge",
+        "count": 45,
+        "probability": 0.023244,
+        "songCount": 42,
+        "songCoverage": 0.046053
+      },
+      {
+        "to": "instrumental",
+        "count": 33,
+        "probability": 0.017045,
+        "songCount": 23,
+        "songCoverage": 0.025219
+      },
+      {
+        "to": "breakdown",
+        "count": 19,
+        "probability": 0.009814,
+        "songCount": 16,
+        "songCoverage": 0.017544
+      },
+      {
+        "to": "interlude",
+        "count": 19,
+        "probability": 0.009814,
+        "songCount": 11,
+        "songCoverage": 0.012061
+      },
+      {
+        "to": "solo",
+        "count": 16,
+        "probability": 0.008264,
+        "songCount": 14,
+        "songCoverage": 0.015351
+      },
+      {
+        "to": "outro",
+        "count": 11,
+        "probability": 0.005682,
+        "songCount": 11,
+        "songCoverage": 0.012061
+      }
+    ]
+  },
+  "formFamilies": {
+    "ABA": {
+      "pattern": "ABA",
+      "exactSongCount": 5,
+      "exactCoverage": 0.005482,
+      "familySongCount": 5,
+      "familyCoverage": 0.005482,
+      "averageFamilySimilarity": 1.0,
+      "examples": [
+        {
+          "title": "Dragostea din tei",
+          "artist": "O-Zone",
+          "genre": "Pop"
+        },
+        {
+          "title": "Hello Good Morning",
+          "artist": "Diddy - Dirty Money",
+          "genre": "Hip-Hop"
+        },
+        {
+          "title": "Last Night",
+          "artist": "Diddy",
+          "genre": "R&B"
+        }
+      ]
+    },
+    "AABA": {
+      "pattern": "AABA",
+      "exactSongCount": 3,
+      "exactCoverage": 0.003289,
+      "familySongCount": 47,
+      "familyCoverage": 0.051535,
+      "averageFamilySimilarity": 0.796809,
+      "examples": [
+        {
+          "title": "May This Be Love",
+          "artist": "The Jimi Hendrix Experience",
+          "genre": "Classic Rock"
+        },
+        {
+          "title": "Saucy Jack",
+          "artist": "Spın̈al Tap",
+          "genre": "Metal"
+        },
+        {
+          "title": "My Oh My",
+          "artist": "Macklemore & Ryan Lewis",
+          "genre": "Pop"
+        }
+      ]
+    },
+    "ABAB": {
+      "pattern": "ABAB",
+      "exactSongCount": 32,
+      "exactCoverage": 0.035088,
+      "familySongCount": 44,
+      "familyCoverage": 0.048246,
+      "averageFamilySimilarity": 0.936364,
+      "examples": [
+        {
+          "title": "Control",
+          "artist": "Janet Jackson",
+          "genre": "Pop"
+        },
+        {
+          "title": "DJ Got Us Falling in Love Again",
+          "artist": "Usher",
+          "genre": "Pop"
+        },
+        {
+          "title": "Don’t Cha",
+          "artist": "The Pussycat Dolls",
+          "genre": "R&B"
+        }
+      ]
+    },
+    "ABABCB": {
+      "pattern": "ABABCB",
+      "exactSongCount": 123,
+      "exactCoverage": 0.134868,
+      "familySongCount": 465,
+      "familyCoverage": 0.509868,
+      "averageFamilySimilarity": 0.864926,
+      "examples": [
+        {
+          "title": "A Thing About You",
+          "artist": "Tom Petty & the Heartbreakers",
+          "genre": "Rock"
+        },
+        {
+          "title": "Better",
+          "artist": "Guns N' Roses",
+          "genre": "Rock"
+        },
+        {
+          "title": "Boyfriend",
+          "artist": "Justin Bieber",
+          "genre": "Pop"
+        }
+      ]
+    },
+    "ABCBA": {
+      "pattern": "ABCBA",
+      "exactSongCount": 1,
+      "exactCoverage": 0.001096,
+      "familySongCount": 32,
+      "familyCoverage": 0.035088,
+      "averageFamilySimilarity": 0.800149,
+      "examples": [
+        {
+          "title": "Drop It Like It's Hot",
+          "artist": "Snoop Dogg",
+          "genre": "Hip-Hop"
+        }
+      ]
+    },
+    "ABACA": {
+      "pattern": "ABACA",
+      "exactSongCount": 10,
+      "exactCoverage": 0.010965,
+      "familySongCount": 75,
+      "familyCoverage": 0.082237,
+      "averageFamilySimilarity": 0.791683,
+      "examples": [
+        {
+          "title": "Club Can’t Handle Me",
+          "artist": "Flo Rida",
+          "genre": "Pop"
+        },
+        {
+          "title": "Forget You",
+          "artist": "CeeLo Green",
+          "genre": "R&B"
+        },
+        {
+          "title": "Get Low",
+          "artist": "Lil Jon & The East Side Boyz",
+          "genre": "Hip-Hop"
+        }
+      ]
+    }
+  },
+  "topPatterns": [
+    {
+      "pattern": "ABABCB",
+      "songCount": 123,
+      "songCoverage": 0.134868,
+      "examples": [
+        {
+          "title": "A Thing About You",
+          "artist": "Tom Petty & the Heartbreakers",
+          "genre": "Rock"
+        },
+        {
+          "title": "Better",
+          "artist": "Guns N' Roses",
+          "genre": "Rock"
+        },
+        {
+          "title": "Boyfriend",
+          "artist": "Justin Bieber",
+          "genre": "Pop"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABCBB",
+      "songCount": 79,
+      "songCoverage": 0.086623,
+      "examples": [
+        {
+          "title": "Don't Touch Me",
+          "artist": "The Game",
+          "genre": "Hip-Hop"
+        },
+        {
+          "title": "Don't You Want Me",
+          "artist": "The Human League",
+          "genre": "Dance/Electronic"
+        },
+        {
+          "title": "Real Love",
+          "artist": "Mary J. Blige",
+          "genre": "Pop"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABB",
+      "songCount": 39,
+      "songCoverage": 0.042763,
+      "examples": [
+        {
+          "title": "Call Me Maybe",
+          "artist": "Carly Rae Jepsen",
+          "genre": "Pop"
+        },
+        {
+          "title": "Conceited (There's Something About Remy)",
+          "artist": "Remy Ma",
+          "genre": "Hip-Hop"
+        },
+        {
+          "title": "Floods",
+          "artist": "Pantera",
+          "genre": "Metal"
+        }
+      ]
+    },
+    {
+      "pattern": "ABAB",
+      "songCount": 32,
+      "songCoverage": 0.035088,
+      "examples": [
+        {
+          "title": "Control",
+          "artist": "Janet Jackson",
+          "genre": "Pop"
+        },
+        {
+          "title": "DJ Got Us Falling in Love Again",
+          "artist": "Usher",
+          "genre": "Pop"
+        },
+        {
+          "title": "Don’t Cha",
+          "artist": "The Pussycat Dolls",
+          "genre": "R&B"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABAB",
+      "songCount": 31,
+      "songCoverage": 0.033991,
+      "examples": [
+        {
+          "title": "American Music",
+          "artist": "Violent Femmes",
+          "genre": "Alternative"
+        },
+        {
+          "title": "Are You Experienced?",
+          "artist": "The Jimi Hendrix Experience",
+          "genre": "Classic Rock"
+        },
+        {
+          "title": "Beware of the Boys (Mundian to Bach Ke)",
+          "artist": "Panjabi MC",
+          "genre": "World"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABACA",
+      "songCount": 29,
+      "songCoverage": 0.031798,
+      "examples": [
+        {
+          "title": "Replay",
+          "artist": "Iyaz",
+          "genre": "Pop"
+        },
+        {
+          "title": "Wild Ones",
+          "artist": "Flo Rida",
+          "genre": "Hip-Hop"
+        },
+        {
+          "title": "Be in Love Tonight",
+          "artist": "Toy Connor",
+          "genre": "Dance/Electronic"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABCAB",
+      "songCount": 22,
+      "songCoverage": 0.024123,
+      "examples": [
+        {
+          "title": "...and Justice for All (LP version)",
+          "artist": "Metallica",
+          "genre": "Metal"
+        },
+        {
+          "title": "Critical Acclaim",
+          "artist": "Avenged Sevenfold",
+          "genre": "Metal"
+        },
+        {
+          "title": "Fell On Black Days",
+          "artist": "Soundgarden",
+          "genre": "Grunge"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABA",
+      "songCount": 19,
+      "songCoverage": 0.020833,
+      "examples": [
+        {
+          "title": "Bass Down Low",
+          "artist": "DEV",
+          "genre": "Pop"
+        },
+        {
+          "title": "Billionaire",
+          "artist": "Travie McCoy",
+          "genre": "Hip-Hop"
+        },
+        {
+          "title": "Cupid Shuffle (radio version)",
+          "artist": "Cupid",
+          "genre": "Hip-Hop"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABC",
+      "songCount": 16,
+      "songCoverage": 0.017544,
+      "examples": [
+        {
+          "title": "Diggin' Me Down",
+          "artist": "Ozzy Osbourne",
+          "genre": "Metal"
+        },
+        {
+          "title": "Firework",
+          "artist": "Katy Perry",
+          "genre": "Pop"
+        },
+        {
+          "title": "Galang '05",
+          "artist": "M.I.A.",
+          "genre": "Reggaeton"
+        }
+      ]
+    },
+    {
+      "pattern": "AABABCB",
+      "songCount": 15,
+      "songCoverage": 0.016447,
+      "examples": [
+        {
+          "title": "Without You",
+          "artist": "Mötley Crüe",
+          "genre": "Metal"
+        },
+        {
+          "title": "Dark Side",
+          "artist": "Kelly Clarkson",
+          "genre": "Dance/Electronic"
+        },
+        {
+          "title": "Eat Dirt",
+          "artist": "Susan Justice",
+          "genre": "Pop"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABBB",
+      "songCount": 14,
+      "songCoverage": 0.015351,
+      "examples": [
+        {
+          "title": "Indestructible",
+          "artist": "Disturbed",
+          "genre": "Metal"
+        },
+        {
+          "title": "Bang Pop",
+          "artist": "Free Energy",
+          "genre": "Rock"
+        },
+        {
+          "title": "Crazy Girl",
+          "artist": "Eli Young Band",
+          "genre": "Country"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABCBBB",
+      "songCount": 13,
+      "songCoverage": 0.014254,
+      "examples": [
+        {
+          "title": "ABC",
+          "artist": "The Jackson 5",
+          "genre": "Pop-Rock"
+        },
+        {
+          "title": "Again",
+          "artist": "Flyleaf",
+          "genre": "Alternative"
+        },
+        {
+          "title": "The One That Counts",
+          "artist": "The Wolf Banes",
+          "genre": "Rock"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABAA",
+      "songCount": 13,
+      "songCoverage": 0.014254,
+      "examples": [
+        {
+          "title": "Black and Yellow",
+          "artist": "Wiz Khalifa",
+          "genre": "Hip-Hop"
+        },
+        {
+          "title": "Disco Inferno",
+          "artist": "The Trammps",
+          "genre": "Funk/Disco"
+        },
+        {
+          "title": "Everybody (Backstreet’s Back)",
+          "artist": "Backstreet Boys",
+          "genre": "Pop"
+        }
+      ]
+    },
+    {
+      "pattern": "ABCB",
+      "songCount": 11,
+      "songCoverage": 0.012061,
+      "examples": [
+        {
+          "title": "Bad Romance",
+          "artist": "Lady Gaga",
+          "genre": "Pop"
+        },
+        {
+          "title": "Break Your Heart",
+          "artist": "Taio Cruz",
+          "genre": "Pop"
+        },
+        {
+          "title": "Closer",
+          "artist": "Ne‐Yo",
+          "genre": "R&B"
+        }
+      ]
+    },
+    {
+      "pattern": "AABABCBB",
+      "songCount": 11,
+      "songCoverage": 0.012061,
+      "examples": [
+        {
+          "title": "Straight Lines",
+          "artist": "Silverchair",
+          "genre": "Rock"
+        },
+        {
+          "title": "Bitch",
+          "artist": "Meredith Brooks",
+          "genre": "Alternative"
+        },
+        {
+          "title": "California Gurls",
+          "artist": "Katy Perry",
+          "genre": "Dance/Electronic"
+        }
+      ]
+    },
+    {
+      "pattern": "ABABBCBB",
+      "songCount": 11,
+      "songCoverage": 0.012061,
+      "examples": [
+        {
+          "title": "Good Time",
+          "artist": "Owl City feat. Carly Rae Jepsen",
+          "genre": "Pop"
+        },
+        {
+          "title": "Raise Your Glass",
+          "artist": "P!nk",
+          "genre": "Dance/Electronic"
+        },
+        {
+          "title": "Cinema (Feat. Gary Go) [Extended Mix]",
+          "artist": "Benny Benassi",
+          "genre": "Dance/Electronic"
+        }
+      ]
+    }
+  ],
+  "genres": [
+    {
+      "genre": "Pop",
+      "songCount": 422,
+      "songCoverage": 0.462719
+    },
+    {
+      "genre": "Hip-Hop",
+      "songCount": 140,
+      "songCoverage": 0.153509
+    },
+    {
+      "genre": "Dance/Electronic",
+      "songCount": 129,
+      "songCoverage": 0.141447
+    },
+    {
+      "genre": "Country",
+      "songCount": 39,
+      "songCoverage": 0.042763
+    },
+    {
+      "genre": "Rock",
+      "songCount": 36,
+      "songCoverage": 0.039474
+    },
+    {
+      "genre": "Alternative",
+      "songCount": 33,
+      "songCoverage": 0.036184
+    },
+    {
+      "genre": "Metal",
+      "songCount": 32,
+      "songCoverage": 0.035088
+    },
+    {
+      "genre": "R&B",
+      "songCount": 25,
+      "songCoverage": 0.027412
+    },
+    {
+      "genre": "Reggaeton",
+      "songCount": 15,
+      "songCoverage": 0.016447
+    },
+    {
+      "genre": "Funk/Disco",
+      "songCount": 14,
+      "songCoverage": 0.015351
+    },
+    {
+      "genre": "Classic Rock",
+      "songCount": 8,
+      "songCoverage": 0.008772
+    },
+    {
+      "genre": "Grunge",
+      "songCount": 6,
+      "songCoverage": 0.006579
+    },
+    {
+      "genre": "Prog",
+      "songCount": 5,
+      "songCoverage": 0.005482
+    },
+    {
+      "genre": "Blues",
+      "songCount": 2,
+      "songCoverage": 0.002193
+    },
+    {
+      "genre": "Indie Rock",
+      "songCount": 2,
+      "songCoverage": 0.002193
+    },
+    {
+      "genre": "Pop-Rock",
+      "songCount": 1,
+      "songCoverage": 0.001096
+    },
+    {
+      "genre": "World",
+      "songCount": 1,
+      "songCoverage": 0.001096
+    },
+    {
+      "genre": "Punk",
+      "songCount": 1,
+      "songCoverage": 0.001096
+    },
+    {
+      "genre": "Unknown",
+      "songCount": 1,
+      "songCoverage": 0.001096
+    }
+  ]
+}
