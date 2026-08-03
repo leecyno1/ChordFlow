@@ -25,11 +25,9 @@ export function ArrangementTimeline({
         </div>
         <div className="timeline-summary">
           {arrangement.formPattern} · {arrangement.sections.length} 段 ·{" "}
-          {arrangement.sections.reduce(
-            (sum, section) => sum + section.chords.length,
-            0
-          )}{" "}
-          小节
+          {arrangement.sections.length * arrangement.production.barsPerSection}{" "}
+          小节 · {arrangement.production.tempoBpm} BPM ·{" "}
+          {arrangement.production.timeSignature}
         </div>
       </div>
       <div className="timeline-scroll">

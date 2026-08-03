@@ -1,16 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Copy, Download, Music2, X } from "lucide-react";
+import { Check, Clock3, Copy, Download, Music2, X } from "lucide-react";
 import {
   buildSunoPromptKit,
   serializeSunoPromptKit
 } from "../domain/suno";
-import type { Arrangement } from "../domain/types";
+import {
+  SECTION_BAR_OPTIONS,
+  TIME_SIGNATURES
+} from "../domain/production";
+import type {
+  Arrangement,
+  ProductionSettings
+} from "../domain/types";
 
 interface SunoBridgeProps {
   open: boolean;
   arrangement: Arrangement;
   onClose: () => void;
   onExportMidi: () => void;
+  onProductionChange: (changes: Partial<ProductionSettings>) => void;
 }
 
 type CopyTarget = "style" | "blueprint" | "all";
@@ -54,12 +62,20 @@ export function SunoBridge({
   open,
   arrangement,
   onClose,
-  onExportMidi
+  onExportMidi,
+  onProductionChange
 }: SunoBridgeProps) {
   const kit = useMemo(() => buildSunoPromptKit(arrangement), [arrangement]);
   const [language, setLanguage] = useState<PromptLanguage>("en");
   const [copied, setCopied] = useState<CopyTarget | null>(null);
+  const [tempoDraft, setTempoDraft] = useState(
+    String(arrangement.production.tempoBpm)
+  );
   const copyTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    setTempoDraft(String(arrangement.production.tempoBpm));
+  }, [arrangement.production.tempoBpm]);
 
   useEffect(() => {
     if (!open) return;
@@ -81,6 +97,15 @@ export function SunoBridge({
 
   const stylePrompt =
     language === "en" ? kit.stylePromptEn : kit.stylePromptZh;
+
+  function commitTempo() {
+    const nextTempo = Number(tempoDraft);
+    if (Number.isFinite(nextTempo)) {
+      onProductionChange({ tempoBpm: nextTempo });
+    } else {
+      setTempoDraft(String(arrangement.production.tempoBpm));
+    }
+  }
 
   async function handleCopy(target: CopyTarget, value: string) {
     await copyText(value);
@@ -123,8 +148,74 @@ export function SunoBridge({
           <span><b>{kit.form}</b> FORM</span>
           <span><b>{kit.key} {kit.mode === "major" ? "MAJ" : "MIN"}</b> KEY</span>
           <span><b>{kit.tempoBpm}</b> BPM</span>
-          <span><b>{kit.sections.length}</b> SECTIONS</span>
+          <span><b>{kit.barsPerSection}</b> BARS / SECTION</span>
         </div>
+
+        <section className="suno-production-grid" aria-label="制作参数">
+          <div className="suno-production-title">
+            <Clock3 size={14} />
+            <div>
+              <span>00 · PRODUCTION GRID</span>
+              <strong>同步提示词与 MIDI</strong>
+            </div>
+          </div>
+          <label className="suno-tempo-field">
+            <span>BPM</span>
+            <input
+              type="number"
+              min="50"
+              max="180"
+              inputMode="numeric"
+              value={tempoDraft}
+              onChange={(event) =>
+                setTempoDraft(event.target.value.replace(/\D/g, "").slice(0, 3))
+              }
+              onBlur={commitTempo}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+              }}
+              aria-label="BPM"
+            />
+          </label>
+          <div className="suno-production-control">
+            <span>拍号</span>
+            <div aria-label="拍号">
+              {TIME_SIGNATURES.map((meter) => (
+                <button
+                  type="button"
+                  key={meter}
+                  className={
+                    arrangement.production.timeSignature === meter ? "active" : ""
+                  }
+                  aria-pressed={arrangement.production.timeSignature === meter}
+                  onClick={() =>
+                    onProductionChange({ timeSignature: meter })
+                  }
+                >
+                  {meter}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="suno-production-control">
+            <span>每段小节</span>
+            <div aria-label="每段小节">
+              {SECTION_BAR_OPTIONS.map((bars) => (
+                <button
+                  type="button"
+                  key={bars}
+                  className={
+                    arrangement.production.barsPerSection === bars ? "active" : ""
+                  }
+                  aria-pressed={arrangement.production.barsPerSection === bars}
+                  onClick={() => onProductionChange({ barsPerSection: bars })}
+                >
+                  {bars}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <section className="suno-prompt-card suno-style-card">
           <div className="suno-card-head">

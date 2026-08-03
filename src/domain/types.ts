@@ -1,5 +1,13 @@
 export type Mode = "major" | "minor";
 
+export type TimeSignature = "4/4" | "3/4" | "6/8";
+
+export interface ProductionSettings {
+  tempoBpm: number;
+  timeSignature: TimeSignature;
+  barsPerSection: number;
+}
+
 export type SectionRole =
   | "intro"
   | "verse"
@@ -60,6 +68,7 @@ export interface Arrangement {
   style: string;
   surprise: number;
   seed: number;
+  production: ProductionSettings;
   sections: SongSection[];
   generatedAt: string;
 }

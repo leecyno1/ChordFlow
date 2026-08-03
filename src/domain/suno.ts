@@ -1,8 +1,12 @@
 import { PROGRESSIONS } from "./catalog";
+import {
+  DEFAULT_PRODUCTION_SETTINGS,
+  harmonicRhythmLabel
+} from "./production";
 import type { Arrangement, SectionRole } from "./types";
 
-export const SUNO_BRIDGE_VERSION = "0.1";
-export const DEFAULT_TEMPO_BPM = 92;
+export const SUNO_BRIDGE_VERSION = "0.2";
+export const DEFAULT_TEMPO_BPM = DEFAULT_PRODUCTION_SETTINGS.tempoBpm;
 
 interface StyleProfile {
   en: string;
@@ -31,7 +35,8 @@ export interface SunoPromptKit {
   form: string;
   style: string;
   tempoBpm: number;
-  timeSignature: "4/4";
+  timeSignature: Arrangement["production"]["timeSignature"];
+  barsPerSection: number;
   stylePromptEn: string;
   stylePromptZh: string;
   chordBlueprint: string;
@@ -195,16 +200,14 @@ function noveltyDirection(surprise: number): { en: string; zh: string } {
   };
 }
 
-export function buildSunoPromptKit(
-  arrangement: Arrangement,
-  tempoBpm = DEFAULT_TEMPO_BPM
-): SunoPromptKit {
+export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   const profile = STYLE_PROFILES[arrangement.style] ?? STYLE_PROFILES.华语流行;
   const moodsZh = collectMoods(arrangement);
   const moodsEn = moodsZh.map((mood) => MOOD_EN[mood] ?? mood.toLowerCase());
   const novelty = noveltyDirection(arrangement.surprise);
   const modeEn = arrangement.mode === "major" ? "major" : "minor";
   const modeZh = arrangement.mode === "major" ? "大调" : "小调";
+  const { tempoBpm, timeSignature, barsPerSection } = arrangement.production;
 
   const sections: SunoSectionPrompt[] = arrangement.sections.map((section) => {
     const variation = section.variationLabel
@@ -229,6 +232,7 @@ export function buildSunoPromptKit(
     profile.en,
     moodsEn.join(", "),
     `${tempoBpm} BPM`,
+    `${timeSignature} meter`,
     `${arrangement.key} ${modeEn}`,
     profile.instrumentationEn,
     profile.productionEn,
@@ -241,6 +245,7 @@ export function buildSunoPromptKit(
     arrangement.style,
     moodsZh.join("、"),
     `${tempoBpm} BPM`,
+    `${timeSignature} 拍`,
     `${arrangement.key} ${modeZh}`,
     profile.instrumentationZh,
     profile.productionZh,
@@ -250,16 +255,17 @@ export function buildSunoPromptKit(
     .join("，");
 
   const sectionLines = sections.flatMap((section) => [
-    `[${section.label} | Energy ${section.energy}/100]`,
+    `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100]`,
     `Chords: ${section.chords.join(" - ")}`,
     `Harmony: ${section.numerals.join(" - ")}`,
+    `Harmonic rhythm: ${harmonicRhythmLabel(arrangement.production, section.chords.length)}`,
     `Direction: ${section.direction}`,
     ""
   ]);
 
   const chordBlueprint = [
     `SONG FORM: ${arrangement.formPattern}`,
-    `KEY: ${arrangement.key} ${modeEn} | TEMPO: ${tempoBpm} BPM | METER: 4/4`,
+    `KEY: ${arrangement.key} ${modeEn} | TEMPO: ${tempoBpm} BPM | METER: ${timeSignature}`,
     `STYLE: ${profile.en}`,
     "",
     ...sectionLines,
@@ -274,7 +280,8 @@ export function buildSunoPromptKit(
     form: arrangement.formPattern,
     style: arrangement.style,
     tempoBpm,
-    timeSignature: "4/4",
+    timeSignature,
+    barsPerSection,
     stylePromptEn,
     stylePromptZh,
     chordBlueprint,

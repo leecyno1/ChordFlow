@@ -1,9 +1,16 @@
 import { Midi } from "@tonejs/midi";
 import { chordNoteNames, noteNameToMidi } from "../domain/music";
+import {
+  chordLengthInBars,
+  quarterNotesPerBar,
+  timeSignatureParts
+} from "../domain/production";
 import type { Arrangement } from "../domain/types";
 
 let synth: any = null;
 let toneModule: any = null;
+let playbackRun = 0;
+let playbackTimers: number[] = [];
 
 async function getTone(): Promise<any> {
   if (!toneModule) {
@@ -60,34 +67,40 @@ export async function playArrangement(
   onStep?: (sectionIndex: number, chordIndex: number) => void
 ): Promise<number> {
   const instrument = await getSynth();
-  const Tone = await getTone();
+  const run = playbackRun + 1;
+  playbackRun = run;
+  playbackTimers.forEach((timer) => window.clearTimeout(timer));
+  playbackTimers = [];
   instrument.releaseAll();
-  const start = Tone.now() + 0.08;
-  const stepDuration = 0.72;
-  let step = 0;
+  const startDelayMs = 80;
+  let elapsedSeconds = 0;
 
   arrangement.sections.forEach((section, sectionIndex) => {
+    const stepDuration =
+      (60 / arrangement.production.tempoBpm) *
+      quarterNotesPerBar(arrangement.production.timeSignature) *
+      chordLengthInBars(arrangement.production, section.chords.length);
     section.chords.forEach((chord, chordIndex) => {
-      const time = start + step * stepDuration;
-      instrument.triggerAttackRelease(
-        chordNoteNames(chord, 3),
-        stepDuration * 0.82,
-        time
-      );
-      if (onStep) {
-        window.setTimeout(
-          () => onStep(sectionIndex, chordIndex),
-          Math.max(0, (time - Tone.now()) * 1000)
+      const timer = window.setTimeout(() => {
+        if (playbackRun !== run) return;
+        instrument.triggerAttackRelease(
+          chordNoteNames(chord, 3),
+          stepDuration * 0.9
         );
-      }
-      step += 1;
+        onStep?.(sectionIndex, chordIndex);
+      }, startDelayMs + elapsedSeconds * 1000);
+      playbackTimers.push(timer);
+      elapsedSeconds += stepDuration;
     });
   });
 
-  return step * stepDuration * 1000;
+  return startDelayMs + elapsedSeconds * 1000;
 }
 
 export function stopPlayback(): void {
+  playbackRun += 1;
+  playbackTimers.forEach((timer) => window.clearTimeout(timer));
+  playbackTimers = [];
   synth?.releaseAll();
 }
 
@@ -96,8 +109,10 @@ function downloadBlob(blob: Blob, filename: string) {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  document.body.appendChild(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function exportJson(arrangement: Arrangement): void {
@@ -109,26 +124,44 @@ export function exportJson(arrangement: Arrangement): void {
   );
 }
 
-export function exportMidi(arrangement: Arrangement): void {
+export function buildMidi(arrangement: Arrangement): Midi {
   const midi = new Midi();
-  midi.header.setTempo(92);
+  midi.header.setTempo(arrangement.production.tempoBpm);
+  midi.header.timeSignatures.push({
+    ticks: 0,
+    timeSignature: timeSignatureParts(arrangement.production.timeSignature)
+  });
+  midi.header.update();
   const track = midi.addTrack();
   track.name = "ChordFlow Harmony";
-  let time = 0;
+  const ticksPerBar =
+    midi.header.ppq *
+    quarterNotesPerBar(arrangement.production.timeSignature);
+  let ticks = 0;
 
   arrangement.sections.forEach((section) => {
+    const durationTicks = Math.round(
+      (ticksPerBar * arrangement.production.barsPerSection) /
+        Math.max(1, section.chords.length)
+    );
     section.chords.forEach((chord) => {
       chordNoteNames(chord, 3).forEach((note) => {
         track.addNote({
           midi: noteNameToMidi(note),
-          time,
-          duration: 0.88,
+          ticks,
+          durationTicks,
           velocity: 0.72
         });
       });
-      time += 1;
+      ticks += durationTicks;
     });
   });
+
+  return midi;
+}
+
+export function exportMidi(arrangement: Arrangement): void {
+  const midi = buildMidi(arrangement);
 
   downloadBlob(
     new Blob([midi.toArray()], { type: "audio/midi" }),

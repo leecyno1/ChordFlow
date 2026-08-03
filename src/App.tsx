@@ -51,7 +51,8 @@ import {
   harmonicFunction,
   romanToChord
 } from "./domain/music";
-import type { Mode } from "./domain/types";
+import { normalizeProductionSettings } from "./domain/production";
+import type { Mode, ProductionSettings } from "./domain/types";
 import {
   generateArrangement,
   getNextCandidates,
@@ -120,7 +121,8 @@ function App() {
       mode,
       style,
       surprise,
-      seed: nextSeed
+      seed: nextSeed,
+      production: arrangement.production
     });
     setSeed(nextSeed);
     setArrangement(next);
@@ -142,7 +144,8 @@ function App() {
         mode,
         style,
         surprise,
-        seed: nextSeed
+        seed: nextSeed,
+        production: arrangement.production
       })
     );
     setActiveSection(0);
@@ -169,7 +172,8 @@ function App() {
         mode,
         style,
         surprise,
-        seed: nextSeed
+        seed: nextSeed,
+        production: arrangement.production
       })
     );
     setActiveSection(0);
@@ -197,7 +201,8 @@ function App() {
         mode: nextMode,
         style,
         surprise,
-        seed: nextSeed
+        seed: nextSeed,
+        production: arrangement.production
       })
     );
     setActiveSection(0);
@@ -211,6 +216,21 @@ function App() {
     );
     setActiveChord(targetIndex);
     void auditionChord(romanToChord(arrangement.key, arrangement.mode, roman));
+  }
+
+  function changeStyle(nextStyle: string) {
+    setStyle(nextStyle);
+    setArrangement((current) => ({ ...current, style: nextStyle }));
+  }
+
+  function changeProduction(changes: Partial<ProductionSettings>) {
+    setArrangement((current) => ({
+      ...current,
+      production: normalizeProductionSettings({
+        ...current.production,
+        ...changes
+      })
+    }));
   }
 
   async function togglePlayback() {
@@ -280,7 +300,7 @@ function App() {
           </div>
           <label className="style-select">
             <span>语境</span>
-            <select name="style" value={style} onChange={(event) => setStyle(event.target.value)}>
+            <select name="style" value={style} onChange={(event) => changeStyle(event.target.value)}>
               {STYLES.map((item) => (
                 <option value={item} key={item}>
                   {item}
@@ -457,7 +477,14 @@ function App() {
                 min="0"
                 max="100"
                 value={surprise}
-                onChange={(event) => setSurprise(Number(event.target.value))}
+                onChange={(event) => {
+                  const nextSurprise = Number(event.target.value);
+                  setSurprise(nextSurprise);
+                  setArrangement((current) => ({
+                    ...current,
+                    surprise: nextSurprise
+                  }));
+                }}
                 style={{ "--range-value": surprise + "%" } as React.CSSProperties}
               />
               <div className="range-labels">
@@ -649,6 +676,7 @@ function App() {
         arrangement={arrangement}
         onClose={() => setSunoOpen(false)}
         onExportMidi={() => exportMidi(arrangement)}
+        onProductionChange={changeProduction}
       />
 
       <footer className="footer">

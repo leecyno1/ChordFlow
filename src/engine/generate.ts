@@ -6,10 +6,12 @@ import {
 } from "../domain/catalog";
 import { getCorpusTransitions } from "../domain/corpus";
 import { romanDegree, romanToChord } from "../domain/music";
+import { normalizeProductionSettings } from "../domain/production";
 import type {
   Arrangement,
   ChordCandidate,
   Mode,
+  ProductionSettings,
   ProgressionTemplate,
   SectionRole
 } from "../domain/types";
@@ -94,6 +96,7 @@ export function generateArrangement(options: {
   style: string;
   surprise: number;
   seed: number;
+  production?: Partial<ProductionSettings>;
 }): Arrangement {
   const random = mulberry32(options.seed);
   const preset = FORM_PRESETS.find((item) => item.id === options.formId);
@@ -157,6 +160,7 @@ export function generateArrangement(options: {
     style: options.style,
     surprise: options.surprise,
     seed: options.seed,
+    production: normalizeProductionSettings(options.production),
     sections,
     generatedAt: new Date().toISOString()
   };
