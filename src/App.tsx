@@ -1,20 +1,24 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
   ChevronRight,
   CircleDot,
   Download,
   FileJson,
+  FolderClock,
   Gauge,
   GitBranch,
   Info,
   Music2,
   Pause,
   Play,
+  Redo2,
   RefreshCw,
   Route,
+  Save,
   Settings2,
   Sparkles,
+  Undo2,
   WandSparkles
 } from "lucide-react";
 import {
@@ -51,8 +55,23 @@ import {
   harmonicFunction,
   romanToChord
 } from "./domain/music";
+import {
+  commitArrangementHistory,
+  createArrangementHistory,
+  mapArrangementHistory,
+  redoArrangementHistory,
+  undoArrangementHistory
+} from "./domain/history";
 import { normalizeProductionSettings } from "./domain/production";
-import type { Mode, ProductionSettings } from "./domain/types";
+import {
+  loadLocalProject,
+  saveLocalProject
+} from "./domain/projectStorage";
+import type {
+  Arrangement,
+  Mode,
+  ProductionSettings
+} from "./domain/types";
 import {
   generateArrangement,
   getNextCandidates,
@@ -70,24 +89,52 @@ type ViewMode = "river" | "fifths";
 
 const initialSeed = 18473;
 
-function App() {
-  const [formId, setFormId] = useState("ababcb");
-  const [customPattern, setCustomPattern] = useState("");
-  const [keyName, setKeyName] = useState("C");
-  const [mode, setMode] = useState<Mode>("major");
-  const [style, setStyle] = useState("华语流行");
-  const [surprise, setSurprise] = useState(34);
-  const [seed, setSeed] = useState(initialSeed);
-  const [arrangement, setArrangement] = useState(() =>
-    generateArrangement({
-      formId: "ababcb",
-      key: "C",
-      mode: "major",
-      style: "华语流行",
-      surprise: 34,
-      seed: initialSeed
-    })
+function formatSavedAt(savedAt: string): string {
+  const date = new Date(savedAt);
+  if (Number.isNaN(date.getTime())) return "时间未知";
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function arrangementFingerprint(arrangement: Arrangement): string {
+  const { generatedAt: _generatedAt, ...musicalProject } = arrangement;
+  return JSON.stringify(musicalProject);
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
   );
+}
+
+function App() {
+  const [customPattern, setCustomPattern] = useState("");
+  const [history, setHistory] = useState(() =>
+    createArrangementHistory(
+      generateArrangement({
+        formId: "ababcb",
+        key: "C",
+        mode: "major",
+        style: "华语流行",
+        surprise: 34,
+        seed: initialSeed
+      })
+    )
+  );
+  const arrangement = history.present;
+  const formId = arrangement.formId;
+  const keyName = arrangement.key;
+  const mode = arrangement.mode;
+  const style = arrangement.style;
+  const surprise = arrangement.surprise;
+  const seed = arrangement.seed;
   const [activeSection, setActiveSection] = useState(0);
   const [activeChord, setActiveChord] = useState(0);
   const [view, setView] = useState<ViewMode>("river");
@@ -97,6 +144,8 @@ function App() {
     section: number;
     chord: number;
   } | null>(null);
+  const [savedProject, setSavedProject] = useState(() => loadLocalProject());
+  const [projectError, setProjectError] = useState<string | null>(null);
   const playbackToken = useRef(0);
 
   const section = arrangement.sections[activeSection] ?? arrangement.sections[0];
@@ -118,6 +167,133 @@ function App() {
     arrangement.sections.map((item) => item.symbol)
   ).size;
   const allThemesLocked = arrangement.lockedSymbols.length >= themeCount;
+  const canUndo = history.past.length > 0;
+  const canRedo = history.future.length > 0;
+  const currentMatchesLocal = useMemo(
+    () =>
+      savedProject !== null &&
+      arrangementFingerprint(savedProject.arrangement) ===
+        arrangementFingerprint(arrangement),
+    [arrangement, savedProject]
+  );
+  const projectStatus = projectError
+    ? projectError
+    : savedProject
+      ? currentMatchesLocal
+        ? `已保存 · ${formatSavedAt(savedProject.savedAt)}`
+        : `有未保存更改 · 本地 ${formatSavedAt(savedProject.savedAt)}`
+      : "尚未创建本地版本";
+  const projectStatusTone = projectError
+    ? "error"
+    : currentMatchesLocal
+      ? "saved"
+      : savedProject
+        ? "dirty"
+        : "empty";
+
+  useEffect(() => {
+    setCustomPattern(
+      arrangement.formId === "custom" ? arrangement.formPattern : ""
+    );
+  }, [arrangement.formId, arrangement.formPattern]);
+
+  function commitArrangement(
+    update: Arrangement | ((current: Arrangement) => Arrangement)
+  ) {
+    setProjectError(null);
+    setHistory((current) => {
+      const next =
+        typeof update === "function" ? update(current.present) : update;
+      return commitArrangementHistory(current, next);
+    });
+  }
+
+  function previewArrangement(
+    update: (current: Arrangement) => Arrangement
+  ) {
+    setProjectError(null);
+    setHistory((current) => mapArrangementHistory(current, update));
+  }
+
+  function resetProjectFocus() {
+    playbackToken.current += 1;
+    stopPlayback();
+    setPlaying(false);
+    setPlayingPosition(null);
+    setActiveSection(0);
+    setActiveChord(0);
+  }
+
+  function undo() {
+    if (!canUndo) return;
+    setProjectError(null);
+    setHistory((current) => undoArrangementHistory(current));
+    resetProjectFocus();
+  }
+
+  function redo() {
+    if (!canRedo) return;
+    setProjectError(null);
+    setHistory((current) => redoArrangementHistory(current));
+    resetProjectFocus();
+  }
+
+  function saveProject() {
+    const saved = saveLocalProject(arrangement);
+    if (!saved) {
+      setProjectError("浏览器阻止了本地保存");
+      return;
+    }
+    setSavedProject(saved);
+    setProjectError(null);
+  }
+
+  function restoreProject() {
+    const saved = loadLocalProject();
+    if (!saved) {
+      setSavedProject(null);
+      setProjectError("没有可恢复的本地版本");
+      return;
+    }
+    setSavedProject(saved);
+    commitArrangement(saved.arrangement);
+    resetProjectFocus();
+  }
+
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if (isEditableTarget(event.target) || event.altKey) return;
+      const command = event.metaKey || event.ctrlKey;
+      if (!command) return;
+      const key = event.key.toLowerCase();
+
+      if (key === "s") {
+        event.preventDefault();
+        saveProject();
+        return;
+      }
+      if (key === "z" && event.shiftKey) {
+        if (!canRedo) return;
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if (key === "z") {
+        if (!canUndo) return;
+        event.preventDefault();
+        undo();
+        return;
+      }
+      if (key === "y") {
+        if (!canRedo) return;
+        event.preventDefault();
+        redo();
+      }
+    }
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [arrangement, canRedo, canUndo]);
 
   function regenerate(nextSeed = Math.floor(Math.random() * 999999)) {
     const next = generateArrangement({
@@ -130,8 +306,7 @@ function App() {
       seed: nextSeed,
       production: arrangement.production
     });
-    setSeed(nextSeed);
-    setArrangement((current) => preserveLockedSections(current, next));
+    commitArrangement((current) => preserveLockedSections(current, next));
     setActiveSection(0);
     setActiveChord(0);
   }
@@ -139,11 +314,9 @@ function App() {
   function chooseForm(nextFormId: string) {
     const preset = FORM_PRESETS.find((item) => item.id === nextFormId);
     if (!preset) return;
-    setFormId(nextFormId);
     setCustomPattern("");
     const nextSeed = seed + 17;
-    setSeed(nextSeed);
-    setArrangement(
+    commitArrangement(
       generateArrangement({
         formId: nextFormId,
         key: keyName,
@@ -167,10 +340,8 @@ function App() {
       return;
     }
     setCustomPattern(normalized);
-    setFormId("custom");
     const nextSeed = seed + 29;
-    setSeed(nextSeed);
-    setArrangement(
+    commitArrangement(
       generateArrangement({
         formId: "custom",
         customPattern: normalized,
@@ -191,15 +362,12 @@ function App() {
   }
 
   function changeKey(nextKey: string) {
-    setKeyName(nextKey);
-    setArrangement((current) => transposeArrangement(current, nextKey));
+    commitArrangement((current) => transposeArrangement(current, nextKey));
   }
 
   function changeMode(nextMode: Mode) {
-    setMode(nextMode);
     const nextSeed = seed + 11;
-    setSeed(nextSeed);
-    setArrangement(
+    commitArrangement(
       generateArrangement({
         formId,
         customPattern: formId === "custom" ? customPattern : undefined,
@@ -217,7 +385,7 @@ function App() {
 
   function chooseCandidate(roman: string) {
     const targetIndex = Math.min(activeChord + 1, section.numerals.length - 1);
-    setArrangement((current) =>
+    commitArrangement((current) =>
       replaceChord(current, activeSection, targetIndex, roman)
     );
     setActiveChord(targetIndex);
@@ -225,12 +393,11 @@ function App() {
   }
 
   function changeStyle(nextStyle: string) {
-    setStyle(nextStyle);
-    setArrangement((current) => ({ ...current, style: nextStyle }));
+    commitArrangement((current) => ({ ...current, style: nextStyle }));
   }
 
   function changeProduction(changes: Partial<ProductionSettings>) {
-    setArrangement((current) => ({
+    commitArrangement((current) => ({
       ...current,
       production: normalizeProductionSettings({
         ...current.production,
@@ -240,7 +407,7 @@ function App() {
   }
 
   function toggleThemeLock(symbol: string) {
-    setArrangement((current) => ({
+    commitArrangement((current) => ({
       ...current,
       lockedSymbols: current.lockedSymbols.includes(symbol)
         ? current.lockedSymbols.filter((item) => item !== symbol)
@@ -250,8 +417,7 @@ function App() {
 
   function regenerateTheme(symbol: string) {
     const nextSeed = seed + 37 + symbol.charCodeAt(0);
-    setSeed(nextSeed);
-    setArrangement((current) =>
+    commitArrangement((current) =>
       regenerateSectionIdentity(current, symbol, nextSeed)
     );
   }
@@ -355,6 +521,56 @@ function App() {
           </button>
         </div>
       </header>
+
+      <section className="project-strip" aria-label="本地项目与编辑历史">
+        <div className="project-strip-status">
+          <span className={`project-status-dot ${projectStatusTone}`} />
+          <span>LOCAL SESSION</span>
+          <strong aria-live="polite">{projectStatus}</strong>
+        </div>
+        <div className="project-strip-actions">
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!canUndo}
+            aria-label="撤销上一步"
+            title="撤销（⌘/Ctrl + Z）"
+          >
+            <Undo2 size={14} />
+            <span>撤销</span>
+          </button>
+          <button
+            type="button"
+            onClick={redo}
+            disabled={!canRedo}
+            aria-label="重做下一步"
+            title="重做（⌘/Ctrl + Shift + Z）"
+          >
+            <Redo2 size={14} />
+            <span>重做</span>
+          </button>
+          <button
+            type="button"
+            className={currentMatchesLocal ? "saved" : ""}
+            onClick={saveProject}
+            aria-label="保存到当前浏览器"
+            title="保存到当前浏览器（⌘/Ctrl + S）"
+          >
+            <Save size={14} />
+            <span>{currentMatchesLocal ? "已保存" : "保存"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={restoreProject}
+            disabled={!savedProject}
+            aria-label="恢复浏览器本地版本"
+            title="恢复最近保存的本地版本"
+          >
+            <FolderClock size={14} />
+            <span>恢复</span>
+          </button>
+        </div>
+      </section>
 
       <main className="workspace">
         <aside className="left-rail">
@@ -502,8 +718,7 @@ function App() {
                 value={surprise}
                 onChange={(event) => {
                   const nextSurprise = Number(event.target.value);
-                  setSurprise(nextSurprise);
-                  setArrangement((current) => ({
+                  previewArrangement((current) => ({
                     ...current,
                     surprise: nextSurprise
                   }));
@@ -682,7 +897,7 @@ function App() {
           void auditionProgression(suggestion.previewChords)
         }
         onApply={(suggestion) =>
-          setArrangement((current) =>
+          commitArrangement((current) =>
             applyTransitionSuggestion(current, activeSection, suggestion)
           )
         }

@@ -1,0 +1,74 @@
+import { describe, expect, it } from "vitest";
+import { generateArrangement } from "../engine/generate";
+import {
+  LOCAL_PROJECT_KEY,
+  loadLocalProject,
+  parseLocalProject,
+  saveLocalProject,
+  serializeLocalProject
+} from "./projectStorage";
+
+function arrangement() {
+  return generateArrangement({
+    formId: "ababcb",
+    key: "D",
+    mode: "major",
+    style: "独立流行",
+    surprise: 48,
+    seed: 912
+  });
+}
+
+function memoryStorage() {
+  const values = new Map<string, string>();
+  return {
+    getItem(key: string) {
+      return values.get(key) ?? null;
+    },
+    setItem(key: string, value: string) {
+      values.set(key, value);
+    }
+  };
+}
+
+describe("local project storage", () => {
+  it("round-trips an arrangement through the versioned envelope", () => {
+    const source = { ...arrangement(), lockedSymbols: ["B"] };
+    const savedAt = new Date("2026-08-04T02:30:00.000Z");
+    const parsed = parseLocalProject(serializeLocalProject(source, savedAt));
+
+    expect(parsed?.savedAt).toBe(savedAt.toISOString());
+    expect(parsed?.arrangement).toEqual(source);
+  });
+
+  it("saves and loads from a storage-compatible local slot", () => {
+    const storage = memoryStorage();
+    const source = arrangement();
+    const saved = saveLocalProject(source, storage);
+    const loaded = loadLocalProject(storage);
+
+    expect(storage.getItem(LOCAL_PROJECT_KEY)).not.toBeNull();
+    expect(loaded).toEqual(saved);
+  });
+
+  it("migrates older arrangements without theme locks", () => {
+    const source = arrangement();
+    const { lockedSymbols: _lockedSymbols, ...legacy } = source;
+    const parsed = parseLocalProject(
+      JSON.stringify({
+        schemaVersion: 1,
+        savedAt: "2026-08-04T00:00:00.000Z",
+        arrangement: legacy
+      })
+    );
+
+    expect(parsed?.arrangement.lockedSymbols).toEqual([]);
+  });
+
+  it("rejects malformed or unsupported project data", () => {
+    expect(parseLocalProject("not-json")).toBeNull();
+    expect(
+      parseLocalProject(JSON.stringify({ schemaVersion: 99, arrangement: {} }))
+    ).toBeNull();
+  });
+});

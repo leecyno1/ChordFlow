@@ -275,6 +275,121 @@ select {
   box-shadow: 0 5px 26px rgba(255, 107, 120, 0.28);
 }
 
+.project-strip {
+  min-height: 42px;
+  padding: 5px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(90deg, rgba(78, 216, 208, 0.035), transparent 35%),
+    rgba(10, 11, 14, 0.88);
+  position: relative;
+  z-index: 9;
+}
+
+.project-strip::before {
+  content: "";
+  width: 92px;
+  height: 1px;
+  position: absolute;
+  left: 22px;
+  bottom: -1px;
+  background: linear-gradient(90deg, var(--cyan), transparent);
+}
+
+.project-strip-status,
+.project-strip-actions {
+  display: flex;
+  align-items: center;
+}
+
+.project-strip-status {
+  min-width: 0;
+  gap: 9px;
+  font: 8px var(--mono);
+  letter-spacing: 0.13em;
+  color: #555956;
+}
+
+.project-strip-status strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8a8c86;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.project-status-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #454845;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.025);
+}
+
+.project-status-dot.saved {
+  background: var(--cyan);
+  box-shadow: 0 0 9px rgba(78, 216, 208, 0.58);
+}
+
+.project-status-dot.dirty {
+  background: var(--amber);
+  box-shadow: 0 0 9px rgba(244, 184, 96, 0.46);
+}
+
+.project-status-dot.error {
+  background: var(--rose);
+  box-shadow: 0 0 9px rgba(255, 107, 120, 0.5);
+}
+
+.project-strip-actions {
+  flex: 0 0 auto;
+  gap: 5px;
+}
+
+.project-strip-actions button {
+  height: 30px;
+  min-width: 66px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 5px;
+  color: #747672;
+  background: rgba(255, 255, 255, 0.018);
+  cursor: pointer;
+  font: 9px var(--mono);
+  transition: 160ms ease;
+}
+
+.project-strip-actions button:hover:not(:disabled) {
+  color: var(--ivory);
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.project-strip-actions button.saved {
+  color: var(--cyan);
+  border-color: rgba(78, 216, 208, 0.22);
+  background: rgba(78, 216, 208, 0.045);
+}
+
+.project-strip-actions button:disabled {
+  color: #353734;
+  border-color: rgba(255, 255, 255, 0.035);
+  background: transparent;
+  cursor: not-allowed;
+}
+
 .workspace {
   min-height: 660px;
   display: grid;
@@ -2878,6 +2993,34 @@ select {
 
   .export-button,
   .icon-button {
+    display: none;
+  }
+
+  .project-strip {
+    min-height: 44px;
+    padding: 6px 14px;
+    gap: 10px;
+  }
+
+  .project-strip::before {
+    left: 14px;
+  }
+
+  .project-strip-status {
+    gap: 7px;
+  }
+
+  .project-strip-status > span:nth-child(2) {
+    display: none;
+  }
+
+  .project-strip-actions button {
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+  }
+
+  .project-strip-actions button span {
     display: none;
   }
 
