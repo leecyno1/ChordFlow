@@ -1,3 +1,4 @@
+import { Lock, RefreshCw, Unlock } from "lucide-react";
 import { functionColor, harmonicFunction } from "../domain/music";
 import { getVoicingProfile } from "../domain/production";
 import type { Arrangement } from "../domain/types";
@@ -8,6 +9,8 @@ interface ArrangementTimelineProps {
   activeChord: number;
   playingPosition?: { section: number; chord: number } | null;
   onSelect: (sectionIndex: number, chordIndex: number) => void;
+  onToggleLock: (symbol: string) => void;
+  onRegenerateTheme: (symbol: string) => void;
 }
 
 export function ArrangementTimeline({
@@ -15,8 +18,14 @@ export function ArrangementTimeline({
   activeSection,
   activeChord,
   playingPosition,
-  onSelect
+  onSelect,
+  onToggleLock,
+  onRegenerateTheme
 }: ArrangementTimelineProps) {
+  const themeCount = new Set(
+    arrangement.sections.map((section) => section.symbol)
+  ).size;
+
   return (
     <section className="timeline-panel">
       <div className="section-heading">
@@ -30,6 +39,9 @@ export function ArrangementTimeline({
           小节 · {arrangement.production.tempoBpm} BPM ·{" "}
           {arrangement.production.timeSignature} ·{" "}
           {getVoicingProfile(arrangement.production.voicingMode).label}声部
+          {arrangement.lockedSymbols.length > 0
+            ? ` · 锁定 ${arrangement.lockedSymbols.length}/${themeCount}`
+            : ""}
         </div>
       </div>
       <div className="timeline-scroll">
@@ -38,14 +50,17 @@ export function ArrangementTimeline({
             <article
               className={
                 "timeline-section " +
-                (sectionIndex === activeSection ? "active" : "")
+                (sectionIndex === activeSection ? "active " : "") +
+                (arrangement.lockedSymbols.includes(section.symbol)
+                  ? "locked"
+                  : "")
               }
               key={section.id}
               style={{ "--section-energy": section.energy + "%" } as React.CSSProperties}
             >
               <div className="timeline-section-head">
                 <span className="timeline-symbol">{section.symbol}</span>
-                <div>
+                <div className="timeline-section-copy">
                   <strong>{section.title}</strong>
                   <small>
                     {section.transitionLabel
@@ -53,6 +68,43 @@ export function ArrangementTimeline({
                       : section.variationLabel || "主题原型"}{" "}
                     · 能量 {section.energy}
                   </small>
+                </div>
+                <div className="timeline-theme-actions">
+                  <button
+                    type="button"
+                    className={
+                      "timeline-lock " +
+                      (arrangement.lockedSymbols.includes(section.symbol)
+                        ? "active"
+                        : "")
+                    }
+                    onClick={() => onToggleLock(section.symbol)}
+                    aria-label={
+                      arrangement.lockedSymbols.includes(section.symbol)
+                        ? `解锁 ${section.symbol} 主题`
+                        : `锁定 ${section.symbol} 主题`
+                    }
+                    title={
+                      arrangement.lockedSymbols.includes(section.symbol)
+                        ? "解锁同字母主题"
+                        : "锁定同字母主题"
+                    }
+                  >
+                    {arrangement.lockedSymbols.includes(section.symbol) ? (
+                      <Lock size={12} />
+                    ) : (
+                      <Unlock size={12} />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRegenerateTheme(section.symbol)}
+                    disabled={arrangement.lockedSymbols.includes(section.symbol)}
+                    aria-label={`重新生成 ${section.symbol} 主题`}
+                    title="同步更新所有同字母段落"
+                  >
+                    <RefreshCw size={12} />
+                  </button>
                 </div>
               </div>
               <div className="timeline-chords">

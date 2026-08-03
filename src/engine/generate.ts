@@ -160,9 +160,95 @@ export function generateArrangement(options: {
     style: options.style,
     surprise: options.surprise,
     seed: options.seed,
+    lockedSymbols: [],
     production: normalizeProductionSettings(options.production),
     sections,
     generatedAt: new Date().toISOString()
+  };
+}
+
+export function regenerateSectionIdentity(
+  arrangement: Arrangement,
+  rawSymbol: string,
+  seed: number
+): Arrangement {
+  const symbol = rawSymbol.toUpperCase();
+  const targetSections = arrangement.sections.filter(
+    (section) => section.symbol === symbol
+  );
+  if (
+    targetSections.length === 0 ||
+    arrangement.lockedSymbols.includes(symbol)
+  ) {
+    return arrangement;
+  }
+
+  const random = mulberry32(seed);
+  const role = targetSections[0].role;
+  const excludedIds = [...new Set(
+    arrangement.sections.map((section) => section.templateId)
+  )];
+  const template = selectTemplate(
+    arrangement.mode,
+    role,
+    arrangement.style,
+    arrangement.surprise,
+    random,
+    excludedIds
+  );
+
+  return {
+    ...arrangement,
+    seed,
+    sections: arrangement.sections.map((section, index) => {
+      if (section.symbol !== symbol) return section;
+      const variation = variationFor(
+        template.numerals,
+        section.occurrence,
+        arrangement.mode,
+        index === arrangement.sections.length - 1
+      );
+      return {
+        ...section,
+        templateId: template.id,
+        numerals: variation.numerals,
+        chords: variation.numerals.map((roman) =>
+          romanToChord(arrangement.key, arrangement.mode, roman)
+        ),
+        energy: Math.round(
+          (template.energy + ROLE_META[role].targetEnergy) / 2
+        ),
+        variationLabel: variation.label,
+        transitionLabel: undefined
+      };
+    }),
+    generatedAt: new Date().toISOString()
+  };
+}
+
+export function preserveLockedSections(
+  current: Arrangement,
+  regenerated: Arrangement
+): Arrangement {
+  const locked = new Set(current.lockedSymbols);
+  const lockedSections = new Map(
+    current.sections
+      .filter((section) => locked.has(section.symbol))
+      .map(
+        (section): [string, typeof section] => [
+          `${section.symbol}:${section.occurrence}`,
+          section
+        ]
+      )
+  );
+
+  return {
+    ...regenerated,
+    lockedSymbols: [...current.lockedSymbols],
+    sections: regenerated.sections.map(
+      (section) =>
+        lockedSections.get(`${section.symbol}:${section.occurrence}`) ?? section
+    )
   };
 }
 

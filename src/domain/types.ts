@@ -70,6 +70,7 @@ export interface Arrangement {
   style: string;
   surprise: number;
   seed: number;
+  lockedSymbols: string[];
   production: ProductionSettings;
   sections: SongSection[];
   generatedAt: string;

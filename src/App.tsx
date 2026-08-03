@@ -56,6 +56,8 @@ import type { Mode, ProductionSettings } from "./domain/types";
 import {
   generateArrangement,
   getNextCandidates,
+  preserveLockedSections,
+  regenerateSectionIdentity,
   replaceChord,
   transposeArrangement
 } from "./engine/generate";
@@ -112,6 +114,10 @@ function App() {
     () => getTransitionSuggestions(arrangement, activeSection),
     [arrangement, activeSection]
   );
+  const themeCount = new Set(
+    arrangement.sections.map((item) => item.symbol)
+  ).size;
+  const allThemesLocked = arrangement.lockedSymbols.length >= themeCount;
 
   function regenerate(nextSeed = Math.floor(Math.random() * 999999)) {
     const next = generateArrangement({
@@ -125,7 +131,7 @@ function App() {
       production: arrangement.production
     });
     setSeed(nextSeed);
-    setArrangement(next);
+    setArrangement((current) => preserveLockedSections(current, next));
     setActiveSection(0);
     setActiveChord(0);
   }
@@ -231,6 +237,23 @@ function App() {
         ...changes
       })
     }));
+  }
+
+  function toggleThemeLock(symbol: string) {
+    setArrangement((current) => ({
+      ...current,
+      lockedSymbols: current.lockedSymbols.includes(symbol)
+        ? current.lockedSymbols.filter((item) => item !== symbol)
+        : [...current.lockedSymbols, symbol].sort()
+    }));
+  }
+
+  function regenerateTheme(symbol: string) {
+    const nextSeed = seed + 37 + symbol.charCodeAt(0);
+    setSeed(nextSeed);
+    setArrangement((current) =>
+      regenerateSectionIdentity(current, symbol, nextSeed)
+    );
   }
 
   async function togglePlayback() {
@@ -499,7 +522,13 @@ function App() {
                 <span>A 段会保留主题身份，B/C 段优先制造能量和色彩差异。</span>
               </div>
             </div>
-            <button type="button" className="generate-button" onClick={() => regenerate()}>
+            <button
+              type="button"
+              className="generate-button"
+              onClick={() => regenerate()}
+              disabled={allThemesLocked}
+              title={allThemesLocked ? "所有主题均已锁定" : "重新生成未锁定主题"}
+            >
               <RefreshCw size={16} />
               重新编织
             </button>
@@ -669,6 +698,8 @@ function App() {
           setActiveChord(chordIndex);
           void auditionChord(arrangement.sections[sectionIndex].chords[chordIndex]);
         }}
+        onToggleLock={toggleThemeLock}
+        onRegenerateTheme={regenerateTheme}
       />
 
       <SunoBridge
