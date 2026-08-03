@@ -1,11 +1,13 @@
 import { PROGRESSIONS } from "./catalog";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
+  getVoicingProfile,
   harmonicRhythmLabel
 } from "./production";
+import { buildVoicingPlan } from "./voicing";
 import type { Arrangement, SectionRole } from "./types";
 
-export const SUNO_BRIDGE_VERSION = "0.2";
+export const SUNO_BRIDGE_VERSION = "0.3";
 export const DEFAULT_TEMPO_BPM = DEFAULT_PRODUCTION_SETTINGS.tempoBpm;
 
 interface StyleProfile {
@@ -24,6 +26,8 @@ export interface SunoSectionPrompt {
   energy: number;
   chords: string[];
   numerals: string[];
+  voicings: string[];
+  bassLine: string[];
   direction: string;
 }
 
@@ -37,6 +41,8 @@ export interface SunoPromptKit {
   tempoBpm: number;
   timeSignature: Arrangement["production"]["timeSignature"];
   barsPerSection: number;
+  voicingMode: Arrangement["production"]["voicingMode"];
+  voicingLabel: string;
   stylePromptEn: string;
   stylePromptZh: string;
   chordBlueprint: string;
@@ -208,8 +214,10 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   const modeEn = arrangement.mode === "major" ? "major" : "minor";
   const modeZh = arrangement.mode === "major" ? "大调" : "小调";
   const { tempoBpm, timeSignature, barsPerSection } = arrangement.production;
+  const voicingProfile = getVoicingProfile(arrangement.production.voicingMode);
+  const voicingPlan = buildVoicingPlan(arrangement);
 
-  const sections: SunoSectionPrompt[] = arrangement.sections.map((section) => {
+  const sections: SunoSectionPrompt[] = arrangement.sections.map((section, sectionIndex) => {
     const variation = section.variationLabel
       ? VARIATION_EN[section.variationLabel] ?? section.variationLabel
       : "theme statement";
@@ -224,6 +232,12 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
       energy: section.energy,
       chords: section.chords,
       numerals: section.numerals,
+      voicings: voicingPlan.sections[sectionIndex].map(
+        (voicing) => voicing.displayChord
+      ),
+      bassLine: voicingPlan.sections[sectionIndex].map(
+        (voicing) => voicing.bassNote
+      ),
       direction: `${ROLE_DIRECTION[section.role]}; ${variation}.${transition}`
     };
   });
@@ -236,6 +250,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `${arrangement.key} ${modeEn}`,
     profile.instrumentationEn,
     profile.productionEn,
+    voicingProfile.directionEn,
     novelty.en
   ]
     .filter(Boolean)
@@ -249,6 +264,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `${arrangement.key} ${modeZh}`,
     profile.instrumentationZh,
     profile.productionZh,
+    voicingProfile.directionZh,
     novelty.zh
   ]
     .filter(Boolean)
@@ -258,6 +274,8 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100]`,
     `Chords: ${section.chords.join(" - ")}`,
     `Harmony: ${section.numerals.join(" - ")}`,
+    `Voicing guide: ${section.voicings.join(" - ")}`,
+    `Bass guide: ${section.bassLine.join(" - ")}`,
     `Harmonic rhythm: ${harmonicRhythmLabel(arrangement.production, section.chords.length)}`,
     `Direction: ${section.direction}`,
     ""
@@ -267,6 +285,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `SONG FORM: ${arrangement.formPattern}`,
     `KEY: ${arrangement.key} ${modeEn} | TEMPO: ${tempoBpm} BPM | METER: ${timeSignature}`,
     `STYLE: ${profile.en}`,
+    `VOICING MODE: ${voicingProfile.label} / ${voicingProfile.code}`,
     "",
     ...sectionLines,
     "ARRANGEMENT RULE: Keep repeated letter sections recognizable. Let the chorus feel wider than the verse, and make the bridge provide contrast before the final return. Preserve the listed chord order as the harmonic reference."
@@ -282,6 +301,8 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     tempoBpm,
     timeSignature,
     barsPerSection,
+    voicingMode: arrangement.production.voicingMode,
+    voicingLabel: voicingProfile.label,
     stylePromptEn,
     stylePromptZh,
     chordBlueprint,

@@ -1,10 +1,11 @@
 import { Midi } from "@tonejs/midi";
-import { chordNoteNames, noteNameToMidi } from "../domain/music";
+import { chordNoteNames } from "../domain/music";
 import {
   chordLengthInBars,
   quarterNotesPerBar,
   timeSignatureParts
 } from "../domain/production";
+import { buildVoicingPlan } from "../domain/voicing";
 import type { Arrangement } from "../domain/types";
 
 let synth: any = null;
@@ -73,6 +74,7 @@ export async function playArrangement(
   playbackTimers = [];
   instrument.releaseAll();
   const startDelayMs = 80;
+  const voicingPlan = buildVoicingPlan(arrangement);
   let elapsedSeconds = 0;
 
   arrangement.sections.forEach((section, sectionIndex) => {
@@ -80,11 +82,12 @@ export async function playArrangement(
       (60 / arrangement.production.tempoBpm) *
       quarterNotesPerBar(arrangement.production.timeSignature) *
       chordLengthInBars(arrangement.production, section.chords.length);
-    section.chords.forEach((chord, chordIndex) => {
+    section.chords.forEach((_chord, chordIndex) => {
+      const voicing = voicingPlan.sections[sectionIndex][chordIndex];
       const timer = window.setTimeout(() => {
         if (playbackRun !== run) return;
         instrument.triggerAttackRelease(
-          chordNoteNames(chord, 3),
+          [voicing.bassNote, ...voicing.noteNames],
           stepDuration * 0.9
         );
         onStep?.(sectionIndex, chordIndex);
@@ -132,26 +135,36 @@ export function buildMidi(arrangement: Arrangement): Midi {
     timeSignature: timeSignatureParts(arrangement.production.timeSignature)
   });
   midi.header.update();
-  const track = midi.addTrack();
-  track.name = "ChordFlow Harmony";
+  const voicingPlan = buildVoicingPlan(arrangement);
+  const harmonyTrack = midi.addTrack();
+  harmonyTrack.name = "ChordFlow Harmony";
+  const bassTrack = midi.addTrack();
+  bassTrack.name = "ChordFlow Bass Guide";
   const ticksPerBar =
     midi.header.ppq *
     quarterNotesPerBar(arrangement.production.timeSignature);
   let ticks = 0;
 
-  arrangement.sections.forEach((section) => {
+  arrangement.sections.forEach((section, sectionIndex) => {
     const durationTicks = Math.round(
       (ticksPerBar * arrangement.production.barsPerSection) /
         Math.max(1, section.chords.length)
     );
-    section.chords.forEach((chord) => {
-      chordNoteNames(chord, 3).forEach((note) => {
-        track.addNote({
-          midi: noteNameToMidi(note),
+    section.chords.forEach((_chord, chordIndex) => {
+      const voicing = voicingPlan.sections[sectionIndex][chordIndex];
+      voicing.midiNotes.forEach((midiNote) => {
+        harmonyTrack.addNote({
+          midi: midiNote,
           ticks,
           durationTicks,
           velocity: 0.72
         });
+      });
+      bassTrack.addNote({
+        midi: voicing.bassMidi,
+        ticks,
+        durationTicks,
+        velocity: 0.68
       });
       ticks += durationTicks;
     });

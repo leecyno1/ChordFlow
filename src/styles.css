@@ -2482,6 +2482,62 @@ select {
   background: var(--amber);
 }
 
+.suno-voicing-control {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 66px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.suno-voicing-control > span {
+  color: #66635d;
+  font: 6px var(--mono);
+  letter-spacing: .08em;
+}
+
+.suno-voicing-control > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.suno-voicing-control button {
+  min-width: 0;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: #706d67;
+  background: rgba(0, 0, 0, 0.13);
+  cursor: pointer;
+}
+
+.suno-voicing-control button strong {
+  font-size: 7px;
+}
+
+.suno-voicing-control button small {
+  color: #4d4b47;
+  font: 5px var(--mono);
+}
+
+.suno-voicing-control button.active {
+  color: #171109;
+  border-color: var(--amber);
+  background: var(--amber);
+}
+
+.suno-voicing-control button.active small {
+  color: rgba(23, 17, 9, 0.55);
+}
+
 .suno-prompt-card {
   margin: 12px 16px 0;
   padding: 14px;
@@ -2992,6 +3048,14 @@ select {
 
   .suno-production-title {
     grid-column: 1 / -1;
+  }
+
+  .suno-voicing-control {
+    grid-template-columns: 52px 1fr;
+  }
+
+  .suno-voicing-control button {
+    padding: 0 6px;
   }
 
   .suno-accuracy-note {

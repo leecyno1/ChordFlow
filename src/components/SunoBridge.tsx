@@ -6,7 +6,8 @@ import {
 } from "../domain/suno";
 import {
   SECTION_BAR_OPTIONS,
-  TIME_SIGNATURES
+  TIME_SIGNATURES,
+  VOICING_PROFILES
 } from "../domain/production";
 import type {
   Arrangement,
@@ -27,10 +28,25 @@ type PromptLanguage = "en" | "zh";
 async function copyText(value: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     try {
-      await navigator.clipboard.writeText(value);
+      await new Promise<void>((resolve, reject) => {
+        const timeout = window.setTimeout(
+          () => reject(new Error("Clipboard write timed out")),
+          280
+        );
+        navigator.clipboard.writeText(value).then(
+          () => {
+            window.clearTimeout(timeout);
+            resolve();
+          },
+          (error) => {
+            window.clearTimeout(timeout);
+            reject(error);
+          }
+        );
+      });
       return;
     } catch {
-      // Some embedded browsers expose Clipboard API but deny permission.
+      // Some embedded browsers expose Clipboard API but deny or stall writes.
       // Fall through to the local textarea copy path in that case.
     }
   }
@@ -211,6 +227,31 @@ export function SunoBridge({
                   onClick={() => onProductionChange({ barsPerSection: bars })}
                 >
                   {bars}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="suno-voicing-control">
+            <span>声部路径</span>
+            <div aria-label="声部路径">
+              {VOICING_PROFILES.map((profile) => (
+                <button
+                  type="button"
+                  key={profile.id}
+                  className={
+                    arrangement.production.voicingMode === profile.id
+                      ? "active"
+                      : ""
+                  }
+                  aria-pressed={
+                    arrangement.production.voicingMode === profile.id
+                  }
+                  onClick={() =>
+                    onProductionChange({ voicingMode: profile.id })
+                  }
+                >
+                  <strong>{profile.label}</strong>
+                  <small>{profile.code}</small>
                 </button>
               ))}
             </div>

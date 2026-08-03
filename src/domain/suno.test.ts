@@ -58,7 +58,8 @@ describe("Suno Bridge prompt kit", () => {
       production: {
         tempoBpm: 118,
         timeSignature: "6/8",
-        barsPerSection: 8
+        barsPerSection: 8,
+        voicingMode: "dramatic"
       }
     });
     const kit = buildSunoPromptKit(arrangement);
@@ -66,10 +67,14 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.tempoBpm).toBe(118);
     expect(kit.timeSignature).toBe("6/8");
     expect(kit.barsPerSection).toBe(8);
+    expect(kit.voicingMode).toBe("dramatic");
     expect(kit.stylePromptEn).toContain("118 BPM");
     expect(kit.stylePromptEn).toContain("6/8 meter");
     expect(kit.chordBlueprint).toContain("METER: 6/8");
     expect(kit.chordBlueprint).toContain("8 bars");
     expect(kit.chordBlueprint).toContain("2 bars per chord");
+    expect(kit.chordBlueprint).toContain("VOICING MODE: 戏剧 / WIDE");
+    expect(kit.chordBlueprint).toContain("Voicing guide:");
+    expect(kit.chordBlueprint).toContain("Bass guide:");
   });
 });

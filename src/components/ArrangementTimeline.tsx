@@ -1,4 +1,5 @@
 import { functionColor, harmonicFunction } from "../domain/music";
+import { getVoicingProfile } from "../domain/production";
 import type { Arrangement } from "../domain/types";
 
 interface ArrangementTimelineProps {
@@ -27,7 +28,8 @@ export function ArrangementTimeline({
           {arrangement.formPattern} · {arrangement.sections.length} 段 ·{" "}
           {arrangement.sections.length * arrangement.production.barsPerSection}{" "}
           小节 · {arrangement.production.tempoBpm} BPM ·{" "}
-          {arrangement.production.timeSignature}
+          {arrangement.production.timeSignature} ·{" "}
+          {getVoicingProfile(arrangement.production.voicingMode).label}声部
         </div>
       </div>
       <div className="timeline-scroll">
