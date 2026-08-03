@@ -217,6 +217,7 @@ select {
 
 .icon-button,
 .export-button,
+.suno-launch,
 .play-button {
   height: 38px;
   border-radius: 7px;
@@ -239,6 +240,13 @@ select {
   padding: 0 13px;
 }
 
+.suno-launch {
+  padding: 0 13px;
+  color: var(--cyan);
+  border-color: rgba(78, 216, 208, 0.24);
+  background: rgba(78, 216, 208, 0.055);
+}
+
 .play-button {
   min-width: 112px;
   padding: 0 15px;
@@ -250,9 +258,16 @@ select {
 }
 
 .icon-button:hover,
-.export-button:hover {
+.export-button:hover,
+.suno-launch:hover {
   border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.07);
+}
+
+.suno-launch:hover {
+  color: #8ff4ed;
+  border-color: rgba(78, 216, 208, 0.42);
+  box-shadow: 0 0 18px rgba(78, 216, 208, 0.08);
 }
 
 .play-button:hover {
@@ -2249,6 +2264,296 @@ select {
   opacity: 0.7;
 }
 
+.suno-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px;
+  background: rgba(2, 3, 5, 0.68);
+  backdrop-filter: blur(10px);
+  animation: sunoFadeIn 180ms ease-out both;
+}
+
+.suno-bridge {
+  width: min(510px, calc(100vw - 28px));
+  height: calc(100vh - 28px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(78, 216, 208, 0.2);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 88% 7%, rgba(78, 216, 208, 0.09), transparent 18rem),
+    radial-gradient(circle at 12% 82%, rgba(255, 107, 120, 0.055), transparent 20rem),
+    #0c0d11;
+  box-shadow:
+    -28px 0 70px rgba(0, 0, 0, 0.52),
+    inset 0 0 70px rgba(255, 255, 255, 0.012);
+  animation: sunoSlideIn 260ms cubic-bezier(.2, .78, .24, 1) both;
+}
+
+@keyframes sunoFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sunoSlideIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.suno-bridge-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 20px 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.suno-bridge-head h2 {
+  margin: 7px 0 4px;
+  font: 500 25px var(--display);
+  letter-spacing: .025em;
+}
+
+.suno-bridge-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.suno-close {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: #74716d;
+  background: rgba(255, 255, 255, 0.025);
+  cursor: pointer;
+}
+
+.suno-close:hover {
+  color: var(--ivory);
+  border-color: var(--line-strong);
+}
+
+.suno-signal-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.suno-signal-strip span {
+  min-width: 0;
+  padding: 11px 7px;
+  border-right: 1px solid var(--line);
+  color: #555450;
+  text-align: center;
+  font: 6px var(--mono);
+}
+
+.suno-signal-strip span:first-child {
+  padding-left: 0;
+}
+
+.suno-signal-strip span:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.suno-signal-strip b {
+  display: block;
+  margin-bottom: 3px;
+  overflow: hidden;
+  color: #aaa7a1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 8px var(--mono);
+}
+
+.suno-prompt-card {
+  margin: 12px 16px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.suno-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.suno-card-head span,
+.suno-card-head strong {
+  display: block;
+}
+
+.suno-card-head span {
+  color: var(--cyan);
+  font: 6px var(--mono);
+  letter-spacing: .13em;
+}
+
+.suno-card-head strong {
+  margin-top: 4px;
+  color: #a6a39d;
+  font-size: 9px;
+}
+
+.suno-card-head > small {
+  color: #555450;
+  font: 6px var(--mono);
+}
+
+.suno-language-switch {
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.suno-language-switch button {
+  min-width: 30px;
+  height: 25px;
+  border: 0;
+  border-radius: 3px;
+  color: #5d5b57;
+  background: transparent;
+  cursor: pointer;
+  font: 7px var(--mono);
+}
+
+.suno-language-switch button.active {
+  color: #071110;
+  background: var(--cyan);
+}
+
+.suno-style-prompt {
+  margin: 13px 0 11px;
+  color: #c4c0b8;
+  font: 9px/1.75 var(--mono);
+}
+
+.suno-copy {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid rgba(78, 216, 208, 0.18);
+  border-radius: 5px;
+  color: var(--cyan);
+  background: rgba(78, 216, 208, 0.04);
+  cursor: pointer;
+  font-size: 7px;
+}
+
+.suno-copy:hover {
+  background: rgba(78, 216, 208, 0.09);
+}
+
+.suno-blueprint-card {
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.suno-blueprint-card pre {
+  min-height: 130px;
+  flex: 1;
+  overflow: auto;
+  margin: 12px 0 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+  color: #918e88;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(255, 255, 255, 0.018) 23px 24px),
+    rgba(0, 0, 0, 0.18);
+  white-space: pre-wrap;
+  font: 7px/1.75 var(--mono);
+}
+
+.suno-blueprint-card pre::-webkit-scrollbar {
+  width: 5px;
+}
+
+.suno-blueprint-card pre::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: #303136;
+}
+
+.suno-accuracy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 16px 0;
+  padding: 9px 11px;
+  border-left: 2px solid var(--amber);
+  color: #625f5a;
+  background: linear-gradient(90deg, rgba(244, 184, 96, 0.045), transparent);
+}
+
+.suno-accuracy-note svg {
+  flex: 0 0 auto;
+  color: var(--amber);
+}
+
+.suno-accuracy-note p {
+  margin: 0;
+  font-size: 7px;
+  line-height: 1.65;
+}
+
+.suno-bridge-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.15fr;
+  gap: 7px;
+  padding: 12px 16px 16px;
+}
+
+.suno-bridge-actions button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: #85827d;
+  background: rgba(255, 255, 255, 0.025);
+  cursor: pointer;
+  font-size: 8px;
+}
+
+.suno-bridge-actions button:hover {
+  color: var(--ivory);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.suno-bridge-actions .suno-download {
+  color: #071110;
+  border-color: var(--cyan);
+  background: var(--cyan);
+  font-weight: 700;
+}
+
+.suno-bridge-actions .suno-download:hover {
+  color: #071110;
+  background: #72e8e1;
+}
+
 .footer {
   height: 38px;
   padding: 0 22px;
@@ -2454,6 +2759,11 @@ select {
   .atlas-patterns-label {
     min-height: 54px;
   }
+
+  .suno-bridge {
+    width: min(500px, calc(100vw - 16px));
+    height: calc(100vh - 16px);
+  }
 }
 
 @media (max-width: 560px) {
@@ -2469,6 +2779,12 @@ select {
   .play-button {
     min-width: 86px;
     padding: 0 10px;
+  }
+
+  .suno-launch {
+    width: 38px;
+    padding: 0;
+    font-size: 0;
   }
 
   .form-list,
@@ -2534,6 +2850,48 @@ select {
 
   .atlas-method-note {
     align-items: flex-start;
+  }
+
+  .suno-overlay {
+    padding: 6px;
+  }
+
+  .suno-bridge {
+    width: calc(100vw - 12px);
+    height: calc(100vh - 12px);
+    border-radius: 9px;
+  }
+
+  .suno-bridge-head {
+    padding: 16px 14px 12px;
+  }
+
+  .suno-bridge-head h2 {
+    font-size: 22px;
+  }
+
+  .suno-signal-strip {
+    padding: 0 14px;
+  }
+
+  .suno-prompt-card {
+    margin-right: 10px;
+    margin-left: 10px;
+    padding: 12px;
+  }
+
+  .suno-accuracy-note {
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  .suno-bridge-actions {
+    grid-template-columns: 1fr 1fr;
+    padding: 10px;
+  }
+
+  .suno-bridge-actions .suno-download {
+    grid-column: 1 / -1;
   }
 
   .corpus-status {

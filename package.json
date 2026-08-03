@@ -1,7 +1,7 @@
 {
   "name": "chordflow",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "结构驱动、语料增强的音乐和弦生成器，为主歌、副歌与桥段生成可解释的完整和声方案。",
   "type": "module",
   "scripts": {

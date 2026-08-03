@@ -29,6 +29,7 @@ import { ArrangementTimeline } from "./components/ArrangementTimeline";
 import { ChordRiver } from "./components/ChordRiver";
 import { FifthsLens } from "./components/FifthsLens";
 import { FormAtlas } from "./components/FormAtlas";
+import { SunoBridge } from "./components/SunoBridge";
 import { TransitionWorkshop } from "./components/TransitionWorkshop";
 import {
   FORM_PRESETS,
@@ -87,6 +88,7 @@ function App() {
   const [activeSection, setActiveSection] = useState(0);
   const [activeChord, setActiveChord] = useState(0);
   const [view, setView] = useState<ViewMode>("river");
+  const [sunoOpen, setSunoOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [playingPosition, setPlayingPosition] = useState<{
     section: number;
@@ -295,6 +297,14 @@ function App() {
           <button type="button" className="export-button" onClick={() => exportMidi(arrangement)}>
             <Download size={16} />
             导出 MIDI
+          </button>
+          <button
+            type="button"
+            className="suno-launch"
+            onClick={() => setSunoOpen(true)}
+          >
+            <WandSparkles size={16} />
+            Suno Kit
           </button>
           <button type="button" className="play-button" onClick={togglePlayback}>
             {playing ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" />}
@@ -632,6 +642,13 @@ function App() {
           setActiveChord(chordIndex);
           void auditionChord(arrangement.sections[sectionIndex].chords[chordIndex]);
         }}
+      />
+
+      <SunoBridge
+        open={sunoOpen}
+        arrangement={arrangement}
+        onClose={() => setSunoOpen(false)}
+        onExportMidi={() => exportMidi(arrangement)}
       />
 
       <footer className="footer">
