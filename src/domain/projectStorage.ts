@@ -1,6 +1,9 @@
 import { bassOverrideKey } from "./bass";
 import { chordPitchClasses, DISPLAY_KEYS, romanToChord } from "./music";
-import { normalizeProductionSettings } from "./production";
+import {
+  normalizeProductionSettings,
+  pruneSectionProductionOverrides
+} from "./production";
 import type {
   Arrangement,
   Mode,
@@ -142,8 +145,11 @@ function normalizeArrangement(value: unknown): Arrangement | null {
     seed: Math.round(value.seed),
     lockedSymbols,
     bassOverrides: normalizeBassOverrides(value.bassOverrides, sections),
-    production: normalizeProductionSettings(
-      isRecord(value.production) ? value.production : undefined
+    production: pruneSectionProductionOverrides(
+      normalizeProductionSettings(
+        isRecord(value.production) ? value.production : undefined
+      ),
+      sections
     ),
     sections,
     generatedAt:

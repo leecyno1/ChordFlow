@@ -3,11 +3,17 @@ export type Mode = "major" | "minor";
 export type TimeSignature = "4/4" | "3/4" | "6/8";
 export type VoicingMode = "stable" | "flowing" | "dramatic";
 
+export interface SectionProductionOverride {
+  energy: number;
+  voicingMode: VoicingMode;
+}
+
 export interface ProductionSettings {
   tempoBpm: number;
   timeSignature: TimeSignature;
   barsPerSection: number;
   voicingMode: VoicingMode;
+  sectionOverrides: Record<string, SectionProductionOverride>;
 }
 
 export type SectionRole =

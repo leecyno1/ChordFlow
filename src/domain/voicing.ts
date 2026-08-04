@@ -1,5 +1,6 @@
 import { chordPitchClasses } from "./music";
 import { bassOverrideKey } from "./bass";
+import { effectiveSectionProductionAt } from "./production";
 import type { Arrangement, VoicingMode } from "./types";
 
 const SHARP_NAMES = [
@@ -56,6 +57,7 @@ export interface ChordVoicing {
 
 export interface VoicingPlan {
   mode: VoicingMode;
+  sectionModes: VoicingMode[];
   chords: ChordVoicing[];
   sections: ChordVoicing[][];
 }
@@ -257,15 +259,21 @@ export function buildVoicingPlan(arrangement: Arrangement): VoicingPlan {
   const mode = arrangement.production.voicingMode;
   const chords: ChordVoicing[] = [];
   const sections: ChordVoicing[][] = [];
+  const sectionModes: VoicingMode[] = [];
   let previousNotes: number[] | null = null;
   let previousBass: number | null = null;
   let globalIndex = 0;
 
   arrangement.sections.forEach((section, sectionIndex) => {
+    const sectionMode = effectiveSectionProductionAt(
+      arrangement,
+      sectionIndex
+    ).voicingMode;
+    sectionModes.push(sectionMode);
     const sectionVoicings = section.chords.map((chord, chordIndex) => {
       let candidate = chooseCandidate(
         chord,
-        mode,
+        sectionMode,
         globalIndex,
         chordIndex === 0,
         previousNotes,
@@ -297,7 +305,7 @@ export function buildVoicingPlan(arrangement: Arrangement): VoicingPlan {
       const bassMidi = chooseBass(
         bassPitchClass,
         previousBass,
-        mode,
+        sectionMode,
         globalIndex
       );
       const voicing: ChordVoicing = {
@@ -326,7 +334,7 @@ export function buildVoicingPlan(arrangement: Arrangement): VoicingPlan {
     sections.push(sectionVoicings);
   });
 
-  return { mode, chords, sections };
+  return { mode, sectionModes, chords, sections };
 }
 
 export function voicingMotion(plan: VoicingPlan): number {

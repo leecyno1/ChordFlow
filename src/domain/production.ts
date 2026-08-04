@@ -1,5 +1,8 @@
 import type {
+  Arrangement,
   ProductionSettings,
+  SectionProductionOverride,
+  SongSection,
   TimeSignature,
   VoicingMode
 } from "./types";
@@ -8,7 +11,8 @@ export const DEFAULT_PRODUCTION_SETTINGS: ProductionSettings = {
   tempoBpm: 92,
   timeSignature: "4/4",
   barsPerSection: 4,
-  voicingMode: "flowing"
+  voicingMode: "flowing",
+  sectionOverrides: {}
 };
 
 export const TIME_SIGNATURES: TimeSignature[] = ["4/4", "3/4", "6/8"];
@@ -43,6 +47,46 @@ export const VOICING_PROFILES: Array<{
   }
 ];
 
+export interface EffectiveSectionProduction
+  extends SectionProductionOverride {
+  locked: boolean;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isVoicingMode(value: unknown): value is VoicingMode {
+  return VOICING_PROFILES.some((profile) => profile.id === value);
+}
+
+function normalizeEnergy(value: number): number {
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function normalizeSectionOverrides(
+  value: unknown
+): Record<string, SectionProductionOverride> {
+  if (!isRecord(value)) return {};
+  const entries: Array<[string, SectionProductionOverride]> = [];
+
+  Object.entries(value).forEach(([key, rawOverride]) => {
+    if (!/^[A-D]:\d+$/.test(key) || !isRecord(rawOverride)) return;
+    const energy = rawOverride.energy;
+    const voicingMode = rawOverride.voicingMode;
+    if (
+      typeof energy !== "number" ||
+      !Number.isFinite(energy) ||
+      !isVoicingMode(voicingMode)
+    ) {
+      return;
+    }
+    entries.push([key, { energy: normalizeEnergy(energy), voicingMode }]);
+  });
+
+  return Object.fromEntries(entries);
+}
+
 export function normalizeProductionSettings(
   settings?: Partial<ProductionSettings>
 ): ProductionSettings {
@@ -57,9 +101,7 @@ export function normalizeProductionSettings(
   )
     ? (settings?.timeSignature as TimeSignature)
     : DEFAULT_PRODUCTION_SETTINGS.timeSignature;
-  const voicingMode = VOICING_PROFILES.some(
-    (profile) => profile.id === settings?.voicingMode
-  )
+  const voicingMode = isVoicingMode(settings?.voicingMode)
     ? (settings?.voicingMode as VoicingMode)
     : DEFAULT_PRODUCTION_SETTINGS.voicingMode;
 
@@ -69,7 +111,89 @@ export function normalizeProductionSettings(
     barsPerSection: SECTION_BAR_OPTIONS.includes(bars)
       ? bars
       : DEFAULT_PRODUCTION_SETTINGS.barsPerSection,
-    voicingMode
+    voicingMode,
+    sectionOverrides: normalizeSectionOverrides(settings?.sectionOverrides)
+  };
+}
+
+export function sectionProductionKey(
+  section: Pick<SongSection, "symbol" | "occurrence">
+): string {
+  return `${section.symbol.toUpperCase()}:${section.occurrence}`;
+}
+
+export function pruneSectionProductionOverrides(
+  production: ProductionSettings,
+  sections: Array<Pick<SongSection, "symbol" | "occurrence">>
+): ProductionSettings {
+  const availableKeys = new Set(sections.map(sectionProductionKey));
+  const sectionOverrides = Object.fromEntries(
+    Object.entries(production.sectionOverrides).filter(([key]) =>
+      availableKeys.has(key)
+    )
+  );
+  if (
+    Object.keys(sectionOverrides).length ===
+    Object.keys(production.sectionOverrides).length
+  ) {
+    return production;
+  }
+  return { ...production, sectionOverrides };
+}
+
+export function effectiveSectionProductionAt(
+  arrangement: Arrangement,
+  sectionIndex: number
+): EffectiveSectionProduction {
+  const section = arrangement.sections[sectionIndex];
+  const override = section
+    ? arrangement.production.sectionOverrides[sectionProductionKey(section)]
+    : undefined;
+
+  return {
+    energy: override?.energy ?? section?.energy ?? 50,
+    voicingMode:
+      override?.voicingMode ?? arrangement.production.voicingMode,
+    locked: override !== undefined
+  };
+}
+
+export function setSectionProductionOverride(
+  arrangement: Arrangement,
+  sectionIndex: number,
+  override: SectionProductionOverride | null
+): Arrangement {
+  const section = arrangement.sections[sectionIndex];
+  if (!section) return arrangement;
+
+  const key = sectionProductionKey(section);
+  const sectionOverrides = { ...arrangement.production.sectionOverrides };
+  if (override === null) {
+    if (!(key in sectionOverrides)) return arrangement;
+    delete sectionOverrides[key];
+  } else {
+    const nextOverride = {
+      energy: normalizeEnergy(override.energy),
+      voicingMode: isVoicingMode(override.voicingMode)
+        ? override.voicingMode
+        : arrangement.production.voicingMode
+    };
+    const current = sectionOverrides[key];
+    if (
+      current?.energy === nextOverride.energy &&
+      current.voicingMode === nextOverride.voicingMode
+    ) {
+      return arrangement;
+    }
+    sectionOverrides[key] = nextOverride;
+  }
+
+  return {
+    ...arrangement,
+    production: {
+      ...arrangement.production,
+      sectionOverrides
+    }
   };
 }
 

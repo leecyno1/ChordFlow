@@ -1,17 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Clock3, Copy, Download, Music2, X } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Clock3,
+  Copy,
+  Download,
+  Lock,
+  Music2,
+  SlidersHorizontal,
+  Unlock,
+  X
+} from "lucide-react";
 import {
   buildSunoPromptKit,
   serializeSunoPromptKit
 } from "../domain/suno";
 import {
+  effectiveSectionProductionAt,
   SECTION_BAR_OPTIONS,
   TIME_SIGNATURES,
   VOICING_PROFILES
 } from "../domain/production";
 import type {
   Arrangement,
-  ProductionSettings
+  ProductionSettings,
+  SectionProductionOverride
 } from "../domain/types";
 
 interface SunoBridgeProps {
@@ -20,6 +33,10 @@ interface SunoBridgeProps {
   onClose: () => void;
   onExportMidi: () => void;
   onProductionChange: (changes: Partial<ProductionSettings>) => void;
+  onSectionProductionChange: (
+    sectionIndex: number,
+    override: SectionProductionOverride | null
+  ) => void;
 }
 
 type CopyTarget = "style" | "blueprint" | "all";
@@ -79,7 +96,8 @@ export function SunoBridge({
   arrangement,
   onClose,
   onExportMidi,
-  onProductionChange
+  onProductionChange,
+  onSectionProductionChange
 }: SunoBridgeProps) {
   const kit = useMemo(() => buildSunoPromptKit(arrangement), [arrangement]);
   const [language, setLanguage] = useState<PromptLanguage>("en");
@@ -87,6 +105,7 @@ export function SunoBridge({
   const [tempoDraft, setTempoDraft] = useState(
     String(arrangement.production.tempoBpm)
   );
+  const [sectionControlsOpen, setSectionControlsOpen] = useState(true);
   const copyTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -167,12 +186,13 @@ export function SunoBridge({
           <span><b>{kit.barsPerSection}</b> BARS / SECTION</span>
         </div>
 
+        <div className="suno-bridge-body">
         <section className="suno-production-grid" aria-label="制作参数">
           <div className="suno-production-title">
             <Clock3 size={14} />
             <div>
               <span>00 · PRODUCTION GRID</span>
-              <strong>同步提示词与 MIDI</strong>
+              <strong>同步提示词、试听与 MIDI</strong>
             </div>
           </div>
           <label className="suno-tempo-field">
@@ -258,10 +278,162 @@ export function SunoBridge({
           </div>
         </section>
 
+        <section
+          className={
+            "suno-section-production " +
+            (sectionControlsOpen ? "open" : "")
+          }
+          aria-label="逐段制作参数"
+        >
+          <button
+            type="button"
+            className="suno-section-production-toggle"
+            onClick={() => setSectionControlsOpen((current) => !current)}
+            aria-expanded={sectionControlsOpen}
+          >
+            <SlidersHorizontal size={14} />
+            <div>
+              <span>01 · SECTION DYNAMICS</span>
+              <strong>
+                {kit.sectionOverrideCount > 0
+                  ? `${kit.sectionOverrideCount} 段已锁定`
+                  : "按段补足动态与声部反差"}
+              </strong>
+            </div>
+            <ChevronDown size={14} />
+          </button>
+
+          {sectionControlsOpen ? (
+            <div className="suno-section-production-list">
+              {arrangement.sections.map((section, sectionIndex) => {
+                const sectionProduction = effectiveSectionProductionAt(
+                  arrangement,
+                  sectionIndex
+                );
+                const sectionCode = `${section.symbol}${
+                  section.occurrence > 0 ? section.occurrence + 1 : ""
+                }`;
+                const setOverride = (
+                  changes: Partial<SectionProductionOverride>
+                ) =>
+                  onSectionProductionChange(sectionIndex, {
+                    energy: changes.energy ?? sectionProduction.energy,
+                    voicingMode:
+                      changes.voicingMode ?? sectionProduction.voicingMode
+                  });
+
+                return (
+                  <article
+                    className={
+                      "suno-section-production-card " +
+                      (sectionProduction.locked ? "locked" : "")
+                    }
+                    key={section.id}
+                  >
+                    <header>
+                      <span>{sectionCode}</span>
+                      <div>
+                        <strong>{section.title}</strong>
+                        <small>
+                          {sectionProduction.locked ? "LOCKED" : "FOLLOW"}
+                        </small>
+                      </div>
+                      <button
+                        type="button"
+                        className="suno-section-lock"
+                        onClick={() =>
+                          onSectionProductionChange(
+                            sectionIndex,
+                            sectionProduction.locked
+                              ? null
+                              : {
+                                  energy: sectionProduction.energy,
+                                  voicingMode: sectionProduction.voicingMode
+                                }
+                          )
+                        }
+                        aria-label={
+                          sectionProduction.locked
+                            ? `恢复 ${section.title} 的全局制作参数`
+                            : `锁定 ${section.title} 的制作参数`
+                        }
+                        aria-pressed={sectionProduction.locked}
+                      >
+                        {sectionProduction.locked ? (
+                          <Lock size={12} />
+                        ) : (
+                          <Unlock size={12} />
+                        )}
+                      </button>
+                    </header>
+
+                    <div className="suno-section-energy-control">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOverride({
+                            energy: Math.max(0, sectionProduction.energy - 5)
+                          })
+                        }
+                        aria-label={`降低 ${section.title} 能量`}
+                        disabled={sectionProduction.energy <= 0}
+                      >
+                        −
+                      </button>
+                      <span>
+                        <small>ENERGY</small>
+                        <strong>{sectionProduction.energy}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOverride({
+                            energy: Math.min(100, sectionProduction.energy + 5)
+                          })
+                        }
+                        aria-label={`提高 ${section.title} 能量`}
+                        disabled={sectionProduction.energy >= 100}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div
+                      className="suno-section-voicing-control"
+                      aria-label={`${section.title} 声部路径`}
+                    >
+                      {VOICING_PROFILES.map((profile) => (
+                        <button
+                          type="button"
+                          key={profile.id}
+                          className={
+                            sectionProduction.voicingMode === profile.id
+                              ? "active"
+                              : ""
+                          }
+                          onClick={() =>
+                            setOverride({ voicingMode: profile.id })
+                          }
+                          aria-label={`${section.title} 使用${profile.label}声部`}
+                          aria-pressed={
+                            sectionProduction.voicingMode === profile.id
+                          }
+                        >
+                          {profile.code}
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : null}
+        </section>
+
         <section className="suno-prompt-card suno-style-card">
           <div className="suno-card-head">
             <div>
-              <span>01 · STYLE FIELD</span>
+              <span>02 · STYLE FIELD</span>
               <strong>复制到 Suno 的 Style 输入框</strong>
             </div>
             <div className="suno-language-switch" aria-label="提示词语言">
@@ -295,7 +467,7 @@ export function SunoBridge({
         <section className="suno-prompt-card suno-blueprint-card">
           <div className="suno-card-head">
             <div>
-              <span>02 · CHORD BLUEPRINT</span>
+              <span>03 · CHORD BLUEPRINT</span>
               <strong>结构、和弦与段落能量参考</strong>
             </div>
             <small>{kit.sections.length} 段 · {kit.form}</small>
@@ -316,6 +488,7 @@ export function SunoBridge({
           <p>
             Suno 可能重新解释和弦指令。需要逐小节准确时，请同时导出 MIDI 作为制作参考。
           </p>
+        </div>
         </div>
 
         <footer className="suno-bridge-actions">

@@ -742,6 +742,11 @@ select {
   font: 9px var(--mono);
 }
 
+.section-energy.locked {
+  color: var(--cyan);
+  text-shadow: 0 0 9px rgba(78, 216, 208, 0.38);
+}
+
 .main-stage {
   min-width: 0;
   padding: 24px 24px 18px;
@@ -2501,6 +2506,22 @@ select {
   box-shadow: inset 0 0 28px rgba(244, 184, 96, 0.035);
 }
 
+.timeline-section.production-locked::after {
+  content: "MIX LOCK";
+  position: absolute;
+  right: 9px;
+  bottom: 7px;
+  color: rgba(78, 216, 208, 0.48);
+  font: 5px var(--mono);
+  letter-spacing: .12em;
+}
+
+.timeline-section.production-locked .energy-line {
+  height: 3px;
+  opacity: 1;
+  box-shadow: 0 0 8px rgba(78, 216, 208, 0.32);
+}
+
 .timeline-section-head {
   display: flex;
   gap: 8px;
@@ -2688,6 +2709,7 @@ select {
 }
 
 .suno-bridge-head {
+  flex: 0 0 auto;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -2727,6 +2749,7 @@ select {
 }
 
 .suno-signal-strip {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding: 0 20px;
@@ -2759,6 +2782,22 @@ select {
   text-overflow: ellipsis;
   white-space: nowrap;
   font: 500 8px var(--mono);
+}
+
+.suno-bridge-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.suno-bridge-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.suno-bridge-body::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: #2d3030;
 }
 
 .suno-production-grid {
@@ -2921,6 +2960,231 @@ select {
   color: rgba(23, 17, 9, 0.55);
 }
 
+.suno-section-production {
+  margin: 10px 16px 0;
+  overflow: hidden;
+  border: 1px solid rgba(78, 216, 208, 0.13);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(78, 216, 208, 0.035), transparent 46%),
+    rgba(255, 255, 255, 0.012);
+}
+
+.suno-section-production-toggle {
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 10px;
+  display: grid;
+  grid-template-columns: 16px 1fr 16px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  color: var(--cyan);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.suno-section-production-toggle > div {
+  min-width: 0;
+}
+
+.suno-section-production-toggle span,
+.suno-section-production-toggle strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suno-section-production-toggle span {
+  font: 6px var(--mono);
+  letter-spacing: .12em;
+}
+
+.suno-section-production-toggle strong {
+  margin-top: 3px;
+  color: #858580;
+  font-size: 8px;
+}
+
+.suno-section-production-toggle > svg:last-child {
+  color: #484b49;
+  transition: transform 180ms ease;
+}
+
+.suno-section-production.open .suno-section-production-toggle > svg:last-child {
+  transform: rotate(180deg);
+}
+
+.suno-section-production-list {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 0 8px 8px;
+  scroll-snap-type: x proximity;
+}
+
+.suno-section-production-list::-webkit-scrollbar {
+  height: 4px;
+}
+
+.suno-section-production-list::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #2d3130;
+}
+
+.suno-section-production-card {
+  min-width: 166px;
+  padding: 8px;
+  scroll-snap-align: start;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+  background: rgba(4, 6, 8, 0.52);
+  transition: 160ms ease;
+}
+
+.suno-section-production-card.locked {
+  border-color: rgba(78, 216, 208, 0.3);
+  background:
+    linear-gradient(135deg, rgba(78, 216, 208, 0.07), transparent 60%),
+    rgba(4, 6, 8, 0.68);
+  box-shadow: inset 2px 0 0 rgba(78, 216, 208, 0.72);
+}
+
+.suno-section-production-card header {
+  display: grid;
+  grid-template-columns: 22px 1fr 25px;
+  align-items: center;
+  gap: 6px;
+}
+
+.suno-section-production-card header > span {
+  color: var(--ivory);
+  font: 600 10px var(--mono);
+}
+
+.suno-section-production-card header > div {
+  min-width: 0;
+}
+
+.suno-section-production-card header strong,
+.suno-section-production-card header small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suno-section-production-card header strong {
+  color: #999792;
+  font-size: 8px;
+}
+
+.suno-section-production-card header small {
+  margin-top: 2px;
+  color: #424542;
+  font: 5px var(--mono);
+  letter-spacing: .12em;
+}
+
+.suno-section-production-card.locked header small {
+  color: var(--cyan);
+}
+
+.suno-section-lock {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: #545753;
+  background: transparent;
+  cursor: pointer;
+}
+
+.suno-section-production-card.locked .suno-section-lock {
+  color: var(--cyan);
+  border-color: rgba(78, 216, 208, 0.2);
+  background: rgba(78, 216, 208, 0.05);
+}
+
+.suno-section-energy-control {
+  display: grid;
+  grid-template-columns: 25px 1fr 25px;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.suno-section-energy-control button {
+  height: 25px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: #71736f;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  font: 12px var(--mono);
+}
+
+.suno-section-energy-control button:hover:not(:disabled) {
+  color: var(--ivory);
+  border-color: var(--line-strong);
+}
+
+.suno-section-energy-control button:disabled {
+  opacity: .28;
+  cursor: not-allowed;
+}
+
+.suno-section-energy-control > span {
+  min-width: 0;
+  text-align: center;
+}
+
+.suno-section-energy-control small,
+.suno-section-energy-control strong {
+  display: block;
+}
+
+.suno-section-energy-control small {
+  color: #474a47;
+  font: 5px var(--mono);
+  letter-spacing: .09em;
+}
+
+.suno-section-energy-control strong {
+  margin-top: 1px;
+  color: var(--amber);
+  font: 9px var(--mono);
+}
+
+.suno-section-voicing-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.suno-section-voicing-control button {
+  height: 20px;
+  padding: 0 3px;
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 3px;
+  color: #4e514e;
+  background: transparent;
+  cursor: pointer;
+  font: 5px var(--mono);
+}
+
+.suno-section-voicing-control button.active {
+  color: #071110;
+  border-color: var(--cyan);
+  background: var(--cyan);
+}
+
 .suno-prompt-card {
   margin: 12px 16px 0;
   padding: 14px;
@@ -3006,9 +3270,9 @@ select {
 }
 
 .suno-blueprint-card {
-  min-height: 0;
+  min-height: 290px;
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
   flex-direction: column;
 }
 
@@ -3060,6 +3324,7 @@ select {
 }
 
 .suno-bridge-actions {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr 1.15fr;
   gap: 7px;

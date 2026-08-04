@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { generateArrangement } from "../engine/generate";
 import { setBassOverride } from "./bass";
 import { chordPitchClasses } from "./music";
+import { setSectionProductionOverride } from "./production";
 import {
   buildSunoPromptKit,
   DEFAULT_TEMPO_BPM,
@@ -97,5 +98,29 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.sections[0].voicings[0]).toContain("/");
     expect(kit.stylePromptEn).toContain("manual bass anchors");
     expect(kit.chordBlueprint).toContain("BASS ANCHORS:");
+  });
+
+  it("writes locked section energy and voicing into the Suno blueprint", () => {
+    const source = generateArrangement({
+      formId: "aba",
+      key: "C",
+      mode: "major",
+      style: "华语流行",
+      surprise: 34,
+      seed: 18473
+    });
+    const arrangement = setSectionProductionOverride(source, 1, {
+      energy: 94,
+      voicingMode: "dramatic"
+    });
+    const kit = buildSunoPromptKit(arrangement);
+
+    expect(kit.sectionOverrideCount).toBe(1);
+    expect(kit.sections[1].energy).toBe(94);
+    expect(kit.sections[1].voicingMode).toBe("dramatic");
+    expect(kit.chordBlueprint).toContain(
+      "Energy 94/100 | Voicing 戏剧/WIDE LOCKED"
+    );
+    expect(kit.stylePromptEn).toContain("section-specific energy");
   });
 });

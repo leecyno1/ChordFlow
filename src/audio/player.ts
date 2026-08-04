@@ -2,6 +2,7 @@ import { Midi } from "@tonejs/midi";
 import { chordNoteNames } from "../domain/music";
 import {
   chordLengthInBars,
+  effectiveSectionProductionAt,
   quarterNotesPerBar,
   timeSignatureParts
 } from "../domain/production";
@@ -12,6 +13,10 @@ let synth: any = null;
 let toneModule: any = null;
 let playbackRun = 0;
 let playbackTimers: number[] = [];
+
+function energyVelocity(energy: number, floor: number): number {
+  return Math.min(1, floor + Math.min(100, Math.max(0, energy)) * 0.005);
+}
 
 async function getTone(): Promise<any> {
   if (!toneModule) {
@@ -94,6 +99,10 @@ export async function playArrangement(
   let elapsedSeconds = 0;
 
   arrangement.sections.forEach((section, sectionIndex) => {
+    const sectionProduction = effectiveSectionProductionAt(
+      arrangement,
+      sectionIndex
+    );
     const stepDuration =
       (60 / arrangement.production.tempoBpm) *
       quarterNotesPerBar(arrangement.production.timeSignature) *
@@ -104,7 +113,9 @@ export async function playArrangement(
         if (playbackRun !== run) return;
         instrument.triggerAttackRelease(
           [voicing.bassNote, ...voicing.noteNames],
-          stepDuration * 0.9
+          stepDuration * 0.9,
+          undefined,
+          energyVelocity(sectionProduction.energy, 0.38)
         );
         onStep?.(sectionIndex, chordIndex);
       }, startDelayMs + elapsedSeconds * 1000);
@@ -162,6 +173,12 @@ export function buildMidi(arrangement: Arrangement): Midi {
   let ticks = 0;
 
   arrangement.sections.forEach((section, sectionIndex) => {
+    const sectionProduction = effectiveSectionProductionAt(
+      arrangement,
+      sectionIndex
+    );
+    const harmonyVelocity = energyVelocity(sectionProduction.energy, 0.42);
+    const bassVelocity = energyVelocity(sectionProduction.energy, 0.36);
     const durationTicks = Math.round(
       (ticksPerBar * arrangement.production.barsPerSection) /
         Math.max(1, section.chords.length)
@@ -173,14 +190,14 @@ export function buildMidi(arrangement: Arrangement): Midi {
           midi: midiNote,
           ticks,
           durationTicks,
-          velocity: 0.72
+          velocity: harmonyVelocity
         });
       });
       bassTrack.addNote({
         midi: voicing.bassMidi,
         ticks,
         durationTicks,
-        velocity: 0.68
+        velocity: bassVelocity
       });
       ticks += durationTicks;
     });

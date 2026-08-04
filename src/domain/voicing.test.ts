@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { generateArrangement } from "../engine/generate";
 import { setBassOverride } from "./bass";
 import { chordPitchClasses } from "./music";
+import { setSectionProductionOverride } from "./production";
 import { buildVoicingPlan, voicingMotion } from "./voicing";
 
 describe("voicing planner", () => {
@@ -51,6 +52,18 @@ describe("voicing planner", () => {
     expect(
       new Set(plan.chords.map((chord) => chord.bassMidi)).size
     ).toBeGreaterThan(3);
+  });
+
+  it("applies a locked voicing profile to only the target section", () => {
+    const locked = setSectionProductionOverride(base, 0, {
+      energy: 40,
+      voicingMode: "stable"
+    });
+    const plan = buildVoicingPlan(locked);
+
+    expect(plan.sectionModes[0]).toBe("stable");
+    expect(plan.sectionModes[1]).toBe("flowing");
+    expect(plan.sections[0].every((chord) => chord.inversion === 0)).toBe(true);
   });
 
   it("forces a legal manual bass anchor into voicing and slash notation", () => {

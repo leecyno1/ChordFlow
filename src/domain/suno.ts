@@ -1,13 +1,14 @@
 import { PROGRESSIONS } from "./catalog";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
+  effectiveSectionProductionAt,
   getVoicingProfile,
   harmonicRhythmLabel
 } from "./production";
 import { buildVoicingPlan } from "./voicing";
 import type { Arrangement, SectionRole } from "./types";
 
-export const SUNO_BRIDGE_VERSION = "0.4";
+export const SUNO_BRIDGE_VERSION = "0.5";
 export const DEFAULT_TEMPO_BPM = DEFAULT_PRODUCTION_SETTINGS.tempoBpm;
 
 interface StyleProfile {
@@ -24,6 +25,10 @@ export interface SunoSectionPrompt {
   symbol: string;
   role: SectionRole;
   energy: number;
+  voicingMode: Arrangement["production"]["voicingMode"];
+  voicingLabel: string;
+  voicingCode: string;
+  productionLocked: boolean;
   chords: string[];
   numerals: string[];
   voicings: string[];
@@ -43,6 +48,7 @@ export interface SunoPromptKit {
   barsPerSection: number;
   voicingMode: Arrangement["production"]["voicingMode"];
   voicingLabel: string;
+  sectionOverrideCount: number;
   stylePromptEn: string;
   stylePromptZh: string;
   chordBlueprint: string;
@@ -221,6 +227,13 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   );
 
   const sections: SunoSectionPrompt[] = arrangement.sections.map((section, sectionIndex) => {
+    const sectionProduction = effectiveSectionProductionAt(
+      arrangement,
+      sectionIndex
+    );
+    const sectionVoicingProfile = getVoicingProfile(
+      sectionProduction.voicingMode
+    );
     const variation = section.variationLabel
       ? VARIATION_EN[section.variationLabel] ?? section.variationLabel
       : "theme statement";
@@ -232,7 +245,11 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
       title: section.title,
       symbol: section.symbol,
       role: section.role,
-      energy: section.energy,
+      energy: sectionProduction.energy,
+      voicingMode: sectionProduction.voicingMode,
+      voicingLabel: sectionVoicingProfile.label,
+      voicingCode: sectionVoicingProfile.code,
+      productionLocked: sectionProduction.locked,
       chords: section.chords,
       numerals: section.numerals,
       voicings: voicingPlan.sections[sectionIndex].map(
@@ -242,9 +259,12 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
         (voicing) =>
           `${voicing.bassNote}${voicing.isBassOverridden ? "*" : ""}`
       ),
-      direction: `${ROLE_DIRECTION[section.role]}; ${variation}.${transition}`
+      direction: `${ROLE_DIRECTION[section.role]}; ${variation}; ${sectionVoicingProfile.directionEn}.${transition}`
     };
   });
+  const sectionOverrideCount = sections.filter(
+    (section) => section.productionLocked
+  ).length;
 
   const stylePromptEn = [
     profile.en,
@@ -255,6 +275,9 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     profile.instrumentationEn,
     profile.productionEn,
     voicingProfile.directionEn,
+    sectionOverrideCount > 0
+      ? "follow the section-specific energy and voicing directions in the chord blueprint"
+      : "",
     hasBassAnchors
       ? "keep the specified manual bass anchors as the lowest notes"
       : "",
@@ -272,6 +295,9 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     profile.instrumentationZh,
     profile.productionZh,
     voicingProfile.directionZh,
+    sectionOverrideCount > 0
+      ? "按和弦蓝图执行逐段能量与声部方向"
+      : "",
     hasBassAnchors ? "将标记的手动低音锚点保持为最低音" : "",
     novelty.zh
   ]
@@ -279,7 +305,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     .join("，");
 
   const sectionLines = sections.flatMap((section) => [
-    `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100]`,
+    `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100 | Voicing ${section.voicingLabel}/${section.voicingCode}${section.productionLocked ? " LOCKED" : ""}]`,
     `Chords: ${section.chords.join(" - ")}`,
     `Harmony: ${section.numerals.join(" - ")}`,
     `Voicing guide: ${section.voicings.join(" - ")}`,
@@ -293,7 +319,12 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `SONG FORM: ${arrangement.formPattern}`,
     `KEY: ${arrangement.key} ${modeEn} | TEMPO: ${tempoBpm} BPM | METER: ${timeSignature}`,
     `STYLE: ${profile.en}`,
-    `VOICING MODE: ${voicingProfile.label} / ${voicingProfile.code}`,
+    `${sectionOverrideCount > 0 ? "DEFAULT " : ""}VOICING MODE: ${voicingProfile.label} / ${voicingProfile.code}`,
+    ...(sectionOverrideCount > 0
+      ? [
+          `SECTION LOCKS: ${sectionOverrideCount} section${sectionOverrideCount > 1 ? "s" : ""} use explicit energy and voicing directions.`
+        ]
+      : []),
     ...(hasBassAnchors
       ? [
           "BASS ANCHORS: Notes marked * are manual lowest-note anchors and should be preserved."
@@ -316,6 +347,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     barsPerSection,
     voicingMode: arrangement.production.voicingMode,
     voicingLabel: voicingProfile.label,
+    sectionOverrideCount,
     stylePromptEn,
     stylePromptZh,
     chordBlueprint,

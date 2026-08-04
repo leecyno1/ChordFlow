@@ -62,20 +62,26 @@ describe("local project storage", () => {
   it("migrates older arrangements without theme locks", () => {
     const source = arrangement();
     const {
+      sectionOverrides: _sectionOverrides,
+      ...legacyProduction
+    } = source.production;
+    const {
       lockedSymbols: _lockedSymbols,
       bassOverrides: _bassOverrides,
+      production: _production,
       ...legacy
     } = source;
     const parsed = parseLocalProject(
       JSON.stringify({
         schemaVersion: 1,
         savedAt: "2026-08-04T00:00:00.000Z",
-        arrangement: legacy
+        arrangement: { ...legacy, production: legacyProduction }
       })
     );
 
     expect(parsed?.arrangement.lockedSymbols).toEqual([]);
     expect(parsed?.arrangement.bassOverrides).toEqual({});
+    expect(parsed?.arrangement.production.sectionOverrides).toEqual({});
   });
 
   it("rejects malformed or unsupported project data", () => {

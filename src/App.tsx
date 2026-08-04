@@ -71,7 +71,11 @@ import {
   redoArrangementHistory,
   undoArrangementHistory
 } from "./domain/history";
-import { normalizeProductionSettings } from "./domain/production";
+import {
+  effectiveSectionProductionAt,
+  normalizeProductionSettings,
+  setSectionProductionOverride
+} from "./domain/production";
 import { buildVoicingPlan } from "./domain/voicing";
 import {
   loadLocalProject,
@@ -82,7 +86,8 @@ import { compareArrangements } from "./domain/comparison";
 import type {
   Arrangement,
   Mode,
-  ProductionSettings
+  ProductionSettings,
+  SectionProductionOverride
 } from "./domain/types";
 import {
   generateArrangement,
@@ -523,6 +528,15 @@ function App() {
     }));
   }
 
+  function changeSectionProduction(
+    sectionIndex: number,
+    override: SectionProductionOverride | null
+  ) {
+    commitArrangement((current) =>
+      setSectionProductionOverride(current, sectionIndex, override)
+    );
+  }
+
   function changeBassAnchor(pitchClass: number | null) {
     const next = setBassOverride(
       arrangement,
@@ -813,24 +827,38 @@ function App() {
 
           <div className="section-stack">
             <span className="eyebrow">SECTION ROLES</span>
-            {arrangement.sections.map((item, index) => (
-              <button
-                type="button"
-                key={item.id}
-                className={"section-row " + (activeSection === index ? "active" : "")}
-                onClick={() => {
-                  setActiveSection(index);
-                  setActiveChord(0);
-                }}
-              >
-                <span className="section-letter">{item.symbol}</span>
-                <span className="section-copy">
-                  <strong>{item.title}</strong>
-                  <small>{ROLE_META[item.role].description}</small>
-                </span>
-                <span className="section-energy">{item.energy}</span>
-              </button>
-            ))}
+            {arrangement.sections.map((item, index) => {
+              const sectionProduction = effectiveSectionProductionAt(
+                arrangement,
+                index
+              );
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={"section-row " + (activeSection === index ? "active" : "")}
+                  onClick={() => {
+                    setActiveSection(index);
+                    setActiveChord(0);
+                  }}
+                >
+                  <span className="section-letter">{item.symbol}</span>
+                  <span className="section-copy">
+                    <strong>{item.title}</strong>
+                    <small>{ROLE_META[item.role].description}</small>
+                  </span>
+                  <span
+                    className={
+                      "section-energy " +
+                      (sectionProduction.locked ? "locked" : "")
+                    }
+                    title={sectionProduction.locked ? "逐段制作参数已锁定" : "生成能量"}
+                  >
+                    {sectionProduction.energy}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </aside>
 
@@ -1162,6 +1190,7 @@ function App() {
         onClose={() => setSunoOpen(false)}
         onExportMidi={() => exportMidi(arrangement)}
         onProductionChange={changeProduction}
+        onSectionProductionChange={changeSectionProduction}
       />
 
       <footer className="footer">

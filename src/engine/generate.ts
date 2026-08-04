@@ -12,7 +12,10 @@ import {
 } from "../domain/bass";
 import { getCorpusTransitions } from "../domain/corpus";
 import { romanDegree, romanToChord } from "../domain/music";
-import { normalizeProductionSettings } from "../domain/production";
+import {
+  normalizeProductionSettings,
+  pruneSectionProductionOverrides
+} from "../domain/production";
 import type {
   Arrangement,
   ChordCandidate,
@@ -168,7 +171,10 @@ export function generateArrangement(options: {
     seed: options.seed,
     lockedSymbols: [],
     bassOverrides: {},
-    production: normalizeProductionSettings(options.production),
+    production: pruneSectionProductionOverrides(
+      normalizeProductionSettings(options.production),
+      sections
+    ),
     sections,
     generatedAt: new Date().toISOString()
   };
