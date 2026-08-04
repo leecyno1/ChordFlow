@@ -13,7 +13,7 @@ import type {
   SectionTextureMode
 } from "./types";
 
-export const SUNO_BRIDGE_VERSION = "0.6";
+export const SUNO_BRIDGE_VERSION = "0.7";
 export const DEFAULT_TEMPO_BPM = DEFAULT_PRODUCTION_SETTINGS.tempoBpm;
 
 interface StyleProfile {
@@ -22,6 +22,7 @@ interface StyleProfile {
   productionEn: string;
   instrumentationZh: string;
   productionZh: string;
+  textureDirectionsEn: Record<SectionTextureMode, string>;
 }
 
 export interface SunoSectionPrompt {
@@ -37,6 +38,7 @@ export interface SunoSectionPrompt {
   textureLabel: string;
   textureCode: string;
   instrumentationDirection: string;
+  occurrence: number;
   productionLocked: boolean;
   chords: string[];
   numerals: string[];
@@ -58,6 +60,7 @@ export interface SunoPromptKit {
   voicingMode: Arrangement["production"]["voicingMode"];
   voicingLabel: string;
   sectionOverrideCount: number;
+  textureArc: string;
   stylePromptEn: string;
   stylePromptZh: string;
   chordBlueprint: string;
@@ -71,56 +74,120 @@ const STYLE_PROFILES: Record<string, StyleProfile> = {
     instrumentationEn: "warm piano, clean electric guitar, subtle synth pads, restrained live drums",
     productionEn: "intimate verses, a wide melodic chorus, polished emotional dynamics",
     instrumentationZh: "温暖钢琴、干净电吉他、轻柔合成器铺底、克制的现场鼓组",
-    productionZh: "主歌亲密克制，副歌旋律空间明显打开，情绪动态精致而现代"
+    productionZh: "主歌亲密克制，副歌旋律空间明显打开，情绪动态精致而现代",
+    textureDirectionsEn: {
+      sparse:
+        "lead with warm piano or clean electric guitar, leaving pads barely audible and drums minimal",
+      balanced:
+        "pair piano and clean guitar with subtle pads, melodic bass and controlled live drums",
+      full:
+        "layer piano, clean guitars and synth pads over active bass and full live drums"
+    }
   },
   独立流行: {
     en: "indie pop",
     instrumentationEn: "textured electric guitar, soft analog synth, dry drums, melodic bass",
     productionEn: "close vocal presence, organic imperfections, a vivid but unforced chorus",
     instrumentationZh: "纹理电吉他、柔和模拟合成器、干燥鼓组、旋律型贝斯",
-    productionZh: "人声距离亲近，保留自然质感，副歌鲜明但不过度用力"
+    productionZh: "人声距离亲近，保留自然质感，副歌鲜明但不过度用力",
+    textureDirectionsEn: {
+      sparse:
+        "feature one textured guitar with dry room tone, holding synth, bass and drums back",
+      balanced:
+        "join textured guitar, soft analog synth, melodic bass and a tight dry groove",
+      full:
+        "stack contrasting guitars and analog synth around active melodic bass and broader live drums"
+    }
   },
   "R&B / Neo Soul": {
     en: "contemporary R&B and neo-soul",
     instrumentationEn: "Rhodes electric piano, round bass, muted guitar, laid-back drums",
     productionEn: "silky pocket, spacious verses, rich chord color and a smooth chorus lift",
     instrumentationZh: "Rhodes 电钢、圆润贝斯、闷音吉他、松弛鼓组",
-    productionZh: "律动丝滑、主歌留白充分，以丰富和弦色彩平滑抬升副歌"
+    productionZh: "律动丝滑、主歌留白充分，以丰富和弦色彩平滑抬升副歌",
+    textureDirectionsEn: {
+      sparse:
+        "center Rhodes and muted guitar stabs, with round bass and percussion kept spacious",
+      balanced:
+        "lock Rhodes, muted guitar, round melodic bass and laid-back drums into a focused pocket",
+      full:
+        "layer Rhodes color, guitar responses and vocal-space pads over active bass and a full relaxed groove"
+    }
   },
   摇滚: {
     en: "melodic modern rock",
     instrumentationEn: "driven electric guitars, live bass, punchy acoustic drums, restrained synth support",
     productionEn: "controlled verses, strong band dynamics, an anthemic chorus without excess density",
     instrumentationZh: "推动型电吉他、现场贝斯、有冲击力的原声鼓、克制合成器支撑",
-    productionZh: "主歌控制力度，乐队动态清楚，副歌具有合唱感但不堆满"
+    productionZh: "主歌控制力度，乐队动态清楚，副歌具有合唱感但不堆满",
+    textureDirectionsEn: {
+      sparse:
+        "start with one restrained electric guitar, light bass support and minimal acoustic drums",
+      balanced:
+        "bring rhythm guitars, live bass and controlled acoustic drums into a firm band core",
+      full:
+        "open stacked electric guitars, driving bass and punchy full drums while keeping synth support selective"
+    }
   },
   民谣: {
     en: "contemporary acoustic folk-pop",
     instrumentationEn: "fingerpicked acoustic guitar, soft piano, upright-style bass, brushed percussion",
     productionEn: "natural room tone, lyric-forward verses and a warm communal chorus",
     instrumentationZh: "指弹木吉他、柔和钢琴、原声感贝斯、刷奏打击乐",
-    productionZh: "自然空间感，主歌突出叙事，副歌温暖而有共同吟唱感"
+    productionZh: "自然空间感，主歌突出叙事，副歌温暖而有共同吟唱感",
+    textureDirectionsEn: {
+      sparse:
+        "lead with fingerpicked acoustic guitar, with soft piano, bass and brushes barely entering",
+      balanced:
+        "blend acoustic guitar and soft piano with upright-style bass and controlled brushed percussion",
+      full:
+        "widen strummed and fingerpicked acoustics around piano, active bass and a warm full percussion lift"
+    }
   },
   电影配乐: {
     en: "cinematic song score",
     instrumentationEn: "felt piano, evolving strings, low percussion, atmospheric synth layers",
     productionEn: "long dynamic arcs, restrained opening, widescreen harmonic climax",
     instrumentationZh: "毡音钢琴、渐进弦乐、低频打击乐、氛围合成器层次",
-    productionZh: "长线动态弧线，开场克制，和声高潮具有宽银幕感"
+    productionZh: "长线动态弧线，开场克制，和声高潮具有宽银幕感",
+    textureDirectionsEn: {
+      sparse:
+        "expose felt piano with distant string air and almost no low percussion",
+      balanced:
+        "support felt piano with evolving strings, restrained low percussion and atmospheric synth depth",
+      full:
+        "expand into wide strings, layered synth atmosphere and decisive low percussion around the harmonic peak"
+    }
   },
   爵士流行: {
     en: "sophisticated jazz-pop",
     instrumentationEn: "acoustic piano, upright bass, brushed drums, clean hollow-body guitar",
     productionEn: "elegant harmonic motion, conversational verses and a clear melodic refrain",
     instrumentationZh: "原声钢琴、立式贝斯、刷鼓、干净空心吉他",
-    productionZh: "和声运动优雅，主歌像对话，副歌旋律清晰而不炫技"
+    productionZh: "和声运动优雅，主歌像对话，副歌旋律清晰而不炫技",
+    textureDirectionsEn: {
+      sparse:
+        "feature acoustic piano or hollow-body guitar with sparse upright bass and brushes",
+      balanced:
+        "shape a conversational quartet of piano, upright bass, brushes and clean hollow-body guitar",
+      full:
+        "open piano voicings, active upright bass, fuller brushed drums and selective guitar counterlines"
+    }
   },
   电子氛围: {
     en: "atmospheric electronic pop",
     instrumentationEn: "soft pulse synth, granular pads, deep electronic bass, minimal programmed drums",
     productionEn: "slow-blooming texture, spacious verses and a luminous layered chorus",
     instrumentationZh: "柔和脉冲合成器、颗粒铺底、深沉电子贝斯、极简编程鼓",
-    productionZh: "纹理缓慢展开，主歌留白，副歌明亮且具有分层空间"
+    productionZh: "纹理缓慢展开，主歌留白，副歌明亮且具有分层空间",
+    textureDirectionsEn: {
+      sparse:
+        "lead with a soft pulse or granular pad, holding deep bass and programmed drums to fragments",
+      balanced:
+        "combine pulse synth, granular pads, deep bass and controlled programmed drums in a focused grid",
+      full:
+        "stack luminous synth layers over active deep bass, full programmed drums and selective counter-melodies"
+    }
   }
 };
 
@@ -262,7 +329,9 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
       textureMode: sectionProduction.textureMode,
       textureLabel: textureProfile.label,
       textureCode: textureProfile.code,
-      instrumentationDirection: textureProfile.directionEn,
+      instrumentationDirection:
+        profile.textureDirectionsEn[sectionProduction.textureMode],
+      occurrence: section.occurrence,
       productionLocked: sectionProduction.locked,
       chords: section.chords,
       numerals: section.numerals,
@@ -279,6 +348,12 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   const sectionOverrideCount = sections.filter(
     (section) => section.productionLocked
   ).length;
+  const textureArc = sections
+    .map(
+      (section) =>
+        `${section.symbol}${section.occurrence > 0 ? section.occurrence + 1 : ""}:${section.textureCode}`
+    )
+    .join(" → ");
 
   const stylePromptEn = [
     profile.en,
@@ -334,6 +409,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `SONG FORM: ${arrangement.formPattern}`,
     `KEY: ${arrangement.key} ${modeEn} | TEMPO: ${tempoBpm} BPM | METER: ${timeSignature}`,
     `STYLE: ${profile.en}`,
+    `TEXTURE ARC: ${textureArc}`,
     `${sectionOverrideCount > 0 ? "DEFAULT " : ""}VOICING MODE: ${voicingProfile.label} / ${voicingProfile.code}`,
     ...(sectionOverrideCount > 0
       ? [
@@ -363,6 +439,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     voicingMode: arrangement.production.voicingMode,
     voicingLabel: voicingProfile.label,
     sectionOverrideCount,
+    textureArc,
     stylePromptEn,
     stylePromptZh,
     chordBlueprint,

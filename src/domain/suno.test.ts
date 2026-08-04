@@ -31,6 +31,10 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.chordBlueprint).toContain("[Chorus B | 4 bars | Energy");
     expect(kit.sections[0].textureCode).toBe("AIR");
     expect(kit.sections[1].textureCode).toBe("LIFT");
+    expect(kit.textureArc).toBe(
+      "A:AIR → B:LIFT → A2:CORE → B2:LIFT → C:CORE → B3:LIFT"
+    );
+    expect(kit.chordBlueprint).toContain(`TEXTURE ARC: ${kit.textureArc}`);
     expect(kit.chordBlueprint).toContain("Instrumentation:");
     expect(kit.sections).toHaveLength(arrangement.sections.length);
   });
@@ -50,7 +54,45 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.chordBlueprint).toContain("[Verse A2 | 4 bars | Energy");
     expect(kit.chordBlueprint).toContain("[Chorus B2 | 4 bars | Energy");
     expect(textPackage).toContain("SUNO STYLE PROMPT / EN");
+    expect(textPackage).toContain("TEXTURE ARC:");
     expect(textPackage).toContain("Suno may reinterpret chord instructions");
+  });
+
+  it("adapts the same texture arc to each style palette", () => {
+    const folk = buildSunoPromptKit(
+      generateArrangement({
+        formId: "aba",
+        key: "G",
+        mode: "major",
+        style: "民谣",
+        surprise: 40,
+        seed: 210
+      })
+    );
+    const electronic = buildSunoPromptKit(
+      generateArrangement({
+        formId: "aba",
+        key: "G",
+        mode: "major",
+        style: "电子氛围",
+        surprise: 40,
+        seed: 210
+      })
+    );
+
+    expect(folk.textureArc).toBe(electronic.textureArc);
+    expect(folk.sections[0].instrumentationDirection).toContain(
+      "fingerpicked acoustic guitar"
+    );
+    expect(electronic.sections[0].instrumentationDirection).toContain(
+      "soft pulse or granular pad"
+    );
+    expect(folk.sections[1].instrumentationDirection).toContain(
+      "strummed and fingerpicked acoustics"
+    );
+    expect(electronic.sections[1].instrumentationDirection).toContain(
+      "luminous synth layers"
+    );
   });
 
   it("uses the shared production grid in every Suno output", () => {
@@ -124,7 +166,7 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.sections[1].voicingMode).toBe("dramatic");
     expect(kit.sections[1].textureMode).toBe("full");
     expect(kit.sections[1].instrumentationDirection).toContain(
-      "layered harmony"
+      "layer piano"
     );
     expect(kit.chordBlueprint).toContain(
       "Energy 94/100 | Voicing 戏剧/WIDE | Texture 展开/LIFT LOCKED"
