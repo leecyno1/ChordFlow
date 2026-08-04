@@ -14,10 +14,12 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import ToneMidi from "@tonejs/midi";
 
 // Keep browser-critical delivery paths testable without adding a browser bundle.
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const { Midi } = ToneMidi;
 
 function sleep(milliseconds) {
   return new Promise((resolveDelay) => setTimeout(resolveDelay, milliseconds));
@@ -277,6 +279,25 @@ async function selectValue(client, selector, value) {
   })()`);
 }
 
+async function fillInput(client, selector, value) {
+  await client.evaluate(`(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!(element instanceof HTMLInputElement)) {
+      throw new Error(${JSON.stringify(`Missing input element: ${selector}`)});
+    }
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value"
+    )?.set;
+    element.focus();
+    setter.call(element, ${JSON.stringify(value)});
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+    element.blur();
+    return element.value;
+  })()`);
+}
+
 async function setFileInput(client, selector, filePath) {
   const documentTree = await client.send("DOM.getDocument", {
     depth: -1,
@@ -299,25 +320,30 @@ async function setFileInput(client, selector, filePath) {
   })()`);
 }
 
-async function waitForDownloadedText(downloadDirectory) {
+async function waitForDownloadedFile(
+  downloadDirectory,
+  previousFiles,
+  predicate,
+  description
+) {
   const deadline = Date.now() + 7000;
   while (Date.now() < deadline) {
     const files = await readdir(downloadDirectory);
     const filename = files.find(
       (item) =>
-        item.startsWith("chordflow-suno-") &&
-        item.endsWith(".txt") &&
-        !item.endsWith(".crdownload")
+        !previousFiles.has(item) &&
+        !item.endsWith(".crdownload") &&
+        predicate(item)
     );
     if (filename) {
       return {
         filename,
-        content: await readFile(join(downloadDirectory, filename), "utf8")
+        content: await readFile(join(downloadDirectory, filename))
       };
     }
     await sleep(50);
   }
-  throw new Error("The Suno TXT package was not downloaded");
+  throw new Error(`${description} was not downloaded`);
 }
 
 if (typeof WebSocket !== "function") {
@@ -530,10 +556,61 @@ try {
     "Suno Bridge to open"
   );
 
+  const downloadedFiles = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="suno-export-midi"]');
+  const baselineMidiDownload = await waitForDownloadedFile(
+    downloadDirectory,
+    downloadedFiles,
+    (filename) =>
+      filename.startsWith("chordflow-") && filename.endsWith(".mid"),
+    "The baseline MIDI reference"
+  );
+  downloadedFiles.add(baselineMidiDownload.filename);
+  const baselineMidi = new Midi(baselineMidiDownload.content);
+  await rm(join(downloadDirectory, baselineMidiDownload.filename), {
+    force: true
+  });
+  downloadedFiles.delete(baselineMidiDownload.filename);
+
+  await fillInput(client, '[data-testid="suno-tempo-input"]', "128");
+  await click(client, '[data-testid="suno-meter-6-8"]');
+  await click(client, '[data-testid="suno-bars-8"]');
+  await click(client, '[data-testid="suno-voicing-dramatic"]');
+  await click(client, '[data-testid="suno-section-energy-increase-0"]');
+  await click(client, '[data-testid="suno-section-texture-0-full"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-signal-tempo"]')?.textContent === '128'`,
+    "the Suno tempo signal to update"
+  );
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-signal-bars"]')?.textContent === '8'`,
+    "the Suno section length signal to update"
+  );
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-meter-6-8"]')?.getAttribute('aria-pressed') === 'true'`,
+    "six-eight meter to activate"
+  );
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-voicing-dramatic"]')?.getAttribute('aria-pressed') === 'true'`,
+    "dramatic voicing to activate"
+  );
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-section-texture-0-full"]')?.getAttribute('aria-pressed') === 'true'`,
+    "the first section LIFT texture to activate"
+  );
+
   const stylePrompt = await textContent(
     client,
     '[data-testid="suno-style-prompt"]'
   );
+  assert.match(stylePrompt, /128 BPM/);
+  assert.match(stylePrompt, /6\/8 meter/);
+  assert.match(stylePrompt, /contrasting inversions/);
   await click(client, '[data-testid="suno-copy-style"]');
   await waitForExpression(
     client,
@@ -543,12 +620,6 @@ try {
   const copiedStyle = await client.evaluate("navigator.clipboard.readText()");
   assert.equal(copiedStyle, stylePrompt, "Style copy must match the visible prompt");
 
-  await click(client, '[data-testid="suno-section-lock-0"]');
-  await waitForExpression(
-    client,
-    `document.querySelector('[data-testid="suno-section-card-0"]')?.dataset.locked === 'true'`,
-    "the first section to lock"
-  );
   assert.match(
     await textContent(client, '[data-testid="suno-section-lock-summary"]'),
     /1 段已锁定/
@@ -557,8 +628,18 @@ try {
     client,
     '[data-testid="suno-blueprint"]'
   );
+  const expectedFirstSectionEnergy =
+    importedProject.arrangement.sections[0].energy + 5;
+  assert.match(lockedBlueprint, /TEMPO: 128 BPM \| METER: 6\/8/);
+  assert.match(lockedBlueprint, /DEFAULT VOICING MODE: 戏剧 \/ WIDE/);
   assert.match(lockedBlueprint, /SECTION LOCKS: 1 section/);
-  assert.match(lockedBlueprint, /Texture .* LOCKED/);
+  assert.match(
+    lockedBlueprint,
+    new RegExp(
+      `8 bars \\| Energy ${expectedFirstSectionEnergy}/100 \\| Voicing 戏剧/WIDE \\| Texture 展开/LIFT LOCKED`
+    )
+  );
+  assert.match(lockedBlueprint, /TEXTURE ARC: A:LIFT/);
 
   await click(client, '[data-testid="suno-copy-all"]');
   await waitForExpression(
@@ -572,14 +653,93 @@ try {
   assert.match(copiedPackage, /SECTION LOCKS: 1 section/);
 
   await click(client, '[data-testid="suno-download-txt"]');
-  const download = await waitForDownloadedText(downloadDirectory);
-  assert.equal(download.filename, "chordflow-suno-ababcb.txt");
+  const textDownload = await waitForDownloadedFile(
+    downloadDirectory,
+    downloadedFiles,
+    (filename) =>
+      filename.startsWith("chordflow-suno-") && filename.endsWith(".txt"),
+    "The Suno TXT package"
+  );
+  downloadedFiles.add(textDownload.filename);
+  assert.equal(textDownload.filename, "chordflow-suno-ababcb.txt");
   assert.equal(
-    download.content,
+    textDownload.content.toString("utf8"),
     copiedPackage,
     "Downloaded TXT and copied package must be identical"
   );
 
+  await click(client, '[data-testid="suno-export-midi"]');
+  const producedMidiDownload = await waitForDownloadedFile(
+    downloadDirectory,
+    downloadedFiles,
+    (filename) =>
+      filename.startsWith("chordflow-") && filename.endsWith(".mid"),
+    "The updated MIDI reference"
+  );
+  downloadedFiles.add(producedMidiDownload.filename);
+  const producedMidi = new Midi(producedMidiDownload.content);
+
+  await click(client, '[data-testid="suno-close"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-bridge"]') === null`,
+    "Suno Bridge to close before JSON export"
+  );
+  await click(client, '[data-testid="export-json"]');
+  const jsonDownload = await waitForDownloadedFile(
+    downloadDirectory,
+    downloadedFiles,
+    (filename) =>
+      filename.startsWith("chordflow-") && filename.endsWith(".json"),
+    "The arrangement JSON"
+  );
+  downloadedFiles.add(jsonDownload.filename);
+  const exportedArrangement = JSON.parse(
+    jsonDownload.content.toString("utf8")
+  );
+
+  assert.equal(exportedArrangement.production.tempoBpm, 128);
+  assert.equal(exportedArrangement.production.timeSignature, "6/8");
+  assert.equal(exportedArrangement.production.barsPerSection, 8);
+  assert.equal(exportedArrangement.production.voicingMode, "dramatic");
+  assert.deepEqual(exportedArrangement.production.sectionOverrides["A:0"], {
+    energy: expectedFirstSectionEnergy,
+    voicingMode: "dramatic",
+    textureMode: "full"
+  });
+
+  assert.equal(Math.round(producedMidi.header.tempos[0].bpm), 128);
+  assert.deepEqual(
+    producedMidi.header.timeSignatures[0].timeSignature,
+    [6, 8]
+  );
+  const expectedChordTicks =
+    (producedMidi.header.ppq * 3 * 8) /
+    exportedArrangement.sections[0].chords.length;
+  assert.equal(
+    producedMidi.tracks[0].notes[0].durationTicks,
+    expectedChordTicks
+  );
+  assert.equal(producedMidi.tracks.length, 2);
+  assert.equal(producedMidi.tracks[0].name, "ChordFlow Harmony");
+  assert.equal(producedMidi.tracks[1].name, "ChordFlow Bass Guide");
+  assert.notDeepEqual(
+    producedMidi.tracks[0].notes.map((note) => note.midi),
+    baselineMidi.tracks[0].notes.map((note) => note.midi),
+    "Dramatic voicing must change the exported harmony pitches"
+  );
+  assert.ok(
+    producedMidi.tracks[0].notes[0].velocity >
+      baselineMidi.tracks[0].notes[0].velocity,
+    "The section energy increase must raise MIDI velocity"
+  );
+
+  await click(client, '[data-testid="suno-launch"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-bridge"]') !== null`,
+    "Suno Bridge to reopen"
+  );
   await click(client, '[data-testid="suno-section-lock-0"]');
   await waitForExpression(
     client,
@@ -597,7 +757,10 @@ try {
       "✓ Undo and redo restored the expected arrangement\n" +
       "✓ A saved project imported through the real JSON file input\n" +
       "✓ The JSON import participated in undo and redo history\n" +
-      "✓ Suno Bridge opened\n" +
+      "✓ Production controls updated the Suno prompt and blueprint\n" +
+      "✓ JSON preserved tempo, meter, voicing, energy and texture\n" +
+      "✓ MIDI preserved tempo, meter, duration, voicing and energy\n" +
+      "✓ Texture remained prompt/JSON-only without fake MIDI tracks\n" +
       "✓ Visible Style prompt matched the clipboard\n" +
       "✓ Section lock updated the blueprint\n" +
       "✓ Copied package matched the downloaded TXT\n" +

@@ -175,6 +175,7 @@ export function SunoBridge({
           <button
             type="button"
             className="suno-close"
+            data-testid="suno-close"
             onClick={onClose}
             aria-label="关闭 Suno Bridge"
           >
@@ -185,8 +186,12 @@ export function SunoBridge({
         <div className="suno-signal-strip">
           <span><b>{kit.form}</b> FORM</span>
           <span><b>{kit.key} {kit.mode === "major" ? "MAJ" : "MIN"}</b> KEY</span>
-          <span><b>{kit.tempoBpm}</b> BPM</span>
-          <span><b>{kit.barsPerSection}</b> BARS / SECTION</span>
+          <span>
+            <b data-testid="suno-signal-tempo">{kit.tempoBpm}</b> BPM
+          </span>
+          <span>
+            <b data-testid="suno-signal-bars">{kit.barsPerSection}</b> BARS / SECTION
+          </span>
         </div>
 
         <div className="suno-bridge-body">
@@ -205,6 +210,7 @@ export function SunoBridge({
               min="50"
               max="180"
               inputMode="numeric"
+              data-testid="suno-tempo-input"
               value={tempoDraft}
               onChange={(event) =>
                 setTempoDraft(event.target.value.replace(/\D/g, "").slice(0, 3))
@@ -223,6 +229,7 @@ export function SunoBridge({
                 <button
                   type="button"
                   key={meter}
+                  data-testid={`suno-meter-${meter.replace("/", "-")}`}
                   className={
                     arrangement.production.timeSignature === meter ? "active" : ""
                   }
@@ -243,6 +250,7 @@ export function SunoBridge({
                 <button
                   type="button"
                   key={bars}
+                  data-testid={`suno-bars-${bars}`}
                   className={
                     arrangement.production.barsPerSection === bars ? "active" : ""
                   }
@@ -261,6 +269,7 @@ export function SunoBridge({
                 <button
                   type="button"
                   key={profile.id}
+                  data-testid={`suno-voicing-${profile.id}`}
                   className={
                     arrangement.production.voicingMode === profile.id
                       ? "active"
@@ -381,6 +390,7 @@ export function SunoBridge({
                     <div className="suno-section-energy-control">
                       <button
                         type="button"
+                        data-testid={`suno-section-energy-decrease-${sectionIndex}`}
                         onClick={() =>
                           setOverride({
                             energy: Math.max(0, sectionProduction.energy - 5)
@@ -397,6 +407,7 @@ export function SunoBridge({
                       </span>
                       <button
                         type="button"
+                        data-testid={`suno-section-energy-increase-${sectionIndex}`}
                         onClick={() =>
                           setOverride({
                             energy: Math.min(100, sectionProduction.energy + 5)
@@ -417,6 +428,7 @@ export function SunoBridge({
                         <button
                           type="button"
                           key={profile.id}
+                          data-testid={`suno-section-voicing-${sectionIndex}-${profile.id}`}
                           className={
                             sectionProduction.voicingMode === profile.id
                               ? "active"
@@ -445,6 +457,7 @@ export function SunoBridge({
                           <button
                             type="button"
                             key={profile.id}
+                            data-testid={`suno-section-texture-${sectionIndex}-${profile.id}`}
                             className={
                               sectionProduction.textureMode === profile.id
                                 ? "active"
@@ -587,7 +600,11 @@ export function SunoBridge({
             {copied === "all" ? <Check size={15} /> : <Copy size={15} />}
             {copied === "all" ? "整包已复制" : "复制全部"}
           </button>
-          <button type="button" onClick={onExportMidi}>
+          <button
+            type="button"
+            data-testid="suno-export-midi"
+            onClick={onExportMidi}
+          >
             <Music2 size={15} />
             MIDI 参考
           </button>

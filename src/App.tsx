@@ -652,10 +652,21 @@ function App() {
         </div>
 
         <div className="top-actions">
-          <button type="button" className="icon-button" onClick={() => exportJson(arrangement)} title="导出 JSON">
+          <button
+            type="button"
+            className="icon-button"
+            data-testid="export-json"
+            onClick={() => exportJson(arrangement)}
+            title="导出 JSON"
+          >
             <FileJson size={18} />
           </button>
-          <button type="button" className="export-button" onClick={() => exportMidi(arrangement)}>
+          <button
+            type="button"
+            className="export-button"
+            data-testid="export-midi"
+            onClick={() => exportMidi(arrangement)}
+          >
             <Download size={16} />
             导出 MIDI
           </button>

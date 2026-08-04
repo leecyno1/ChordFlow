@@ -4,9 +4,9 @@ import { setBassOverride } from "../domain/bass";
 import { chordPitchClasses } from "../domain/music";
 import { setSectionProductionOverride } from "../domain/production";
 import { generateArrangement } from "../engine/generate";
-import { buildMidi } from "./player";
+import { buildMidi, buildPlaybackSchedule } from "./player";
 
-describe("MIDI production grid", () => {
+describe("production grid delivery", () => {
   it("shares tempo, meter and harmonic rhythm with the arrangement", () => {
     const generated = generateArrangement({
       formId: "aba",
@@ -58,5 +58,48 @@ describe("MIDI production grid", () => {
     expect(bassNotes[0].midi % 12).toBe(anchorPitchClass);
     expect(bassNotes[0].durationTicks).toBe(expectedChordTicks);
     expect(secondSectionVelocity).toBeGreaterThan(firstSectionVelocity ?? 0);
+  });
+
+  it("shares production timing, voicing and energy with playback", () => {
+    const generated = generateArrangement({
+      formId: "aba",
+      key: "D",
+      mode: "major",
+      style: "独立流行",
+      surprise: 45,
+      seed: 102,
+      production: {
+        tempoBpm: 118,
+        timeSignature: "6/8",
+        barsPerSection: 8,
+        voicingMode: "dramatic"
+      }
+    });
+    const arrangement = setSectionProductionOverride(generated, 1, {
+      energy: 100,
+      voicingMode: "dramatic",
+      textureMode: "full"
+    });
+    const schedule = buildPlaybackSchedule(arrangement);
+    const voicingPlan = buildVoicingPlan(arrangement);
+    const firstStep = schedule.steps[0];
+    const secondSectionStep = schedule.steps.find(
+      (step) => step.sectionIndex === 1
+    );
+    const expectedStepSeconds = (60 / 118) * 3 * 2;
+
+    expect(firstStep.offsetMs).toBe(80);
+    expect(firstStep.durationSeconds).toBeCloseTo(expectedStepSeconds);
+    expect(firstStep.notes).toEqual([
+      voicingPlan.sections[0][0].bassNote,
+      ...voicingPlan.sections[0][0].noteNames
+    ]);
+    expect(schedule.steps[1].offsetMs).toBeCloseTo(
+      80 + expectedStepSeconds * 1000
+    );
+    expect(secondSectionStep?.velocity).toBeGreaterThan(firstStep.velocity);
+    expect(schedule.durationMs).toBeCloseTo(
+      80 + expectedStepSeconds * schedule.steps.length * 1000
+    );
   });
 });

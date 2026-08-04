@@ -18,6 +18,57 @@ function energyVelocity(energy: number, floor: number): number {
   return Math.min(1, floor + Math.min(100, Math.max(0, energy)) * 0.005);
 }
 
+export interface ArrangementPlaybackStep {
+  sectionIndex: number;
+  chordIndex: number;
+  offsetMs: number;
+  durationSeconds: number;
+  velocity: number;
+  notes: string[];
+}
+
+export interface ArrangementPlaybackSchedule {
+  durationMs: number;
+  steps: ArrangementPlaybackStep[];
+}
+
+export function buildPlaybackSchedule(
+  arrangement: Arrangement
+): ArrangementPlaybackSchedule {
+  const startDelayMs = 80;
+  const voicingPlan = buildVoicingPlan(arrangement);
+  const steps: ArrangementPlaybackStep[] = [];
+  let elapsedSeconds = 0;
+
+  arrangement.sections.forEach((section, sectionIndex) => {
+    const sectionProduction = effectiveSectionProductionAt(
+      arrangement,
+      sectionIndex
+    );
+    const stepDuration =
+      (60 / arrangement.production.tempoBpm) *
+      quarterNotesPerBar(arrangement.production.timeSignature) *
+      chordLengthInBars(arrangement.production, section.chords.length);
+    section.chords.forEach((_chord, chordIndex) => {
+      const voicing = voicingPlan.sections[sectionIndex][chordIndex];
+      steps.push({
+        sectionIndex,
+        chordIndex,
+        offsetMs: startDelayMs + elapsedSeconds * 1000,
+        durationSeconds: stepDuration,
+        velocity: energyVelocity(sectionProduction.energy, 0.38),
+        notes: [voicing.bassNote, ...voicing.noteNames]
+      });
+      elapsedSeconds += stepDuration;
+    });
+  });
+
+  return {
+    durationMs: startDelayMs + elapsedSeconds * 1000,
+    steps
+  };
+}
+
 async function getTone(): Promise<any> {
   if (!toneModule) {
     toneModule = await import("tone");
@@ -94,37 +145,23 @@ export async function playArrangement(
   playbackTimers.forEach((timer) => window.clearTimeout(timer));
   playbackTimers = [];
   instrument.releaseAll();
-  const startDelayMs = 80;
-  const voicingPlan = buildVoicingPlan(arrangement);
-  let elapsedSeconds = 0;
+  const schedule = buildPlaybackSchedule(arrangement);
 
-  arrangement.sections.forEach((section, sectionIndex) => {
-    const sectionProduction = effectiveSectionProductionAt(
-      arrangement,
-      sectionIndex
-    );
-    const stepDuration =
-      (60 / arrangement.production.tempoBpm) *
-      quarterNotesPerBar(arrangement.production.timeSignature) *
-      chordLengthInBars(arrangement.production, section.chords.length);
-    section.chords.forEach((_chord, chordIndex) => {
-      const voicing = voicingPlan.sections[sectionIndex][chordIndex];
-      const timer = window.setTimeout(() => {
-        if (playbackRun !== run) return;
-        instrument.triggerAttackRelease(
-          [voicing.bassNote, ...voicing.noteNames],
-          stepDuration * 0.9,
-          undefined,
-          energyVelocity(sectionProduction.energy, 0.38)
-        );
-        onStep?.(sectionIndex, chordIndex);
-      }, startDelayMs + elapsedSeconds * 1000);
-      playbackTimers.push(timer);
-      elapsedSeconds += stepDuration;
-    });
+  schedule.steps.forEach((step) => {
+    const timer = window.setTimeout(() => {
+      if (playbackRun !== run) return;
+      instrument.triggerAttackRelease(
+        step.notes,
+        step.durationSeconds * 0.9,
+        undefined,
+        step.velocity
+      );
+      onStep?.(step.sectionIndex, step.chordIndex);
+    }, step.offsetMs);
+    playbackTimers.push(timer);
   });
 
-  return startDelayMs + elapsedSeconds * 1000;
+  return schedule.durationMs;
 }
 
 export function stopPlayback(): void {
