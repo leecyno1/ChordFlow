@@ -1,4 +1,5 @@
-import { romanToChord } from "./music";
+import { bassOverrideKey } from "./bass";
+import { chordPitchClasses, romanToChord } from "./music";
 import { normalizeProductionSettings } from "./production";
 import type { Arrangement, Mode, SongSection } from "./types";
 
@@ -49,6 +50,32 @@ function isSongSection(value: unknown): value is SongSection {
   );
 }
 
+function normalizeBassOverrides(
+  value: unknown,
+  sections: SongSection[]
+): Record<string, number> {
+  if (!isRecord(value)) return {};
+  const entries: Array<[string, number]> = [];
+
+  sections.forEach((section) => {
+    section.chords.forEach((chord, chordIndex) => {
+      const key = bassOverrideKey(section.id, chordIndex);
+      const pitchClass = value[key];
+      if (
+        typeof pitchClass === "number" &&
+        Number.isInteger(pitchClass) &&
+        pitchClass >= 0 &&
+        pitchClass < 12 &&
+        chordPitchClasses(chord).includes(pitchClass)
+      ) {
+        entries.push([key, pitchClass]);
+      }
+    });
+  });
+
+  return Object.fromEntries(entries);
+}
+
 function normalizeArrangement(value: unknown): Arrangement | null {
   if (!isRecord(value)) return null;
   if (
@@ -92,6 +119,7 @@ function normalizeArrangement(value: unknown): Arrangement | null {
     surprise: Math.min(100, Math.max(0, Math.round(value.surprise))),
     seed: Math.round(value.seed),
     lockedSymbols,
+    bassOverrides: normalizeBassOverrides(value.bassOverrides, sections),
     production: normalizeProductionSettings(
       isRecord(value.production) ? value.production : undefined
     ),

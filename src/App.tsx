@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowDownToLine,
   AudioLines,
   ChevronRight,
   CircleDot,
@@ -22,6 +23,7 @@ import {
   WandSparkles
 } from "lucide-react";
 import {
+  auditionArrangementChord,
   auditionChord,
   auditionProgression,
   exportJson,
@@ -56,6 +58,11 @@ import {
   romanToChord
 } from "./domain/music";
 import {
+  bassAnchorOptions,
+  bassOverrideAt,
+  setBassOverride
+} from "./domain/bass";
+import {
   commitArrangementHistory,
   createArrangementHistory,
   mapArrangementHistory,
@@ -63,6 +70,7 @@ import {
   undoArrangementHistory
 } from "./domain/history";
 import { normalizeProductionSettings } from "./domain/production";
+import { buildVoicingPlan } from "./domain/voicing";
 import {
   loadLocalProject,
   saveLocalProject
@@ -159,6 +167,20 @@ function App() {
   const template = PROGRESSIONS.find((item) => item.id === section?.templateId);
   const progressionCorpusStat = getProgressionCorpusStat(template?.id);
   const chordCorpusStat = getChordCorpusStat(currentRoman);
+  const voicingPlan = useMemo(
+    () => buildVoicingPlan(arrangement),
+    [arrangement]
+  );
+  const currentVoicing = voicingPlan.sections[activeSection]?.[activeChord];
+  const bassOptions = useMemo(
+    () => bassAnchorOptions(currentChord, arrangement.key),
+    [arrangement.key, currentChord]
+  );
+  const currentBassOverride = bassOverrideAt(
+    arrangement,
+    activeSection,
+    activeChord
+  );
   const transitionSuggestions = useMemo(
     () => getTransitionSuggestions(arrangement, activeSection),
     [arrangement, activeSection]
@@ -404,6 +426,17 @@ function App() {
         ...changes
       })
     }));
+  }
+
+  function changeBassAnchor(pitchClass: number | null) {
+    const next = setBassOverride(
+      arrangement,
+      activeSection,
+      activeChord,
+      pitchClass
+    );
+    commitArrangement(next);
+    void auditionArrangementChord(next, activeSection, activeChord);
   }
 
   function toggleThemeLock(symbol: string) {
@@ -759,12 +792,62 @@ function App() {
           <section className="chord-focus" style={{ "--focus-color": functionColor(harmonicFn) } as React.CSSProperties}>
             <div className="focus-orbit" />
             <span className="focus-function">{functionLabel(harmonicFn)}</span>
-            <strong>{currentChord}</strong>
+            <strong>{currentVoicing?.displayChord ?? currentChord}</strong>
             <span className="focus-roman">{currentRoman}</span>
-            <button type="button" onClick={() => void auditionChord(currentChord)}>
-              <AudioLines size={15} />
-              单独试听
-            </button>
+            <div className="focus-controls">
+              <button
+                type="button"
+                className="focus-audition"
+                onClick={() =>
+                  void auditionArrangementChord(
+                    arrangement,
+                    activeSection,
+                    activeChord
+                  )
+                }
+              >
+                <AudioLines size={14} />
+                试听声部
+              </button>
+              <div className="focus-bass-control">
+                <span>
+                  <ArrowDownToLine size={11} />
+                  LOWEST NOTE
+                  <b>
+                    {currentBassOverride === undefined ? "AUTO" : "MANUAL"}
+                  </b>
+                </span>
+                <div className="focus-bass-options" aria-label="低音锚点">
+                  <button
+                    type="button"
+                    className={
+                      currentBassOverride === undefined ? "active" : ""
+                    }
+                    aria-pressed={currentBassOverride === undefined}
+                    aria-label="低音锚点 自动"
+                    title={`自动声部：${currentVoicing?.bassName ?? "根音"}`}
+                    onClick={() => changeBassAnchor(null)}
+                  >
+                    AUTO
+                  </button>
+                  {bassOptions.map((option) => (
+                    <button
+                      type="button"
+                      key={option.pitchClass}
+                      className={
+                        currentBassOverride === option.pitchClass ? "active" : ""
+                      }
+                      aria-pressed={currentBassOverride === option.pitchClass}
+                      aria-label={`低音锚点 ${option.name}`}
+                      title={`强制 ${option.name} 为最低音`}
+                      onClick={() => changeBassAnchor(option.pitchClass)}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </section>
 
           <section className="inspector-card progression-story">

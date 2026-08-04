@@ -71,6 +71,7 @@ export interface Arrangement {
   surprise: number;
   seed: number;
   lockedSymbols: string[];
+  bassOverrides: Record<string, number>;
   production: ProductionSettings;
   sections: SongSection[];
   generatedAt: string;

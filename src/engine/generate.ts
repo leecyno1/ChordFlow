@@ -4,6 +4,12 @@ import {
   ROLE_META,
   roleForSymbol
 } from "../domain/catalog";
+import {
+  pickBassOverridesForSections,
+  removeBassOverride,
+  removeBassOverridesForSections,
+  transposeBassOverrides
+} from "../domain/bass";
 import { getCorpusTransitions } from "../domain/corpus";
 import { romanDegree, romanToChord } from "../domain/music";
 import { normalizeProductionSettings } from "../domain/production";
@@ -161,6 +167,7 @@ export function generateArrangement(options: {
     surprise: options.surprise,
     seed: options.seed,
     lockedSymbols: [],
+    bassOverrides: {},
     production: normalizeProductionSettings(options.production),
     sections,
     generatedAt: new Date().toISOString()
@@ -185,6 +192,7 @@ export function regenerateSectionIdentity(
 
   const random = mulberry32(seed);
   const role = targetSections[0].role;
+  const targetSectionIds = new Set(targetSections.map((section) => section.id));
   const excludedIds = [...new Set(
     arrangement.sections.map((section) => section.templateId)
   )];
@@ -200,6 +208,10 @@ export function regenerateSectionIdentity(
   return {
     ...arrangement,
     seed,
+    bassOverrides: removeBassOverridesForSections(
+      arrangement.bassOverrides,
+      targetSectionIds
+    ),
     sections: arrangement.sections.map((section, index) => {
       if (section.symbol !== symbol) return section;
       const variation = variationFor(
@@ -241,10 +253,19 @@ export function preserveLockedSections(
         ]
       )
   );
+  const lockedSectionIds = new Set(
+    current.sections
+      .filter((section) => locked.has(section.symbol))
+      .map((section) => section.id)
+  );
 
   return {
     ...regenerated,
     lockedSymbols: [...current.lockedSymbols],
+    bassOverrides: pickBassOverridesForSections(
+      current.bassOverrides,
+      lockedSectionIds
+    ),
     sections: regenerated.sections.map(
       (section) =>
         lockedSections.get(`${section.symbol}:${section.occurrence}`) ?? section
@@ -322,7 +343,8 @@ export function replaceChord(
   chordIndex: number,
   roman: string
 ): Arrangement {
-  return {
+  const section = arrangement.sections[sectionIndex];
+  const replaced = {
     ...arrangement,
     sections: arrangement.sections.map((section, index) => {
       if (index !== sectionIndex) return section;
@@ -338,6 +360,9 @@ export function replaceChord(
       };
     })
   };
+  return section
+    ? removeBassOverride(replaced, section.id, chordIndex)
+    : replaced;
 }
 
 export function transposeArrangement(
@@ -347,6 +372,11 @@ export function transposeArrangement(
   return {
     ...arrangement,
     key,
+    bassOverrides: transposeBassOverrides(
+      arrangement.bassOverrides,
+      arrangement.key,
+      key
+    ),
     sections: arrangement.sections.map((section) => ({
       ...section,
       chords: section.numerals.map((roman) =>

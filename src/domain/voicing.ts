@@ -1,4 +1,5 @@
 import { chordPitchClasses } from "./music";
+import { bassOverrideKey } from "./bass";
 import type { Arrangement, VoicingMode } from "./types";
 
 const SHARP_NAMES = [
@@ -48,6 +49,7 @@ export interface ChordVoicing {
   bassName: string;
   bassMidi: number;
   bassNote: string;
+  isBassOverridden: boolean;
   midiNotes: number[];
   noteNames: string[];
 }
@@ -218,6 +220,35 @@ function chooseCandidate(
   )[0];
 }
 
+function applyBassOverride(
+  chord: string,
+  pitchClass: number,
+  fallback: VoicingCandidate,
+  previousNotes: number[] | null
+): VoicingCandidate {
+  const inversion = chordPitchClasses(chord).indexOf(pitchClass);
+  if (inversion < 0) return fallback;
+  const candidates = candidatesForChord(chord).filter(
+    (candidate) => candidate.inversion === inversion
+  );
+  if (candidates.length === 0) return fallback;
+
+  return [...candidates].sort((a, b) => {
+    if (previousNotes) {
+      return (
+        voiceDistance(previousNotes, a.midiNotes) -
+          voiceDistance(previousNotes, b.midiNotes) ||
+        Math.abs(center(a.midiNotes) - center(fallback.midiNotes)) -
+          Math.abs(center(b.midiNotes) - center(fallback.midiNotes))
+      );
+    }
+    return (
+      Math.abs(center(a.midiNotes) - center(fallback.midiNotes)) -
+      Math.abs(center(b.midiNotes) - center(fallback.midiNotes))
+    );
+  })[0];
+}
+
 function inversionLabel(inversion: number): string {
   return ["原位", "第一转位", "第二转位", "第三转位"][inversion] ?? "转位";
 }
@@ -232,7 +263,7 @@ export function buildVoicingPlan(arrangement: Arrangement): VoicingPlan {
 
   arrangement.sections.forEach((section, sectionIndex) => {
     const sectionVoicings = section.chords.map((chord, chordIndex) => {
-      const candidate = chooseCandidate(
+      let candidate = chooseCandidate(
         chord,
         mode,
         globalIndex,
@@ -240,7 +271,21 @@ export function buildVoicingPlan(arrangement: Arrangement): VoicingPlan {
         previousNotes,
         previousBass
       );
-      const rootPitchClass = chordPitchClasses(chord)[0];
+      const pitchClasses = chordPitchClasses(chord);
+      const rawOverride = arrangement.bassOverrides[
+        bassOverrideKey(section.id, chordIndex)
+      ];
+      const isBassOverridden =
+        typeof rawOverride === "number" && pitchClasses.includes(rawOverride);
+      if (isBassOverridden) {
+        candidate = applyBassOverride(
+          chord,
+          rawOverride,
+          candidate,
+          previousNotes
+        );
+      }
+      const rootPitchClass = pitchClasses[0];
       const bassPitchClass = candidate.midiNotes[0] % 12;
       const interval = (bassPitchClass - rootPitchClass + 12) % 12;
       const preferFlats =
@@ -266,6 +311,7 @@ export function buildVoicingPlan(arrangement: Arrangement): VoicingPlan {
         bassName,
         bassMidi,
         bassNote: midiToNoteName(bassMidi, preferFlats),
+        isBassOverridden,
         midiNotes: candidate.midiNotes,
         noteNames: candidate.midiNotes.map((note) =>
           midiToNoteName(note, preferFlats)

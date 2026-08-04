@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { generateArrangement } from "../engine/generate";
+import { setBassOverride } from "./bass";
+import { chordPitchClasses } from "./music";
 import {
   buildSunoPromptKit,
   DEFAULT_TEMPO_BPM,
@@ -76,5 +78,24 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.chordBlueprint).toContain("VOICING MODE: 戏剧 / WIDE");
     expect(kit.chordBlueprint).toContain("Voicing guide:");
     expect(kit.chordBlueprint).toContain("Bass guide:");
+  });
+
+  it("marks manual bass anchors in Suno directions", () => {
+    const arrangement = generateArrangement({
+      formId: "aba",
+      key: "C",
+      mode: "major",
+      style: "华语流行",
+      surprise: 34,
+      seed: 18473
+    });
+    const pitchClass = chordPitchClasses(arrangement.sections[0].chords[0])[1];
+    const anchored = setBassOverride(arrangement, 0, 0, pitchClass);
+    const kit = buildSunoPromptKit(anchored);
+
+    expect(kit.sections[0].bassLine[0]).toContain("*");
+    expect(kit.sections[0].voicings[0]).toContain("/");
+    expect(kit.stylePromptEn).toContain("manual bass anchors");
+    expect(kit.chordBlueprint).toContain("BASS ANCHORS:");
   });
 });

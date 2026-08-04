@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { buildVoicingPlan } from "../domain/voicing";
+import { setBassOverride } from "../domain/bass";
+import { chordPitchClasses } from "../domain/music";
 import { generateArrangement } from "../engine/generate";
 import { buildMidi } from "./player";
 
 describe("MIDI production grid", () => {
   it("shares tempo, meter and harmonic rhythm with the arrangement", () => {
-    const arrangement = generateArrangement({
+    const generated = generateArrangement({
       formId: "aba",
       key: "D",
       mode: "major",
@@ -18,6 +20,15 @@ describe("MIDI production grid", () => {
         barsPerSection: 8
       }
     });
+    const anchorPitchClass = chordPitchClasses(
+      generated.sections[0].chords[0]
+    )[1];
+    const arrangement = setBassOverride(
+      generated,
+      0,
+      0,
+      anchorPitchClass
+    );
     const midi = buildMidi(arrangement);
     const notes = midi.tracks[0].notes;
     const bassNotes = midi.tracks[1].notes;
@@ -34,6 +45,7 @@ describe("MIDI production grid", () => {
     expect(midi.tracks[1].name).toBe("ChordFlow Bass Guide");
     expect(notes[0].midi).toBe(voicingPlan.chords[0].midiNotes[0]);
     expect(bassNotes[0].midi).toBe(voicingPlan.chords[0].bassMidi);
+    expect(bassNotes[0].midi % 12).toBe(anchorPitchClass);
     expect(bassNotes[0].durationTicks).toBe(expectedChordTicks);
   });
 });

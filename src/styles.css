@@ -1054,7 +1054,7 @@ select {
 
 .chord-focus {
   --focus-color: var(--rose);
-  min-height: 150px;
+  min-height: 184px;
   position: relative;
   overflow: hidden;
   padding: 18px;
@@ -1097,14 +1097,24 @@ select {
   font: 11px var(--mono);
 }
 
-.chord-focus button {
+.focus-controls {
   position: absolute;
   left: 18px;
+  right: 18px;
   bottom: 15px;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: end;
+  gap: 9px;
+}
+
+.focus-audition {
+  height: 29px;
   min-height: 27px;
-  padding: 0 9px;
+  padding: 0 8px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -1112,6 +1122,62 @@ select {
   color: #aaa7a1;
   font-size: 8px;
   cursor: pointer;
+}
+
+.focus-audition:hover {
+  color: var(--ivory);
+  border-color: var(--line-strong);
+}
+
+.focus-bass-control {
+  min-width: 0;
+}
+
+.focus-bass-control > span {
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #666965;
+  font: 6px var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.focus-bass-control > span b {
+  margin-left: auto;
+  color: var(--focus-color);
+  font-weight: 500;
+}
+
+.focus-bass-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(28px, 1fr));
+  gap: 3px;
+}
+
+.focus-bass-options button {
+  height: 29px;
+  min-width: 0;
+  padding: 0 4px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 4px;
+  color: #70726e;
+  background: rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  font: 7px var(--mono);
+  transition: 150ms ease;
+}
+
+.focus-bass-options button:hover {
+  color: var(--ivory);
+  border-color: color-mix(in srgb, var(--focus-color) 34%, transparent);
+}
+
+.focus-bass-options button.active {
+  color: #0c0d0f;
+  border-color: var(--focus-color);
+  background: var(--focus-color);
+  box-shadow: 0 0 11px color-mix(in srgb, var(--focus-color) 24%, transparent);
 }
 
 .inspector-card {
@@ -3085,7 +3151,10 @@ select {
     padding: 18px 14px;
   }
 
-  .chord-focus,
+  .chord-focus {
+    min-height: 184px;
+  }
+
   .corpus-status {
     min-height: 150px;
   }

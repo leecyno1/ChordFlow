@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { generateArrangement } from "../engine/generate";
+import { setBassOverride } from "./bass";
+import { chordPitchClasses } from "./music";
 import {
   LOCAL_PROJECT_KEY,
   loadLocalProject,
@@ -33,7 +35,12 @@ function memoryStorage() {
 
 describe("local project storage", () => {
   it("round-trips an arrangement through the versioned envelope", () => {
-    const source = { ...arrangement(), lockedSymbols: ["B"] };
+    const base = arrangement();
+    const pitchClass = chordPitchClasses(base.sections[0].chords[0])[1];
+    const source = {
+      ...setBassOverride(base, 0, 0, pitchClass),
+      lockedSymbols: ["B"]
+    };
     const savedAt = new Date("2026-08-04T02:30:00.000Z");
     const parsed = parseLocalProject(serializeLocalProject(source, savedAt));
 
@@ -53,7 +60,11 @@ describe("local project storage", () => {
 
   it("migrates older arrangements without theme locks", () => {
     const source = arrangement();
-    const { lockedSymbols: _lockedSymbols, ...legacy } = source;
+    const {
+      lockedSymbols: _lockedSymbols,
+      bassOverrides: _bassOverrides,
+      ...legacy
+    } = source;
     const parsed = parseLocalProject(
       JSON.stringify({
         schemaVersion: 1,
@@ -63,6 +74,7 @@ describe("local project storage", () => {
     );
 
     expect(parsed?.arrangement.lockedSymbols).toEqual([]);
+    expect(parsed?.arrangement.bassOverrides).toEqual({});
   });
 
   it("rejects malformed or unsupported project data", () => {

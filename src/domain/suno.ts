@@ -7,7 +7,7 @@ import {
 import { buildVoicingPlan } from "./voicing";
 import type { Arrangement, SectionRole } from "./types";
 
-export const SUNO_BRIDGE_VERSION = "0.3";
+export const SUNO_BRIDGE_VERSION = "0.4";
 export const DEFAULT_TEMPO_BPM = DEFAULT_PRODUCTION_SETTINGS.tempoBpm;
 
 interface StyleProfile {
@@ -216,6 +216,9 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   const { tempoBpm, timeSignature, barsPerSection } = arrangement.production;
   const voicingProfile = getVoicingProfile(arrangement.production.voicingMode);
   const voicingPlan = buildVoicingPlan(arrangement);
+  const hasBassAnchors = voicingPlan.chords.some(
+    (voicing) => voicing.isBassOverridden
+  );
 
   const sections: SunoSectionPrompt[] = arrangement.sections.map((section, sectionIndex) => {
     const variation = section.variationLabel
@@ -236,7 +239,8 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
         (voicing) => voicing.displayChord
       ),
       bassLine: voicingPlan.sections[sectionIndex].map(
-        (voicing) => voicing.bassNote
+        (voicing) =>
+          `${voicing.bassNote}${voicing.isBassOverridden ? "*" : ""}`
       ),
       direction: `${ROLE_DIRECTION[section.role]}; ${variation}.${transition}`
     };
@@ -251,6 +255,9 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     profile.instrumentationEn,
     profile.productionEn,
     voicingProfile.directionEn,
+    hasBassAnchors
+      ? "keep the specified manual bass anchors as the lowest notes"
+      : "",
     novelty.en
   ]
     .filter(Boolean)
@@ -265,6 +272,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     profile.instrumentationZh,
     profile.productionZh,
     voicingProfile.directionZh,
+    hasBassAnchors ? "将标记的手动低音锚点保持为最低音" : "",
     novelty.zh
   ]
     .filter(Boolean)
@@ -286,6 +294,11 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `KEY: ${arrangement.key} ${modeEn} | TEMPO: ${tempoBpm} BPM | METER: ${timeSignature}`,
     `STYLE: ${profile.en}`,
     `VOICING MODE: ${voicingProfile.label} / ${voicingProfile.code}`,
+    ...(hasBassAnchors
+      ? [
+          "BASS ANCHORS: Notes marked * are manual lowest-note anchors and should be preserved."
+        ]
+      : []),
     "",
     ...sectionLines,
     "ARRANGEMENT RULE: Keep repeated letter sections recognizable. Let the chorus feel wider than the verse, and make the bridge provide contrast before the final return. Preserve the listed chord order as the harmonic reference."

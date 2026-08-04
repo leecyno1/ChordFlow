@@ -1,5 +1,6 @@
 import { coarseRoman } from "../domain/corpus";
 import { romanToChord } from "../domain/music";
+import { removeBassOverride } from "../domain/bass";
 import type {
   Arrangement,
   SongSection,
@@ -113,7 +114,9 @@ export function applyTransitionSuggestion(
   sectionIndex: number,
   suggestion: TransitionSuggestion
 ): Arrangement {
-  return {
+  const sourceSection = arrangement.sections[sectionIndex];
+  const lastIndex = (sourceSection?.chords.length ?? 1) - 1;
+  const next = {
     ...arrangement,
     sections: arrangement.sections.map((section, index): SongSection => {
       if (index !== sectionIndex) return section;
@@ -132,4 +135,8 @@ export function applyTransitionSuggestion(
       };
     })
   };
+  if (!sourceSection || sourceSection.chords[lastIndex] === suggestion.chord) {
+    return next;
+  }
+  return removeBassOverride(next, sourceSection.id, lastIndex);
 }

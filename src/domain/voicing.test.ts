@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { generateArrangement } from "../engine/generate";
+import { setBassOverride } from "./bass";
+import { chordPitchClasses } from "./music";
 import { buildVoicingPlan, voicingMotion } from "./voicing";
 
 describe("voicing planner", () => {
@@ -49,5 +51,16 @@ describe("voicing planner", () => {
     expect(
       new Set(plan.chords.map((chord) => chord.bassMidi)).size
     ).toBeGreaterThan(3);
+  });
+
+  it("forces a legal manual bass anchor into voicing and slash notation", () => {
+    const pitchClass = chordPitchClasses(base.sections[0].chords[0])[1];
+    const anchored = setBassOverride(base, 0, 0, pitchClass);
+    const voicing = buildVoicingPlan(anchored).sections[0][0];
+
+    expect(voicing.isBassOverridden).toBe(true);
+    expect(voicing.inversion).toBe(1);
+    expect(voicing.bassMidi % 12).toBe(pitchClass);
+    expect(voicing.displayChord).toContain("/");
   });
 });

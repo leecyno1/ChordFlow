@@ -49,6 +49,22 @@ export async function auditionChord(chord: string): Promise<void> {
   instrument.triggerAttackRelease(chordNoteNames(chord, 3), "2n");
 }
 
+export async function auditionArrangementChord(
+  arrangement: Arrangement,
+  sectionIndex: number,
+  chordIndex: number
+): Promise<void> {
+  const voicing = buildVoicingPlan(arrangement).sections[sectionIndex]?.[
+    chordIndex
+  ];
+  if (!voicing) return;
+  const instrument = await getSynth();
+  instrument.triggerAttackRelease(
+    [voicing.bassNote, ...voicing.noteNames],
+    "2n"
+  );
+}
+
 export async function auditionProgression(chords: string[]): Promise<void> {
   const instrument = await getSynth();
   const Tone = await getTone();

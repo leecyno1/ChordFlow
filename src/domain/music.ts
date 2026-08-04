@@ -179,6 +179,25 @@ export function chordPitchClasses(chord: string): number[] {
   return intervals.map((interval) => (root + interval) % 12);
 }
 
+export function pitchClassForName(noteName: string): number | null {
+  const normalized = noteName.match(/^[A-G](?:#|b)?/)?.[0];
+  return normalized && normalized in PITCH_CLASS
+    ? PITCH_CLASS[normalized]
+    : null;
+}
+
+export function pitchClassName(
+  pitchClass: number,
+  preferFlats = false
+): string {
+  const normalized = ((Math.round(pitchClass) % 12) + 12) % 12;
+  return (preferFlats ? FLAT_NAMES : SHARP_NAMES)[normalized];
+}
+
+export function prefersFlatSpelling(key: string, chord = ""): boolean {
+  return FLAT_KEYS.has(key) || key.includes("b") || chord.includes("b");
+}
+
 export function chordNoteNames(chord: string, octave = 3): string[] {
   const pitchClasses = chordPitchClasses(chord);
   return pitchClasses.map((pitch, index) => {

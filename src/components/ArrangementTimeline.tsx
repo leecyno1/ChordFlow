@@ -25,6 +25,7 @@ export function ArrangementTimeline({
   const themeCount = new Set(
     arrangement.sections.map((section) => section.symbol)
   ).size;
+  const bassOverrideCount = Object.keys(arrangement.bassOverrides).length;
 
   return (
     <section className="timeline-panel">
@@ -41,6 +42,9 @@ export function ArrangementTimeline({
           {getVoicingProfile(arrangement.production.voicingMode).label}声部
           {arrangement.lockedSymbols.length > 0
             ? ` · 锁定 ${arrangement.lockedSymbols.length}/${themeCount}`
+            : ""}
+          {bassOverrideCount > 0
+            ? ` · 低音锚点 ${bassOverrideCount}`
             : ""}
         </div>
       </div>

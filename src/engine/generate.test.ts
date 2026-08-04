@@ -38,6 +38,7 @@ describe("generateArrangement", () => {
       (section) => section.symbol === "A"
     );
     expect(arrangement.lockedSymbols).toEqual([]);
+    expect(arrangement.bassOverrides).toEqual({});
     expect(aSections).toHaveLength(2);
     expect(aSections[0].templateId).toBe(aSections[1].templateId);
     expect(aSections[0].numerals.slice(0, -1)).toEqual(
