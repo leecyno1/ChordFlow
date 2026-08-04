@@ -1,7 +1,7 @@
 {
   "name": "chordflow",
   "private": true,
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "结构驱动、语料增强的音乐和弦生成器，为主歌、副歌与桥段生成可解释的完整和声方案。",
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:prompts": "vitest run src/domain/suno.regression.test.ts"
+    "test:prompts": "vitest run src/domain/suno.regression.test.ts",
+    "test:e2e": "node tests/e2e/suno-bridge.mjs"
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.28",

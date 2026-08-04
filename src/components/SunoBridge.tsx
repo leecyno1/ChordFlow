@@ -161,6 +161,7 @@ export function SunoBridge({
     >
       <aside
         className="suno-bridge"
+        data-testid="suno-bridge"
         role="dialog"
         aria-modal="true"
         aria-labelledby="suno-bridge-title"
@@ -297,9 +298,11 @@ export function SunoBridge({
             <div>
               <span>01 · SECTION DYNAMICS</span>
               <strong>
-                {kit.sectionOverrideCount > 0
-                  ? `${kit.sectionOverrideCount} 段已锁定`
-                  : "按段补足动态、声部与配器反差"}
+                <span data-testid="suno-section-lock-summary">
+                  {kit.sectionOverrideCount > 0
+                    ? `${kit.sectionOverrideCount} 段已锁定`
+                    : "按段补足动态、声部与配器反差"}
+                </span>
               </strong>
             </div>
             <ChevronDown size={14} />
@@ -332,6 +335,8 @@ export function SunoBridge({
                       "suno-section-production-card " +
                       (sectionProduction.locked ? "locked" : "")
                     }
+                    data-testid={`suno-section-card-${sectionIndex}`}
+                    data-locked={sectionProduction.locked}
                     key={section.id}
                   >
                     <header>
@@ -345,6 +350,7 @@ export function SunoBridge({
                       <button
                         type="button"
                         className="suno-section-lock"
+                        data-testid={`suno-section-lock-${sectionIndex}`}
                         onClick={() =>
                           onSectionProductionChange(
                             sectionIndex,
@@ -488,10 +494,13 @@ export function SunoBridge({
               </button>
             </div>
           </div>
-          <p className="suno-style-prompt">{stylePrompt}</p>
+          <p className="suno-style-prompt" data-testid="suno-style-prompt">
+            {stylePrompt}
+          </p>
           <button
             type="button"
             className="suno-copy"
+            data-testid="suno-copy-style"
             onClick={() => void handleCopy("style", stylePrompt)}
           >
             {copied === "style" ? <Check size={14} /> : <Copy size={14} />}
@@ -507,7 +516,7 @@ export function SunoBridge({
             </div>
             <small>{kit.sections.length} 段 · {kit.form}</small>
           </div>
-          <pre>{kit.chordBlueprint}</pre>
+          <pre data-testid="suno-blueprint">{kit.chordBlueprint}</pre>
           <button
             type="button"
             className="suno-copy"
@@ -570,6 +579,7 @@ export function SunoBridge({
         <footer className="suno-bridge-actions">
           <button
             type="button"
+            data-testid="suno-copy-all"
             onClick={() =>
               void handleCopy("all", serializeSunoPromptKit(kit))
             }
@@ -584,6 +594,7 @@ export function SunoBridge({
           <button
             type="button"
             className="suno-download"
+            data-testid="suno-download-txt"
             onClick={() =>
               downloadText(
                 serializeSunoPromptKit(kit),

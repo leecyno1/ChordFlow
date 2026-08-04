@@ -652,6 +652,7 @@ function App() {
           <button
             type="button"
             className="suno-launch"
+            data-testid="suno-launch"
             onClick={() => setSunoOpen(true)}
           >
             <WandSparkles size={16} />
