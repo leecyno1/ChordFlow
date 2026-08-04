@@ -18,6 +18,7 @@ import {
 import {
   effectiveSectionProductionAt,
   SECTION_BAR_OPTIONS,
+  TEXTURE_PROFILES,
   TIME_SIGNATURES,
   VOICING_PROFILES
 } from "../domain/production";
@@ -297,7 +298,7 @@ export function SunoBridge({
               <strong>
                 {kit.sectionOverrideCount > 0
                   ? `${kit.sectionOverrideCount} 段已锁定`
-                  : "按段补足动态与声部反差"}
+                  : "按段补足动态、声部与配器反差"}
               </strong>
             </div>
             <ChevronDown size={14} />
@@ -319,7 +320,9 @@ export function SunoBridge({
                   onSectionProductionChange(sectionIndex, {
                     energy: changes.energy ?? sectionProduction.energy,
                     voicingMode:
-                      changes.voicingMode ?? sectionProduction.voicingMode
+                      changes.voicingMode ?? sectionProduction.voicingMode,
+                    textureMode:
+                      changes.textureMode ?? sectionProduction.textureMode
                   });
 
                 return (
@@ -348,7 +351,8 @@ export function SunoBridge({
                               ? null
                               : {
                                   energy: sectionProduction.energy,
-                                  voicingMode: sectionProduction.voicingMode
+                                  voicingMode: sectionProduction.voicingMode,
+                                  textureMode: sectionProduction.textureMode
                                 }
                           )
                         }
@@ -423,6 +427,36 @@ export function SunoBridge({
                         </button>
                       ))}
                     </div>
+
+                    <div
+                      className="suno-section-texture-control"
+                      aria-label={`${section.title} 配器密度`}
+                    >
+                      <span>TEXTURE</span>
+                      <div>
+                        {TEXTURE_PROFILES.map((profile) => (
+                          <button
+                            type="button"
+                            key={profile.id}
+                            className={
+                              sectionProduction.textureMode === profile.id
+                                ? "active"
+                                : ""
+                            }
+                            onClick={() =>
+                              setOverride({ textureMode: profile.id })
+                            }
+                            aria-label={`${section.title} 使用${profile.label}配器密度`}
+                            aria-pressed={
+                              sectionProduction.textureMode === profile.id
+                            }
+                          >
+                            <strong>{profile.code}</strong>
+                            <small>{profile.label}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </article>
                 );
               })}
@@ -468,7 +502,7 @@ export function SunoBridge({
           <div className="suno-card-head">
             <div>
               <span>03 · CHORD BLUEPRINT</span>
-              <strong>结构、和弦与段落能量参考</strong>
+              <strong>结构、和弦与逐段制作参考</strong>
             </div>
             <small>{kit.sections.length} 段 · {kit.form}</small>
           </div>

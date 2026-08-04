@@ -29,6 +29,9 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.chordBlueprint).toContain("SONG FORM: ABABCB");
     expect(kit.chordBlueprint).toContain("[Verse A | 4 bars | Energy");
     expect(kit.chordBlueprint).toContain("[Chorus B | 4 bars | Energy");
+    expect(kit.sections[0].textureCode).toBe("AIR");
+    expect(kit.sections[1].textureCode).toBe("LIFT");
+    expect(kit.chordBlueprint).toContain("Instrumentation:");
     expect(kit.sections).toHaveLength(arrangement.sections.length);
   });
 
@@ -100,7 +103,7 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.chordBlueprint).toContain("BASS ANCHORS:");
   });
 
-  it("writes locked section energy and voicing into the Suno blueprint", () => {
+  it("writes locked section energy, voicing and texture into the Suno blueprint", () => {
     const source = generateArrangement({
       formId: "aba",
       key: "C",
@@ -111,16 +114,21 @@ describe("Suno Bridge prompt kit", () => {
     });
     const arrangement = setSectionProductionOverride(source, 1, {
       energy: 94,
-      voicingMode: "dramatic"
+      voicingMode: "dramatic",
+      textureMode: "full"
     });
     const kit = buildSunoPromptKit(arrangement);
 
     expect(kit.sectionOverrideCount).toBe(1);
     expect(kit.sections[1].energy).toBe(94);
     expect(kit.sections[1].voicingMode).toBe("dramatic");
-    expect(kit.chordBlueprint).toContain(
-      "Energy 94/100 | Voicing 戏剧/WIDE LOCKED"
+    expect(kit.sections[1].textureMode).toBe("full");
+    expect(kit.sections[1].instrumentationDirection).toContain(
+      "layered harmony"
     );
-    expect(kit.stylePromptEn).toContain("section-specific energy");
+    expect(kit.chordBlueprint).toContain(
+      "Energy 94/100 | Voicing 戏剧/WIDE | Texture 展开/LIFT LOCKED"
+    );
+    expect(kit.stylePromptEn).toContain("instrumentation-density");
   });
 });

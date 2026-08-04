@@ -3035,7 +3035,7 @@ select {
 }
 
 .suno-section-production-card {
-  min-width: 166px;
+  min-width: 178px;
   padding: 8px;
   scroll-snap-align: start;
   border: 1px solid rgba(255, 255, 255, 0.055);
@@ -3183,6 +3183,67 @@ select {
   color: #071110;
   border-color: var(--cyan);
   background: var(--cyan);
+}
+
+.suno-section-texture-control {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.suno-section-texture-control > span {
+  color: #4b4842;
+  font: 5px var(--mono);
+  letter-spacing: .06em;
+}
+
+.suno-section-texture-control > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.suno-section-texture-control button {
+  min-width: 0;
+  height: 25px;
+  padding: 0 2px;
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 3px;
+  color: #555149;
+  background: transparent;
+  cursor: pointer;
+}
+
+.suno-section-texture-control strong,
+.suno-section-texture-control small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suno-section-texture-control strong {
+  font: 5px var(--mono);
+}
+
+.suno-section-texture-control small {
+  margin-top: 1px;
+  color: #3e3b36;
+  font-size: 5px;
+}
+
+.suno-section-texture-control button.active {
+  color: #171109;
+  border-color: var(--amber);
+  background: var(--amber);
+}
+
+.suno-section-texture-control button.active small {
+  color: rgba(23, 17, 9, 0.55);
 }
 
 .suno-prompt-card {

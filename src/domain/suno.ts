@@ -2,13 +2,18 @@ import { PROGRESSIONS } from "./catalog";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
   effectiveSectionProductionAt,
+  getTextureProfile,
   getVoicingProfile,
   harmonicRhythmLabel
 } from "./production";
 import { buildVoicingPlan } from "./voicing";
-import type { Arrangement, SectionRole } from "./types";
+import type {
+  Arrangement,
+  SectionRole,
+  SectionTextureMode
+} from "./types";
 
-export const SUNO_BRIDGE_VERSION = "0.5";
+export const SUNO_BRIDGE_VERSION = "0.6";
 export const DEFAULT_TEMPO_BPM = DEFAULT_PRODUCTION_SETTINGS.tempoBpm;
 
 interface StyleProfile {
@@ -28,6 +33,10 @@ export interface SunoSectionPrompt {
   voicingMode: Arrangement["production"]["voicingMode"];
   voicingLabel: string;
   voicingCode: string;
+  textureMode: SectionTextureMode;
+  textureLabel: string;
+  textureCode: string;
+  instrumentationDirection: string;
   productionLocked: boolean;
   chords: string[];
   numerals: string[];
@@ -234,6 +243,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     const sectionVoicingProfile = getVoicingProfile(
       sectionProduction.voicingMode
     );
+    const textureProfile = getTextureProfile(sectionProduction.textureMode);
     const variation = section.variationLabel
       ? VARIATION_EN[section.variationLabel] ?? section.variationLabel
       : "theme statement";
@@ -249,6 +259,10 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
       voicingMode: sectionProduction.voicingMode,
       voicingLabel: sectionVoicingProfile.label,
       voicingCode: sectionVoicingProfile.code,
+      textureMode: sectionProduction.textureMode,
+      textureLabel: textureProfile.label,
+      textureCode: textureProfile.code,
+      instrumentationDirection: textureProfile.directionEn,
       productionLocked: sectionProduction.locked,
       chords: section.chords,
       numerals: section.numerals,
@@ -276,7 +290,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     profile.productionEn,
     voicingProfile.directionEn,
     sectionOverrideCount > 0
-      ? "follow the section-specific energy and voicing directions in the chord blueprint"
+      ? "follow the section-specific energy, voicing and instrumentation-density directions in the chord blueprint"
       : "",
     hasBassAnchors
       ? "keep the specified manual bass anchors as the lowest notes"
@@ -296,7 +310,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     profile.productionZh,
     voicingProfile.directionZh,
     sectionOverrideCount > 0
-      ? "按和弦蓝图执行逐段能量与声部方向"
+      ? "按和弦蓝图执行逐段能量、声部与配器密度方向"
       : "",
     hasBassAnchors ? "将标记的手动低音锚点保持为最低音" : "",
     novelty.zh
@@ -305,11 +319,12 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     .join("，");
 
   const sectionLines = sections.flatMap((section) => [
-    `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100 | Voicing ${section.voicingLabel}/${section.voicingCode}${section.productionLocked ? " LOCKED" : ""}]`,
+    `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100 | Voicing ${section.voicingLabel}/${section.voicingCode} | Texture ${section.textureLabel}/${section.textureCode}${section.productionLocked ? " LOCKED" : ""}]`,
     `Chords: ${section.chords.join(" - ")}`,
     `Harmony: ${section.numerals.join(" - ")}`,
     `Voicing guide: ${section.voicings.join(" - ")}`,
     `Bass guide: ${section.bassLine.join(" - ")}`,
+    `Instrumentation: ${section.instrumentationDirection}`,
     `Harmonic rhythm: ${harmonicRhythmLabel(arrangement.production, section.chords.length)}`,
     `Direction: ${section.direction}`,
     ""
@@ -322,7 +337,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `${sectionOverrideCount > 0 ? "DEFAULT " : ""}VOICING MODE: ${voicingProfile.label} / ${voicingProfile.code}`,
     ...(sectionOverrideCount > 0
       ? [
-          `SECTION LOCKS: ${sectionOverrideCount} section${sectionOverrideCount > 1 ? "s" : ""} use explicit energy and voicing directions.`
+          `SECTION LOCKS: ${sectionOverrideCount} section${sectionOverrideCount > 1 ? "s" : ""} use explicit energy, voicing and texture directions.`
         ]
       : []),
     ...(hasBassAnchors

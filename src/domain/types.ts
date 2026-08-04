@@ -2,10 +2,12 @@ export type Mode = "major" | "minor";
 
 export type TimeSignature = "4/4" | "3/4" | "6/8";
 export type VoicingMode = "stable" | "flowing" | "dramatic";
+export type SectionTextureMode = "sparse" | "balanced" | "full";
 
 export interface SectionProductionOverride {
   energy: number;
   voicingMode: VoicingMode;
+  textureMode?: SectionTextureMode;
 }
 
 export interface ProductionSettings {

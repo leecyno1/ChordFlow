@@ -2,6 +2,7 @@ import type {
   Arrangement,
   ProductionSettings,
   SectionProductionOverride,
+  SectionTextureMode,
   SongSection,
   TimeSignature,
   VoicingMode
@@ -47,8 +48,42 @@ export const VOICING_PROFILES: Array<{
   }
 ];
 
+export const TEXTURE_PROFILES: Array<{
+  id: SectionTextureMode;
+  label: string;
+  code: string;
+  directionEn: string;
+  directionZh: string;
+}> = [
+  {
+    id: "sparse",
+    label: "留白",
+    code: "AIR",
+    directionEn:
+      "one primary harmonic instrument, restrained bass and minimal percussion",
+    directionZh: "保留一件主要和声乐器、克制低音与极简打击乐"
+  },
+  {
+    id: "balanced",
+    label: "承托",
+    code: "CORE",
+    directionEn:
+      "a focused core arrangement with harmonic support, melodic bass and controlled drums",
+    directionZh: "以核心编制承托和声，加入旋律型低音与受控鼓组"
+  },
+  {
+    id: "full",
+    label: "展开",
+    code: "LIFT",
+    directionEn:
+      "layered harmony, active bass, full drums and selective counterlines",
+    directionZh: "展开分层和声、主动低音、完整鼓组与少量对位线条"
+  }
+];
+
 export interface EffectiveSectionProduction
-  extends SectionProductionOverride {
+  extends Omit<SectionProductionOverride, "textureMode"> {
+  textureMode: SectionTextureMode;
   locked: boolean;
 }
 
@@ -58,6 +93,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isVoicingMode(value: unknown): value is VoicingMode {
   return VOICING_PROFILES.some((profile) => profile.id === value);
+}
+
+export function isTextureMode(value: unknown): value is SectionTextureMode {
+  return TEXTURE_PROFILES.some((profile) => profile.id === value);
 }
 
 function normalizeEnergy(value: number): number {
@@ -81,7 +120,16 @@ function normalizeSectionOverrides(
     ) {
       return;
     }
-    entries.push([key, { energy: normalizeEnergy(energy), voicingMode }]);
+    entries.push([
+      key,
+      {
+        energy: normalizeEnergy(energy),
+        voicingMode,
+        ...(isTextureMode(rawOverride.textureMode)
+          ? { textureMode: rawOverride.textureMode }
+          : {})
+      }
+    ]);
   });
 
   return Object.fromEntries(entries);
@@ -154,6 +202,9 @@ export function effectiveSectionProductionAt(
     energy: override?.energy ?? section?.energy ?? 50,
     voicingMode:
       override?.voicingMode ?? arrangement.production.voicingMode,
+    textureMode:
+      override?.textureMode ??
+      (section ? defaultSectionTextureMode(section) : "balanced"),
     locked: override !== undefined
   };
 }
@@ -172,16 +223,21 @@ export function setSectionProductionOverride(
     if (!(key in sectionOverrides)) return arrangement;
     delete sectionOverrides[key];
   } else {
+    const effective = effectiveSectionProductionAt(arrangement, sectionIndex);
     const nextOverride = {
       energy: normalizeEnergy(override.energy),
       voicingMode: isVoicingMode(override.voicingMode)
         ? override.voicingMode
-        : arrangement.production.voicingMode
+        : arrangement.production.voicingMode,
+      textureMode: isTextureMode(override.textureMode)
+        ? override.textureMode
+        : effective.textureMode
     };
     const current = sectionOverrides[key];
     if (
       current?.energy === nextOverride.energy &&
-      current.voicingMode === nextOverride.voicingMode
+      current.voicingMode === nextOverride.voicingMode &&
+      current.textureMode === nextOverride.textureMode
     ) {
       return arrangement;
     }
@@ -201,6 +257,24 @@ export function getVoicingProfile(mode: VoicingMode) {
   return (
     VOICING_PROFILES.find((profile) => profile.id === mode) ??
     VOICING_PROFILES[1]
+  );
+}
+
+export function defaultSectionTextureMode(
+  section: Pick<SongSection, "role" | "occurrence">
+): SectionTextureMode {
+  if (section.role === "intro" || section.role === "outro") return "sparse";
+  if (section.role === "verse") {
+    return section.occurrence === 0 ? "sparse" : "balanced";
+  }
+  if (section.role === "chorus") return "full";
+  return "balanced";
+}
+
+export function getTextureProfile(mode: SectionTextureMode) {
+  return (
+    TEXTURE_PROFILES.find((profile) => profile.id === mode) ??
+    TEXTURE_PROFILES[1]
   );
 }
 

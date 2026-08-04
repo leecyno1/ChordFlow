@@ -28,24 +28,45 @@ describe("section production overrides", () => {
       }
     });
     const legacy = normalizeProductionSettings({ tempoBpm: 88 });
+    const source = arrangement();
+    const legacyLocked = {
+      ...source,
+      production: { ...source.production, ...normalized }
+    };
 
     expect(normalized.sectionOverrides).toEqual({
       "A:0": { energy: 100, voicingMode: "dramatic" }
     });
     expect(legacy.sectionOverrides).toEqual({});
+    expect(effectiveSectionProductionAt(legacyLocked, 0)).toMatchObject({
+      textureMode: "sparse",
+      locked: true
+    });
   });
 
-  it("locks and clears the effective energy and voicing for one section", () => {
+  it("derives lightweight texture defaults from each section role", () => {
+    const source = arrangement();
+
+    expect(effectiveSectionProductionAt(source, 0).textureMode).toBe("sparse");
+    expect(effectiveSectionProductionAt(source, 1).textureMode).toBe("full");
+    expect(effectiveSectionProductionAt(source, 2).textureMode).toBe(
+      "balanced"
+    );
+  });
+
+  it("locks and clears the effective energy, voicing and texture for one section", () => {
     const source = arrangement();
     const locked = setSectionProductionOverride(source, 0, {
       energy: 38,
-      voicingMode: "stable"
+      voicingMode: "stable",
+      textureMode: "balanced"
     });
     const cleared = setSectionProductionOverride(locked, 0, null);
 
     expect(effectiveSectionProductionAt(locked, 0)).toEqual({
       energy: 38,
       voicingMode: "stable",
+      textureMode: "balanced",
       locked: true
     });
     expect(effectiveSectionProductionAt(cleared, 0).locked).toBe(false);
@@ -55,11 +76,13 @@ describe("section production overrides", () => {
     const source = arrangement(100);
     const locked = setSectionProductionOverride(source, 1, {
       energy: 91,
-      voicingMode: "dramatic"
+      voicingMode: "dramatic",
+      textureMode: "full"
     });
     const withStaleLock = setSectionProductionOverride(locked, 3, {
       energy: 72,
-      voicingMode: "stable"
+      voicingMode: "stable",
+      textureMode: "balanced"
     });
     const regenerated = generateArrangement({
       formId: source.formId,
@@ -85,6 +108,9 @@ describe("section production overrides", () => {
     expect(effectiveSectionProductionAt(regenerated, 1).energy).toBe(91);
     expect(effectiveSectionProductionAt(regenerated, 1).voicingMode).toBe(
       "dramatic"
+    );
+    expect(effectiveSectionProductionAt(regenerated, 1).textureMode).toBe(
+      "full"
     );
     expect(shorter.production.sectionOverrides["B:0"]).toBeDefined();
     expect(shorter.production.sectionOverrides["B:1"]).toBeUndefined();
