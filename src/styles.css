@@ -3353,6 +3353,75 @@ select {
   font: 7px/1.75 var(--mono);
 }
 
+.suno-prompt-audit {
+  min-height: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 12px;
+  margin: 10px 16px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(78, 216, 208, 0.13);
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(78, 216, 208, 0.045), transparent 34%),
+    rgba(255, 255, 255, 0.012);
+}
+
+.suno-prompt-audit.review {
+  border-color: rgba(244, 184, 96, 0.2);
+  background:
+    linear-gradient(90deg, rgba(244, 184, 96, 0.055), transparent 34%),
+    rgba(255, 255, 255, 0.012);
+}
+
+.suno-prompt-audit-signal {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--cyan);
+}
+
+.suno-prompt-audit.review .suno-prompt-audit-signal {
+  color: var(--amber);
+}
+
+.suno-prompt-audit-signal span {
+  color: #6f726d;
+  font: 6px var(--mono);
+  letter-spacing: .11em;
+}
+
+.suno-prompt-audit-signal strong {
+  font: 6px var(--mono);
+  letter-spacing: .08em;
+}
+
+.suno-prompt-audit > span {
+  display: flex;
+  gap: 5px;
+  color: #77746e;
+  font: 6px var(--mono);
+}
+
+.suno-prompt-audit > span b {
+  color: #4c4b47;
+  font-weight: 500;
+}
+
+.suno-prompt-audit > small {
+  min-width: 190px;
+  flex: 1 1 220px;
+  color: #5f615d;
+  font-size: 7px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.suno-prompt-audit.review > small {
+  color: #8d7755;
+}
+
 .suno-blueprint-card pre::-webkit-scrollbar {
   width: 5px;
 }
@@ -3845,6 +3914,16 @@ select {
   .suno-accuracy-note {
     margin-right: 10px;
     margin-left: 10px;
+  }
+
+  .suno-prompt-audit {
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  .suno-prompt-audit > small {
+    min-width: 100%;
+    text-align: left;
   }
 
   .suno-bridge-actions {

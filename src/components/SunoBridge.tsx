@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Check,
   ChevronDown,
   Clock3,
@@ -516,6 +517,47 @@ export function SunoBridge({
             {copied === "blueprint" ? "已复制" : "复制和弦蓝图"}
           </button>
         </section>
+
+        <div
+          className={`suno-prompt-audit ${kit.promptAudit.status}`}
+          role="status"
+          aria-label={[
+            `提示词体检 ${kit.promptAudit.status === "ready" ? "通过" : "需确认"}`,
+            `风格提示 ${kit.promptAudit.styleCharacters}/${kit.promptAudit.styleBudget} 字符`,
+            `和弦蓝图 ${kit.promptAudit.blueprintCharacters}/${kit.promptAudit.blueprintBudget} 字符`,
+            ...kit.promptAudit.issues.map((issue) => issue.messageZh)
+          ].join("；")}
+        >
+          <div className="suno-prompt-audit-signal">
+            {kit.promptAudit.status === "ready" ? (
+              <Check size={13} />
+            ) : (
+              <AlertTriangle size={13} />
+            )}
+            <span>PROMPT CHECK</span>
+            <strong>
+              {kit.promptAudit.status === "ready" ? "READY" : "REVIEW"}
+            </strong>
+          </div>
+          <span>
+            <b>STYLE</b>
+            {kit.promptAudit.styleCharacters}/{kit.promptAudit.styleBudget}
+          </span>
+          <span>
+            <b>BLUEPRINT</b>
+            {kit.promptAudit.blueprintCharacters}/
+            {kit.promptAudit.blueprintBudget}
+          </span>
+          <small>
+            {kit.promptAudit.issues.length > 0
+              ? `${kit.promptAudit.issues[0].messageZh}${
+                  kit.promptAudit.issues.length > 1
+                    ? ` · 另有 ${kit.promptAudit.issues.length - 1} 项`
+                    : ""
+                }`
+              : "未发现明显冲突，长度处于 ChordFlow 内部预算内"}
+          </small>
+        </div>
 
         <div className="suno-accuracy-note">
           <Music2 size={15} />

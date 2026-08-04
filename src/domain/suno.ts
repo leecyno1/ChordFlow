@@ -13,8 +13,10 @@ import type {
   SectionTextureMode
 } from "./types";
 
-export const SUNO_BRIDGE_VERSION = "0.7";
+export const SUNO_BRIDGE_VERSION = "0.8";
 export const DEFAULT_TEMPO_BPM = DEFAULT_PRODUCTION_SETTINGS.tempoBpm;
+export const SUNO_STYLE_WORKING_BUDGET = 500;
+export const SUNO_BLUEPRINT_WORKING_BUDGET = 6000;
 
 interface StyleProfile {
   en: string;
@@ -47,6 +49,28 @@ export interface SunoSectionPrompt {
   direction: string;
 }
 
+export type SunoPromptAuditStatus = "ready" | "review";
+
+export interface SunoPromptAuditIssue {
+  code:
+    | "style-budget"
+    | "blueprint-budget"
+    | "high-energy-air"
+    | "low-energy-lift";
+  sectionLabel?: string;
+  messageEn: string;
+  messageZh: string;
+}
+
+export interface SunoPromptAudit {
+  status: SunoPromptAuditStatus;
+  styleCharacters: number;
+  styleBudget: number;
+  blueprintCharacters: number;
+  blueprintBudget: number;
+  issues: SunoPromptAuditIssue[];
+}
+
 export interface SunoPromptKit {
   version: string;
   title: string;
@@ -61,6 +85,7 @@ export interface SunoPromptKit {
   voicingLabel: string;
   sectionOverrideCount: number;
   textureArc: string;
+  promptAudit: SunoPromptAudit;
   stylePromptEn: string;
   stylePromptZh: string;
   chordBlueprint: string;
@@ -288,6 +313,68 @@ function noveltyDirection(surprise: number): { en: string; zh: string } {
   };
 }
 
+function buildPromptAudit(
+  sections: SunoSectionPrompt[],
+  stylePromptEn: string,
+  stylePromptZh: string,
+  chordBlueprint: string
+): SunoPromptAudit {
+  const styleCharacters = Math.max(
+    stylePromptEn.length,
+    stylePromptZh.length
+  );
+  const blueprintCharacters = chordBlueprint.length;
+  const issues: SunoPromptAuditIssue[] = [];
+
+  if (styleCharacters > SUNO_STYLE_WORKING_BUDGET) {
+    issues.push({
+      code: "style-budget",
+      messageEn:
+        "The longer style prompt exceeds ChordFlow's working budget; shorten secondary mood or production adjectives.",
+      messageZh:
+        "较长语言版本超过 ChordFlow 内部预算，建议删减次要情绪词或制作形容词。"
+    });
+  }
+
+  if (blueprintCharacters > SUNO_BLUEPRINT_WORKING_BUDGET) {
+    issues.push({
+      code: "blueprint-budget",
+      messageEn:
+        "The chord blueprint exceeds ChordFlow's working budget; reduce repeated detail before sending it downstream.",
+      messageZh:
+        "和弦蓝图超过 ChordFlow 内部预算，建议在发送前压缩重复说明。"
+    });
+  }
+
+  sections.forEach((section) => {
+    if (section.energy >= 80 && section.textureMode === "sparse") {
+      issues.push({
+        code: "high-energy-air",
+        sectionLabel: section.label,
+        messageEn: `${section.label} combines high energy with AIR texture; confirm that the exposed intensity is intentional.`,
+        messageZh: `${section.title}同时使用高能量与 AIR 留白，请确认这种裸露强度是有意设计。`
+      });
+    }
+    if (section.energy <= 40 && section.textureMode === "full") {
+      issues.push({
+        code: "low-energy-lift",
+        sectionLabel: section.label,
+        messageEn: `${section.label} combines low energy with LIFT texture; confirm that the dense but restrained contrast is intentional.`,
+        messageZh: `${section.title}同时使用低能量与 LIFT 展开，请确认这种密而克制的反差是有意设计。`
+      });
+    }
+  });
+
+  return {
+    status: issues.length > 0 ? "review" : "ready",
+    styleCharacters,
+    styleBudget: SUNO_STYLE_WORKING_BUDGET,
+    blueprintCharacters,
+    blueprintBudget: SUNO_BLUEPRINT_WORKING_BUDGET,
+    issues
+  };
+}
+
 export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   const profile = STYLE_PROFILES[arrangement.style] ?? STYLE_PROFILES.华语流行;
   const moodsZh = collectMoods(arrangement);
@@ -425,6 +512,12 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     ...sectionLines,
     "ARRANGEMENT RULE: Keep repeated letter sections recognizable. Let the chorus feel wider than the verse, and make the bridge provide contrast before the final return. Preserve the listed chord order as the harmonic reference."
   ].join("\n");
+  const promptAudit = buildPromptAudit(
+    sections,
+    stylePromptEn,
+    stylePromptZh,
+    chordBlueprint
+  );
 
   return {
     version: SUNO_BRIDGE_VERSION,
@@ -440,6 +533,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     voicingLabel: voicingProfile.label,
     sectionOverrideCount,
     textureArc,
+    promptAudit,
     stylePromptEn,
     stylePromptZh,
     chordBlueprint,
@@ -450,6 +544,17 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
 }
 
 export function serializeSunoPromptKit(kit: SunoPromptKit): string {
+  const promptCheck = [
+    `Status: ${kit.promptAudit.status.toUpperCase()}`,
+    `Style working budget: ${kit.promptAudit.styleCharacters}/${kit.promptAudit.styleBudget} characters`,
+    `Blueprint working budget: ${kit.promptAudit.blueprintCharacters}/${kit.promptAudit.blueprintBudget} characters`,
+    ...(kit.promptAudit.issues.length > 0
+      ? kit.promptAudit.issues.map(
+          (issue, index) => `${index + 1}. ${issue.messageEn}`
+        )
+      : ["Issues: none"])
+  ];
+
   return [
     "CHORDFLOW → SUNO BRIDGE",
     `Version ${kit.version}`,
@@ -464,6 +569,9 @@ export function serializeSunoPromptKit(kit: SunoPromptKit): string {
     kit.chordBlueprint,
     "",
     "=== ACCURACY NOTE ===",
-    kit.notice
+    kit.notice,
+    "",
+    "=== CHORDFLOW PROMPT CHECK / INTERNAL ===",
+    ...promptCheck
   ].join("\n");
 }

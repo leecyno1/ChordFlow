@@ -34,6 +34,13 @@ describe("Suno Bridge prompt kit", () => {
     expect(kit.textureArc).toBe(
       "A:AIR → B:LIFT → A2:CORE → B2:LIFT → C:CORE → B3:LIFT"
     );
+    expect(kit.promptAudit.status).toBe("ready");
+    expect(kit.promptAudit.styleCharacters).toBeLessThanOrEqual(
+      kit.promptAudit.styleBudget
+    );
+    expect(kit.promptAudit.blueprintCharacters).toBeLessThanOrEqual(
+      kit.promptAudit.blueprintBudget
+    );
     expect(kit.chordBlueprint).toContain(`TEXTURE ARC: ${kit.textureArc}`);
     expect(kit.chordBlueprint).toContain("Instrumentation:");
     expect(kit.sections).toHaveLength(arrangement.sections.length);
@@ -56,6 +63,7 @@ describe("Suno Bridge prompt kit", () => {
     expect(textPackage).toContain("SUNO STYLE PROMPT / EN");
     expect(textPackage).toContain("TEXTURE ARC:");
     expect(textPackage).toContain("Suno may reinterpret chord instructions");
+    expect(textPackage).toContain("CHORDFLOW PROMPT CHECK / INTERNAL");
   });
 
   it("adapts the same texture arc to each style palette", () => {
@@ -172,5 +180,33 @@ describe("Suno Bridge prompt kit", () => {
       "Energy 94/100 | Voicing 戏剧/WIDE | Texture 展开/LIFT LOCKED"
     );
     expect(kit.stylePromptEn).toContain("instrumentation-density");
+  });
+
+  it("flags energy and texture combinations that need review", () => {
+    const source = generateArrangement({
+      formId: "aba",
+      key: "C",
+      mode: "major",
+      style: "华语流行",
+      surprise: 34,
+      seed: 18473
+    });
+    const highEnergyAir = setSectionProductionOverride(source, 0, {
+      energy: 90,
+      voicingMode: "flowing",
+      textureMode: "sparse"
+    });
+    const conflicted = setSectionProductionOverride(highEnergyAir, 1, {
+      energy: 30,
+      voicingMode: "flowing",
+      textureMode: "full"
+    });
+    const kit = buildSunoPromptKit(conflicted);
+    const codes = kit.promptAudit.issues.map((issue) => issue.code);
+
+    expect(kit.promptAudit.status).toBe("review");
+    expect(codes).toContain("high-energy-air");
+    expect(codes).toContain("low-energy-lift");
+    expect(serializeSunoPromptKit(kit)).toContain("Status: REVIEW");
   });
 });
