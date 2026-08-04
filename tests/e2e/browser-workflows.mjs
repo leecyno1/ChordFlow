@@ -6,7 +6,8 @@ import {
   mkdtemp,
   readFile,
   readdir,
-  rm
+  rm,
+  writeFile
 } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -14,6 +15,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
+// Keep browser-critical delivery paths testable without adding a browser bundle.
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 
@@ -263,6 +265,40 @@ async function textContent(client, selector) {
   })()`);
 }
 
+async function selectValue(client, selector, value) {
+  await client.evaluate(`(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!(element instanceof HTMLSelectElement)) {
+      throw new Error(${JSON.stringify(`Missing select element: ${selector}`)});
+    }
+    element.value = ${JSON.stringify(value)};
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+    return element.value;
+  })()`);
+}
+
+async function setFileInput(client, selector, filePath) {
+  const documentTree = await client.send("DOM.getDocument", {
+    depth: -1,
+    pierce: true
+  });
+  const query = await client.send("DOM.querySelector", {
+    nodeId: documentTree.root.nodeId,
+    selector
+  });
+  assert.notEqual(query.nodeId, 0, `Missing file input: ${selector}`);
+  await client.send("DOM.setFileInputFiles", {
+    files: [filePath],
+    nodeId: query.nodeId
+  });
+  await client.evaluate(`(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  })()`);
+}
+
 async function waitForDownloadedText(downloadDirectory) {
   const deadline = Date.now() + 7000;
   while (Date.now() < deadline) {
@@ -357,6 +393,7 @@ try {
   });
   await client.send("Runtime.enable");
   await client.send("Page.enable");
+  await client.send("DOM.enable");
   await client.send("Browser.grantPermissions", {
     origin: new URL(appUrl).origin,
     permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"]
@@ -379,6 +416,113 @@ try {
     `document.querySelector('[data-testid="suno-launch"]') !== null`,
     "ChordFlow to render"
   );
+
+  await click(client, '[data-testid="comparison-capture-A"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="comparison-slot-A"]')?.dataset.state === 'current'`,
+    "comparison slot A to capture the initial arrangement"
+  );
+  await selectValue(client, '[data-testid="tonic-select"]', "D");
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="tonic-select"]')?.value === 'D'`,
+    "the arrangement to transpose to D"
+  );
+  await click(client, '[data-testid="comparison-capture-B"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="comparison-slot-B"]')?.dataset.state === 'current'`,
+    "comparison slot B to capture the transposed arrangement"
+  );
+  assert.equal(
+    await textContent(client, '[data-testid="comparison-summary"]'),
+    "调性"
+  );
+
+  await click(client, '[data-testid="comparison-load-A"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="tonic-select"]')?.value === 'C'`,
+    "comparison slot A to load"
+  );
+  assert.match(
+    await textContent(client, '[data-testid="project-status"]'),
+    /已切换到方案 A/
+  );
+  await click(client, '[data-testid="comparison-load-B"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="tonic-select"]')?.value === 'D'`,
+    "comparison slot B to load"
+  );
+
+  await click(client, '[data-testid="project-undo"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="tonic-select"]')?.value === 'C'`,
+    "undo to restore comparison slot A"
+  );
+  await click(client, '[data-testid="project-redo"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="tonic-select"]')?.value === 'D'`,
+    "redo to restore comparison slot B"
+  );
+
+  await click(client, '[data-testid="project-save"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="project-status"]')?.textContent.includes('已保存') === true`,
+    "the current arrangement to save locally"
+  );
+  const savedProjectRaw = await client.evaluate(
+    "localStorage.getItem('chordflow.project.v1')"
+  );
+  assert.equal(typeof savedProjectRaw, "string");
+  const importedProject = JSON.parse(savedProjectRaw);
+  importedProject.arrangement.title = "ChordFlow Import E2E";
+  importedProject.arrangement.key = "Eb";
+  importedProject.arrangement.style = "爵士流行";
+  importedProject.arrangement.generatedAt = "2026-08-04T00:00:00.000Z";
+  const importPath = join(temporaryRoot, "chordflow-import-e2e.json");
+  await writeFile(importPath, JSON.stringify(importedProject), "utf8");
+  await setFileInput(
+    client,
+    '[data-testid="project-import-input"]',
+    importPath
+  );
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="project-status"]')?.textContent.includes('已导入 chordflow-import-e2e.json') === true`,
+    "the JSON project to import"
+  );
+  assert.equal(
+    await client.evaluate(
+      `document.querySelector('[data-testid="tonic-select"]')?.value`
+    ),
+    "Eb"
+  );
+  assert.equal(
+    await client.evaluate(
+      `document.querySelector('[data-testid="style-select"]')?.value`
+    ),
+    "爵士流行"
+  );
+
+  await click(client, '[data-testid="project-undo"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="tonic-select"]')?.value === 'D'`,
+    "undo to restore the pre-import arrangement"
+  );
+  await click(client, '[data-testid="project-redo"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="tonic-select"]')?.value === 'Eb'`,
+    "redo to restore the imported arrangement"
+  );
+
   await click(client, '[data-testid="suno-launch"]');
   await waitForExpression(
     client,
@@ -449,7 +593,11 @@ try {
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
-    "✓ Suno Bridge opened\n" +
+    "✓ A/B snapshots switched between two tonal centers\n" +
+      "✓ Undo and redo restored the expected arrangement\n" +
+      "✓ A saved project imported through the real JSON file input\n" +
+      "✓ The JSON import participated in undo and redo history\n" +
+      "✓ Suno Bridge opened\n" +
       "✓ Visible Style prompt matched the clipboard\n" +
       "✓ Section lock updated the blueprint\n" +
       "✓ Copied package matched the downloaded TXT\n" +

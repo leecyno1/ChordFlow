@@ -605,7 +605,12 @@ function App() {
         <div className="global-controls">
           <label>
             <span>调性</span>
-            <select name="tonic" value={keyName} onChange={(event) => changeKey(event.target.value)}>
+            <select
+              name="tonic"
+              data-testid="tonic-select"
+              value={keyName}
+              onChange={(event) => changeKey(event.target.value)}
+            >
               {DISPLAY_KEYS.map((key) => (
                 <option value={key} key={key}>
                   {key}
@@ -631,7 +636,12 @@ function App() {
           </div>
           <label className="style-select">
             <span>语境</span>
-            <select name="style" value={style} onChange={(event) => changeStyle(event.target.value)}>
+            <select
+              name="style"
+              data-testid="style-select"
+              value={style}
+              onChange={(event) => changeStyle(event.target.value)}
+            >
               {STYLES.map((item) => (
                 <option value={item} key={item}>
                   {item}
@@ -669,13 +679,17 @@ function App() {
         <div className="project-strip-status">
           <span className={`project-status-dot ${projectStatusTone}`} />
           <span>LOCAL SESSION</span>
-          <strong aria-live="polite">{projectStatus}</strong>
+          <strong aria-live="polite" data-testid="project-status">
+            {projectStatus}
+          </strong>
         </div>
         <div className="project-strip-tools">
           <div className="comparison-deck" aria-label="A/B 方案对比">
             <div className="comparison-readout">
               <span>A/B COMPARE</span>
-              <strong aria-live="polite">{comparisonSummary}</strong>
+              <strong aria-live="polite" data-testid="comparison-summary">
+                {comparisonSummary}
+              </strong>
             </div>
             {comparisonSlotIds.map((slotId) => {
               const snapshot = comparisonSlots[slotId];
@@ -689,10 +703,16 @@ function App() {
                   : "empty";
 
               return (
-                <div className={`comparison-slot ${slotClass}`} key={slotId}>
+                <div
+                  className={`comparison-slot ${slotClass}`}
+                  data-testid={`comparison-slot-${slotId}`}
+                  data-state={slotClass}
+                  key={slotId}
+                >
                   <button
                     type="button"
                     className="comparison-slot-load"
+                    data-testid={`comparison-load-${slotId}`}
                     onClick={() => loadComparisonSlot(slotId)}
                     disabled={!snapshot}
                     title={snapshot ? `载入方案 ${slotId}` : `方案 ${slotId} 尚未记录`}
@@ -703,6 +723,7 @@ function App() {
                   <button
                     type="button"
                     className="comparison-slot-capture"
+                    data-testid={`comparison-capture-${slotId}`}
                     onClick={() => captureComparisonSlot(slotId)}
                     aria-label={`${snapshot ? "覆盖" : "记录"}方案 ${slotId}`}
                     title={`${snapshot ? "覆盖" : "记录"}方案 ${slotId}`}
@@ -717,6 +738,7 @@ function App() {
           <div className="project-strip-actions">
             <button
               type="button"
+              data-testid="project-undo"
               onClick={undo}
               disabled={!canUndo}
               aria-label="撤销上一步"
@@ -727,6 +749,7 @@ function App() {
             </button>
             <button
               type="button"
+              data-testid="project-redo"
               onClick={redo}
               disabled={!canRedo}
               aria-label="重做下一步"
@@ -737,6 +760,7 @@ function App() {
             </button>
             <button
               type="button"
+              data-testid="project-import-trigger"
               onClick={() => importInputRef.current?.click()}
               aria-label="导入 JSON 工程"
               title="导入 ChordFlow JSON 工程（最大 2 MB）"
@@ -746,6 +770,7 @@ function App() {
             </button>
             <button
               type="button"
+              data-testid="project-save"
               className={currentMatchesLocal ? "saved" : ""}
               onClick={saveProject}
               aria-label="保存到当前浏览器"
@@ -756,6 +781,7 @@ function App() {
             </button>
             <button
               type="button"
+              data-testid="project-restore"
               onClick={restoreProject}
               disabled={!savedProject}
               aria-label="恢复浏览器本地版本"
@@ -769,6 +795,7 @@ function App() {
         <input
           ref={importInputRef}
           className="project-import-input"
+          data-testid="project-import-input"
           type="file"
           accept=".json,application/json"
           onChange={importProject}
