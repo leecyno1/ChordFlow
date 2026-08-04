@@ -37,6 +37,31 @@ function promptSnapshot(arrangement: Arrangement) {
   };
 }
 
+function compactPromptSnapshot(arrangement: Arrangement) {
+  const kit = buildSunoPromptKit(arrangement);
+  return {
+    bridgeVersion: kit.version,
+    form: kit.form,
+    stylePromptFingerprint: fingerprint(kit.stylePromptEn),
+    textureArc: kit.textureArc,
+    sectionSignatures: kit.sections.map(
+      (section) =>
+        `${section.label}:${section.textureCode}:${section.voicingCode}:E${section.energy}`
+    ),
+    sparseDirection: kit.sections.find(
+      (section) => section.textureMode === "sparse"
+    )?.instrumentationDirection,
+    fullDirection: kit.sections.find(
+      (section) => section.textureMode === "full"
+    )?.instrumentationDirection,
+    auditStatus: kit.promptAudit.status,
+    issueCodes: kit.promptAudit.issues.map((issue) => issue.code),
+    blueprintCharacters: kit.promptAudit.blueprintCharacters,
+    blueprintFingerprint: fingerprint(kit.chordBlueprint),
+    packageFingerprint: fingerprint(serializeSunoPromptKit(kit))
+  };
+}
+
 describe("fixed Suno brief regressions", () => {
   it("keeps the default Mandopop production contract stable", () => {
     const arrangement = generateArrangement({
@@ -151,6 +176,201 @@ describe("fixed Suno brief regressions", () => {
       },
       blueprintFingerprint: "51c2f7a5",
       packageFingerprint: "242dddc6"
+    });
+  });
+
+  it("covers independent pop with a long custom form", () => {
+    const arrangement = generateArrangement({
+      formId: "custom",
+      customPattern: "ABACABA",
+      key: "D",
+      mode: "major",
+      style: "独立流行",
+      surprise: 48,
+      seed: 311
+    });
+
+    expect(compactPromptSnapshot(arrangement)).toEqual({
+      bridgeVersion: "0.8",
+      form: "ABACABA",
+      stylePromptFingerprint: "1711b1aa",
+      textureArc:
+        "A:AIR → B:LIFT → A2:CORE → C:CORE → A3:CORE → B2:LIFT → A4:CORE",
+      sectionSignatures: [
+        "Verse A:AIR:VOICE:E62",
+        "Chorus B:LIFT:VOICE:E84",
+        "Verse A2:CORE:VOICE:E62",
+        "Bridge C:CORE:VOICE:E56",
+        "Verse A3:CORE:VOICE:E62",
+        "Chorus B2:LIFT:VOICE:E84",
+        "Verse A4:CORE:VOICE:E62"
+      ],
+      sparseDirection:
+        "feature one textured guitar with dry room tone, holding synth, bass and drums back",
+      fullDirection:
+        "stack contrasting guitars and analog synth around active melodic bass and broader live drums",
+      auditStatus: "ready",
+      issueCodes: [],
+      blueprintCharacters: 3733,
+      blueprintFingerprint: "3af41485",
+      packageFingerprint: "7a52f62c"
+    });
+  });
+
+  it("covers rock with dramatic voicing at a fast tempo", () => {
+    const arrangement = generateArrangement({
+      formId: "abab",
+      key: "F#",
+      mode: "major",
+      style: "摇滚",
+      surprise: 46,
+      seed: 9001,
+      production: {
+        tempoBpm: 128,
+        timeSignature: "4/4",
+        barsPerSection: 4,
+        voicingMode: "dramatic"
+      }
+    });
+
+    expect(compactPromptSnapshot(arrangement)).toEqual({
+      bridgeVersion: "0.8",
+      form: "ABAB",
+      stylePromptFingerprint: "dde298d6",
+      textureArc: "A:AIR → B:LIFT → A2:CORE → B2:LIFT",
+      sectionSignatures: [
+        "Verse A:AIR:WIDE:E52",
+        "Chorus B:LIFT:WIDE:E79",
+        "Verse A2:CORE:WIDE:E52",
+        "Chorus B2:LIFT:WIDE:E79"
+      ],
+      sparseDirection:
+        "start with one restrained electric guitar, light bass support and minimal acoustic drums",
+      fullDirection:
+        "open stacked electric guitars, driving bass and punchy full drums while keeping synth support selective",
+      auditStatus: "ready",
+      issueCodes: [],
+      blueprintCharacters: 2681,
+      blueprintFingerprint: "cb732651",
+      packageFingerprint: "163145b5"
+    });
+  });
+
+  it("covers folk in three-four with stable voicing", () => {
+    const arrangement = generateArrangement({
+      formId: "aba",
+      key: "G",
+      mode: "major",
+      style: "民谣",
+      surprise: 38,
+      seed: 210,
+      production: {
+        tempoBpm: 78,
+        timeSignature: "3/4",
+        barsPerSection: 8,
+        voicingMode: "stable"
+      }
+    });
+
+    expect(compactPromptSnapshot(arrangement)).toEqual({
+      bridgeVersion: "0.8",
+      form: "ABA",
+      stylePromptFingerprint: "178da7c8",
+      textureArc: "A:AIR → B:LIFT → A2:CORE",
+      sectionSignatures: [
+        "Verse A:AIR:ROOT:E66",
+        "Chorus B:LIFT:ROOT:E79",
+        "Verse A2:CORE:ROOT:E66"
+      ],
+      sparseDirection:
+        "lead with fingerpicked acoustic guitar, with soft piano, bass and brushes barely entering",
+      fullDirection:
+        "widen strummed and fingerpicked acoustics around piano, active bass and a warm full percussion lift",
+      auditStatus: "ready",
+      issueCodes: [],
+      blueprintCharacters: 1891,
+      blueprintFingerprint: "c2808745",
+      packageFingerprint: "55e1d0e5"
+    });
+  });
+
+  it("covers cinematic minor harmony in slow six-eight", () => {
+    const arrangement = generateArrangement({
+      formId: "abcba",
+      key: "D",
+      mode: "minor",
+      style: "电影配乐",
+      surprise: 68,
+      seed: 451,
+      production: {
+        tempoBpm: 68,
+        timeSignature: "6/8",
+        barsPerSection: 8,
+        voicingMode: "dramatic"
+      }
+    });
+
+    expect(compactPromptSnapshot(arrangement)).toEqual({
+      bridgeVersion: "0.8",
+      form: "ABCBA",
+      stylePromptFingerprint: "5350fd61",
+      textureArc: "A:AIR → B:LIFT → C:CORE → B2:LIFT → A2:CORE",
+      sectionSignatures: [
+        "Verse A:AIR:WIDE:E71",
+        "Chorus B:LIFT:WIDE:E75",
+        "Bridge C:CORE:WIDE:E75",
+        "Chorus B2:LIFT:WIDE:E75",
+        "Verse A2:CORE:WIDE:E71"
+      ],
+      sparseDirection:
+        "expose felt piano with distant string air and almost no low percussion",
+      fullDirection:
+        "expand into wide strings, layered synth atmosphere and decisive low percussion around the harmonic peak",
+      auditStatus: "ready",
+      issueCodes: [],
+      blueprintCharacters: 2940,
+      blueprintFingerprint: "4a76ffdd",
+      packageFingerprint: "e1dd36dd"
+    });
+  });
+
+  it("covers jazz pop with flowing voicing and rondo returns", () => {
+    const arrangement = generateArrangement({
+      formId: "abaca",
+      key: "Bb",
+      mode: "major",
+      style: "爵士流行",
+      surprise: 58,
+      seed: 731,
+      production: {
+        tempoBpm: 112,
+        timeSignature: "4/4",
+        barsPerSection: 4,
+        voicingMode: "flowing"
+      }
+    });
+
+    expect(compactPromptSnapshot(arrangement)).toEqual({
+      bridgeVersion: "0.8",
+      form: "ABACA",
+      stylePromptFingerprint: "03b14785",
+      textureArc: "A:AIR → B:LIFT → A2:CORE → C:CORE → A3:CORE",
+      sectionSignatures: [
+        "Verse A:AIR:VOICE:E48",
+        "Chorus B:LIFT:VOICE:E74",
+        "Verse A2:CORE:VOICE:E48",
+        "Bridge C:CORE:VOICE:E71",
+        "Verse A3:CORE:VOICE:E48"
+      ],
+      sparseDirection:
+        "feature acoustic piano or hollow-body guitar with sparse upright bass and brushes",
+      fullDirection:
+        "open piano voicings, active upright bass, fuller brushed drums and selective guitar counterlines",
+      auditStatus: "ready",
+      issueCodes: [],
+      blueprintCharacters: 2890,
+      blueprintFingerprint: "28914ffa",
+      packageFingerprint: "a15023d5"
     });
   });
 });
