@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import {
   ArrowDownToLine,
   AudioLines,
@@ -20,6 +21,7 @@ import {
   Settings2,
   Sparkles,
   Undo2,
+  Upload,
   WandSparkles
 } from "lucide-react";
 import {
@@ -73,8 +75,10 @@ import { normalizeProductionSettings } from "./domain/production";
 import { buildVoicingPlan } from "./domain/voicing";
 import {
   loadLocalProject,
+  parseArrangementJson,
   saveLocalProject
 } from "./domain/projectStorage";
+import { compareArrangements } from "./domain/comparison";
 import type {
   Arrangement,
   Mode,
@@ -94,8 +98,11 @@ import {
 } from "./engine/transitions";
 
 type ViewMode = "river" | "fifths";
+type ComparisonSlotId = "A" | "B";
 
 const initialSeed = 18473;
+const comparisonSlotIds: ComparisonSlotId[] = ["A", "B"];
+const maxProjectImportBytes = 2 * 1024 * 1024;
 
 function formatSavedAt(savedAt: string): string {
   const date = new Date(savedAt);
@@ -154,7 +161,12 @@ function App() {
   } | null>(null);
   const [savedProject, setSavedProject] = useState(() => loadLocalProject());
   const [projectError, setProjectError] = useState<string | null>(null);
+  const [projectNotice, setProjectNotice] = useState<string | null>(null);
+  const [comparisonSlots, setComparisonSlots] = useState<
+    Record<ComparisonSlotId, Arrangement | null>
+  >({ A: null, B: null });
   const playbackToken = useRef(0);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const section = arrangement.sections[activeSection] ?? arrangement.sections[0];
   const currentRoman = section?.numerals[activeChord] ?? "I";
@@ -191,23 +203,41 @@ function App() {
   const allThemesLocked = arrangement.lockedSymbols.length >= themeCount;
   const canUndo = history.past.length > 0;
   const canRedo = history.future.length > 0;
+  const currentFingerprint = useMemo(
+    () => arrangementFingerprint(arrangement),
+    [arrangement]
+  );
   const currentMatchesLocal = useMemo(
     () =>
       savedProject !== null &&
       arrangementFingerprint(savedProject.arrangement) ===
-        arrangementFingerprint(arrangement),
-    [arrangement, savedProject]
+        currentFingerprint,
+    [currentFingerprint, savedProject]
   );
+  const arrangementComparison = useMemo(
+    () =>
+      comparisonSlots.A && comparisonSlots.B
+        ? compareArrangements(comparisonSlots.A, comparisonSlots.B)
+        : null,
+    [comparisonSlots]
+  );
+  const comparisonSummary = arrangementComparison
+    ? arrangementComparison.summary
+    : comparisonSlots.A || comparisonSlots.B
+      ? "再记录一个方案"
+      : "记录两版后比较";
   const projectStatus = projectError
     ? projectError
-    : savedProject
-      ? currentMatchesLocal
-        ? `已保存 · ${formatSavedAt(savedProject.savedAt)}`
-        : `有未保存更改 · 本地 ${formatSavedAt(savedProject.savedAt)}`
-      : "尚未创建本地版本";
+    : projectNotice
+      ? projectNotice
+      : savedProject
+        ? currentMatchesLocal
+          ? `已保存 · ${formatSavedAt(savedProject.savedAt)}`
+          : `有未保存更改 · 本地 ${formatSavedAt(savedProject.savedAt)}`
+        : "尚未创建本地版本";
   const projectStatusTone = projectError
     ? "error"
-    : currentMatchesLocal
+    : projectNotice || currentMatchesLocal
       ? "saved"
       : savedProject
         ? "dirty"
@@ -223,6 +253,7 @@ function App() {
     update: Arrangement | ((current: Arrangement) => Arrangement)
   ) {
     setProjectError(null);
+    setProjectNotice(null);
     setHistory((current) => {
       const next =
         typeof update === "function" ? update(current.present) : update;
@@ -234,6 +265,7 @@ function App() {
     update: (current: Arrangement) => Arrangement
   ) {
     setProjectError(null);
+    setProjectNotice(null);
     setHistory((current) => mapArrangementHistory(current, update));
   }
 
@@ -249,6 +281,7 @@ function App() {
   function undo() {
     if (!canUndo) return;
     setProjectError(null);
+    setProjectNotice(null);
     setHistory((current) => undoArrangementHistory(current));
     resetProjectFocus();
   }
@@ -256,6 +289,7 @@ function App() {
   function redo() {
     if (!canRedo) return;
     setProjectError(null);
+    setProjectNotice(null);
     setHistory((current) => redoArrangementHistory(current));
     resetProjectFocus();
   }
@@ -268,6 +302,7 @@ function App() {
     }
     setSavedProject(saved);
     setProjectError(null);
+    setProjectNotice(null);
   }
 
   function restoreProject() {
@@ -280,6 +315,66 @@ function App() {
     setSavedProject(saved);
     commitArrangement(saved.arrangement);
     resetProjectFocus();
+    setProjectNotice("已恢复浏览器本地版本");
+  }
+
+  function captureComparisonSlot(slotId: ComparisonSlotId) {
+    setComparisonSlots((current) => ({
+      ...current,
+      [slotId]: arrangement
+    }));
+    setProjectError(null);
+    setProjectNotice(`方案 ${slotId} 已记录`);
+  }
+
+  function loadComparisonSlot(slotId: ComparisonSlotId) {
+    const snapshot = comparisonSlots[slotId];
+    if (!snapshot) {
+      setProjectNotice(null);
+      setProjectError(`方案 ${slotId} 还是空的`);
+      return;
+    }
+    if (arrangementFingerprint(snapshot) !== currentFingerprint) {
+      commitArrangement(snapshot);
+      resetProjectFocus();
+    }
+    setProjectNotice(`已切换到方案 ${slotId}`);
+  }
+
+  async function importProject(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    const isJsonFile =
+      file.type === "application/json" ||
+      file.name.toLowerCase().endsWith(".json");
+    if (!isJsonFile) {
+      setProjectNotice(null);
+      setProjectError("请选择 JSON 工程文件");
+      return;
+    }
+    if (file.size > maxProjectImportBytes) {
+      setProjectNotice(null);
+      setProjectError("JSON 工程不能超过 2 MB");
+      return;
+    }
+
+    try {
+      const imported = parseArrangementJson(await file.text());
+      if (!imported) {
+        setProjectNotice(null);
+        setProjectError("无法识别该 ChordFlow 工程");
+        return;
+      }
+      commitArrangement(imported);
+      resetProjectFocus();
+      setProjectNotice(`已导入 ${file.name}`);
+    } catch {
+      setProjectNotice(null);
+      setProjectError("读取 JSON 工程失败");
+    }
   }
 
   useEffect(() => {
@@ -561,48 +656,109 @@ function App() {
           <span>LOCAL SESSION</span>
           <strong aria-live="polite">{projectStatus}</strong>
         </div>
-        <div className="project-strip-actions">
-          <button
-            type="button"
-            onClick={undo}
-            disabled={!canUndo}
-            aria-label="撤销上一步"
-            title="撤销（⌘/Ctrl + Z）"
-          >
-            <Undo2 size={14} />
-            <span>撤销</span>
-          </button>
-          <button
-            type="button"
-            onClick={redo}
-            disabled={!canRedo}
-            aria-label="重做下一步"
-            title="重做（⌘/Ctrl + Shift + Z）"
-          >
-            <Redo2 size={14} />
-            <span>重做</span>
-          </button>
-          <button
-            type="button"
-            className={currentMatchesLocal ? "saved" : ""}
-            onClick={saveProject}
-            aria-label="保存到当前浏览器"
-            title="保存到当前浏览器（⌘/Ctrl + S）"
-          >
-            <Save size={14} />
-            <span>{currentMatchesLocal ? "已保存" : "保存"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={restoreProject}
-            disabled={!savedProject}
-            aria-label="恢复浏览器本地版本"
-            title="恢复最近保存的本地版本"
-          >
-            <FolderClock size={14} />
-            <span>恢复</span>
-          </button>
+        <div className="project-strip-tools">
+          <div className="comparison-deck" aria-label="A/B 方案对比">
+            <div className="comparison-readout">
+              <span>A/B COMPARE</span>
+              <strong aria-live="polite">{comparisonSummary}</strong>
+            </div>
+            {comparisonSlotIds.map((slotId) => {
+              const snapshot = comparisonSlots[slotId];
+              const isCurrent =
+                snapshot !== null &&
+                arrangementFingerprint(snapshot) === currentFingerprint;
+              const slotClass = isCurrent
+                ? "current"
+                : snapshot
+                  ? "filled"
+                  : "empty";
+
+              return (
+                <div className={`comparison-slot ${slotClass}`} key={slotId}>
+                  <button
+                    type="button"
+                    className="comparison-slot-load"
+                    onClick={() => loadComparisonSlot(slotId)}
+                    disabled={!snapshot}
+                    title={snapshot ? `载入方案 ${slotId}` : `方案 ${slotId} 尚未记录`}
+                  >
+                    <b>{slotId}</b>
+                    <span>{isCurrent ? "当前" : snapshot ? "载入" : "空"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="comparison-slot-capture"
+                    onClick={() => captureComparisonSlot(slotId)}
+                    aria-label={`${snapshot ? "覆盖" : "记录"}方案 ${slotId}`}
+                    title={`${snapshot ? "覆盖" : "记录"}方案 ${slotId}`}
+                  >
+                    {snapshot ? "覆盖" : "记录"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="project-strip-actions">
+            <button
+              type="button"
+              onClick={undo}
+              disabled={!canUndo}
+              aria-label="撤销上一步"
+              title="撤销（⌘/Ctrl + Z）"
+            >
+              <Undo2 size={14} />
+              <span>撤销</span>
+            </button>
+            <button
+              type="button"
+              onClick={redo}
+              disabled={!canRedo}
+              aria-label="重做下一步"
+              title="重做（⌘/Ctrl + Shift + Z）"
+            >
+              <Redo2 size={14} />
+              <span>重做</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => importInputRef.current?.click()}
+              aria-label="导入 JSON 工程"
+              title="导入 ChordFlow JSON 工程（最大 2 MB）"
+            >
+              <Upload size={14} />
+              <span>导入</span>
+            </button>
+            <button
+              type="button"
+              className={currentMatchesLocal ? "saved" : ""}
+              onClick={saveProject}
+              aria-label="保存到当前浏览器"
+              title="保存到当前浏览器（⌘/Ctrl + S）"
+            >
+              <Save size={14} />
+              <span>{currentMatchesLocal ? "已保存" : "保存"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={restoreProject}
+              disabled={!savedProject}
+              aria-label="恢复浏览器本地版本"
+              title="恢复最近保存的本地版本"
+            >
+              <FolderClock size={14} />
+              <span>恢复</span>
+            </button>
+          </div>
         </div>
+        <input
+          ref={importInputRef}
+          className="project-import-input"
+          type="file"
+          accept=".json,application/json"
+          onChange={importProject}
+          tabIndex={-1}
+        />
       </section>
 
       <main className="workspace">

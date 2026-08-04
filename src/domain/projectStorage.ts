@@ -1,7 +1,12 @@
 import { bassOverrideKey } from "./bass";
-import { chordPitchClasses, romanToChord } from "./music";
+import { chordPitchClasses, DISPLAY_KEYS, romanToChord } from "./music";
 import { normalizeProductionSettings } from "./production";
-import type { Arrangement, Mode, SongSection } from "./types";
+import type {
+  Arrangement,
+  Mode,
+  SectionRole,
+  SongSection
+} from "./types";
 
 export const LOCAL_PROJECT_KEY = "chordflow.project.v1";
 export const LOCAL_PROJECT_SCHEMA_VERSION = 1;
@@ -31,6 +36,17 @@ function isMode(value: unknown): value is Mode {
   return value === "major" || value === "minor";
 }
 
+function isSectionRole(value: unknown): value is SectionRole {
+  return (
+    value === "intro" ||
+    value === "verse" ||
+    value === "prechorus" ||
+    value === "chorus" ||
+    value === "bridge" ||
+    value === "outro"
+  );
+}
+
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
@@ -41,12 +57,15 @@ function isSongSection(value: unknown): value is SongSection {
     typeof value.id === "string" &&
     typeof value.symbol === "string" &&
     typeof value.occurrence === "number" &&
-    typeof value.role === "string" &&
+    Number.isInteger(value.occurrence) &&
+    value.occurrence >= 0 &&
+    isSectionRole(value.role) &&
     typeof value.title === "string" &&
     typeof value.templateId === "string" &&
     isStringArray(value.numerals) &&
     value.numerals.length > 0 &&
-    typeof value.energy === "number"
+    typeof value.energy === "number" &&
+    Number.isFinite(value.energy)
   );
 }
 
@@ -81,12 +100,15 @@ function normalizeArrangement(value: unknown): Arrangement | null {
   if (
     typeof value.title !== "string" ||
     typeof value.key !== "string" ||
+    !DISPLAY_KEYS.includes(value.key) ||
     !isMode(value.mode) ||
     typeof value.formId !== "string" ||
     typeof value.formPattern !== "string" ||
     typeof value.style !== "string" ||
     typeof value.surprise !== "number" ||
+    !Number.isFinite(value.surprise) ||
     typeof value.seed !== "number" ||
+    !Number.isFinite(value.seed) ||
     !Array.isArray(value.sections) ||
     value.sections.length === 0 ||
     !value.sections.every(isSongSection)
@@ -158,6 +180,17 @@ export function parseLocalProject(raw: string | null): SavedProject | null {
       savedAt: value.savedAt,
       arrangement
     };
+  } catch {
+    return null;
+  }
+}
+
+export function parseArrangementJson(raw: string): Arrangement | null {
+  const savedProject = parseLocalProject(raw);
+  if (savedProject) return savedProject.arrangement;
+
+  try {
+    return normalizeArrangement(JSON.parse(raw) as unknown);
   } catch {
     return null;
   }

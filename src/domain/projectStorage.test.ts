@@ -5,6 +5,7 @@ import { chordPitchClasses } from "./music";
 import {
   LOCAL_PROJECT_KEY,
   loadLocalProject,
+  parseArrangementJson,
   parseLocalProject,
   saveLocalProject,
   serializeLocalProject
@@ -82,5 +83,28 @@ describe("local project storage", () => {
     expect(
       parseLocalProject(JSON.stringify({ schemaVersion: 99, arrangement: {} }))
     ).toBeNull();
+    expect(
+      parseArrangementJson(JSON.stringify({ ...arrangement(), key: "H" }))
+    ).toBeNull();
+    expect(
+      parseArrangementJson(
+        JSON.stringify({
+          ...arrangement(),
+          sections: arrangement().sections.map((section, index) =>
+            index === 0 ? { ...section, role: "drop" } : section
+          )
+        })
+      )
+    ).toBeNull();
+  });
+
+  it("imports both exported arrangements and saved-project envelopes", () => {
+    const source = arrangement();
+
+    expect(parseArrangementJson(JSON.stringify(source))).toEqual(source);
+    expect(
+      parseArrangementJson(serializeLocalProject(source))
+    ).toEqual(source);
+    expect(parseArrangementJson("not-json")).toBeNull();
   });
 });

@@ -307,6 +307,7 @@ select {
 }
 
 .project-strip-status {
+  flex: 1 1 220px;
   min-width: 0;
   gap: 9px;
   font: 8px var(--mono);
@@ -346,6 +347,129 @@ select {
 .project-status-dot.error {
   background: var(--rose);
   box-shadow: 0 0 9px rgba(255, 107, 120, 0.5);
+}
+
+.project-strip-tools {
+  min-width: 0;
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.comparison-deck {
+  height: 32px;
+  min-width: 322px;
+  padding: 2px;
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, rgba(78, 216, 208, 0.045), transparent 42%),
+    rgba(5, 7, 9, 0.72);
+}
+
+.comparison-readout {
+  min-width: 116px;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.055);
+  font-family: var(--mono);
+}
+
+.comparison-readout span {
+  color: #4f5351;
+  font-size: 7px;
+  letter-spacing: 0.15em;
+}
+
+.comparison-readout strong {
+  overflow: hidden;
+  color: #989b95;
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comparison-slot {
+  min-width: 95px;
+  display: grid;
+  grid-template-columns: minmax(52px, 1fr) 38px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.016);
+  transition: 160ms ease;
+}
+
+.comparison-slot.current {
+  border-color: rgba(78, 216, 208, 0.34);
+  background: rgba(78, 216, 208, 0.07);
+  box-shadow: inset 2px 0 0 var(--cyan);
+}
+
+.comparison-slot.filled:not(.current) {
+  border-color: rgba(244, 184, 96, 0.18);
+}
+
+.comparison-slot button {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #71746f;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--mono);
+  transition: 140ms ease;
+}
+
+.comparison-slot button:hover:not(:disabled) {
+  color: var(--ivory);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.comparison-slot button:disabled {
+  color: #393c39;
+  cursor: not-allowed;
+}
+
+.comparison-slot-load {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.comparison-slot-load b {
+  color: #d8d6cf;
+  font-size: 11px;
+}
+
+.comparison-slot.current .comparison-slot-load b {
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(78, 216, 208, 0.5);
+}
+
+.comparison-slot-load span,
+.comparison-slot-capture {
+  font-size: 8px;
+}
+
+.comparison-slot-capture {
+  border-left: 1px solid rgba(255, 255, 255, 0.055) !important;
+}
+
+.project-import-input {
+  display: none;
 }
 
 .project-strip-actions {
@@ -3065,6 +3189,8 @@ select {
   .project-strip {
     min-height: 44px;
     padding: 6px 14px;
+    align-items: flex-start;
+    flex-wrap: wrap;
     gap: 10px;
   }
 
@@ -3073,11 +3199,25 @@ select {
   }
 
   .project-strip-status {
+    flex: 1 0 100%;
+    min-height: 24px;
     gap: 7px;
   }
 
   .project-strip-status > span:nth-child(2) {
     display: none;
+  }
+
+  .project-strip-tools {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 7px;
+  }
+
+  .comparison-deck {
+    min-width: 0;
+    flex: 1 1 310px;
   }
 
   .project-strip-actions button {
@@ -3235,6 +3375,34 @@ select {
     width: 38px;
     padding: 0;
     font-size: 0;
+  }
+
+  .project-strip-tools {
+    gap: 6px;
+  }
+
+  .project-strip-actions {
+    width: 100%;
+    order: -1;
+    justify-content: flex-start;
+  }
+
+  .comparison-deck {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .comparison-readout {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .comparison-readout span {
+    display: none;
+  }
+
+  .comparison-slot {
+    min-width: 90px;
   }
 
   .form-list,
