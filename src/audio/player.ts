@@ -193,6 +193,7 @@ export function exportJson(arrangement: Arrangement): void {
 
 export function buildMidi(arrangement: Arrangement): Midi {
   const midi = new Midi();
+  midi.header.name = arrangement.title;
   midi.header.setTempo(arrangement.production.tempoBpm);
   midi.header.timeSignatures.push({
     ticks: 0,
@@ -210,6 +211,14 @@ export function buildMidi(arrangement: Arrangement): Midi {
   let ticks = 0;
 
   arrangement.sections.forEach((section, sectionIndex) => {
+    const sectionCode = `${section.symbol}${
+      section.occurrence > 0 ? section.occurrence + 1 : ""
+    }`;
+    midi.header.meta.push({
+      ticks,
+      type: "marker",
+      text: `${sectionCode} | ${section.role.toUpperCase()} | ${section.chords.join(" - ")}`
+    });
     const sectionProduction = effectiveSectionProductionAt(
       arrangement,
       sectionIndex

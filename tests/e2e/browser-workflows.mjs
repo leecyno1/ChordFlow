@@ -549,6 +549,27 @@ try {
     "redo to restore the imported arrangement"
   );
 
+  const manualBassAnchor = await client.evaluate(`(() => {
+    const buttons = [...document.querySelectorAll('[data-testid^="bass-anchor-pc-"]')];
+    const button = buttons[1];
+    if (!(button instanceof HTMLButtonElement)) {
+      throw new Error("The selected chord does not offer a non-root bass anchor");
+    }
+    return {
+      testId: button.dataset.testid,
+      pitchClass: Number(button.dataset.pitchClass),
+      name: button.textContent.trim()
+    };
+  })()`);
+  assert.equal(typeof manualBassAnchor.testId, "string");
+  assert.equal(Number.isInteger(manualBassAnchor.pitchClass), true);
+  await click(client, `[data-testid="${manualBassAnchor.testId}"]`);
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="bass-anchor-mode"]')?.textContent === 'MANUAL'`,
+    "the first chord manual bass anchor to activate"
+  );
+
   await click(client, '[data-testid="suno-launch"]');
   await waitForExpression(
     client,
@@ -578,6 +599,9 @@ try {
   await click(client, '[data-testid="suno-voicing-dramatic"]');
   await click(client, '[data-testid="suno-section-energy-increase-0"]');
   await click(client, '[data-testid="suno-section-texture-0-full"]');
+  await click(client, '[data-testid="suno-section-energy-decrease-1"]');
+  await click(client, '[data-testid="suno-section-voicing-1-stable"]');
+  await click(client, '[data-testid="suno-section-texture-1-sparse"]');
   await waitForExpression(
     client,
     `document.querySelector('[data-testid="suno-signal-tempo"]')?.textContent === '128'`,
@@ -611,6 +635,7 @@ try {
   assert.match(stylePrompt, /128 BPM/);
   assert.match(stylePrompt, /6\/8 meter/);
   assert.match(stylePrompt, /contrasting inversions/);
+  assert.match(stylePrompt, /manual bass anchors/);
   await click(client, '[data-testid="suno-copy-style"]');
   await waitForExpression(
     client,
@@ -622,7 +647,7 @@ try {
 
   assert.match(
     await textContent(client, '[data-testid="suno-section-lock-summary"]'),
-    /1 段已锁定/
+    /2 段已锁定/
   );
   const lockedBlueprint = await textContent(
     client,
@@ -630,16 +655,29 @@ try {
   );
   const expectedFirstSectionEnergy =
     importedProject.arrangement.sections[0].energy + 5;
+  const expectedSecondSectionEnergy =
+    importedProject.arrangement.sections[1].energy - 5;
   assert.match(lockedBlueprint, /TEMPO: 128 BPM \| METER: 6\/8/);
   assert.match(lockedBlueprint, /DEFAULT VOICING MODE: 戏剧 \/ WIDE/);
-  assert.match(lockedBlueprint, /SECTION LOCKS: 1 section/);
+  assert.match(lockedBlueprint, /SECTION LOCKS: 2 sections/);
+  assert.match(lockedBlueprint, /BASS ANCHORS:/);
+  assert.match(
+    lockedBlueprint,
+    new RegExp(`Bass guide: ${manualBassAnchor.name}\\d\\*`)
+  );
   assert.match(
     lockedBlueprint,
     new RegExp(
       `8 bars \\| Energy ${expectedFirstSectionEnergy}/100 \\| Voicing 戏剧/WIDE \\| Texture 展开/LIFT LOCKED`
     )
   );
-  assert.match(lockedBlueprint, /TEXTURE ARC: A:LIFT/);
+  assert.match(
+    lockedBlueprint,
+    new RegExp(
+      `8 bars \\| Energy ${expectedSecondSectionEnergy}/100 \\| Voicing 稳定/ROOT \\| Texture 留白/AIR LOCKED`
+    )
+  );
+  assert.match(lockedBlueprint, /TEXTURE ARC: A:LIFT → B:AIR/);
 
   await click(client, '[data-testid="suno-copy-all"]');
   await waitForExpression(
@@ -650,7 +688,8 @@ try {
   const copiedPackage = await client.evaluate("navigator.clipboard.readText()");
   assert.match(copiedPackage, /CHORDFLOW → SUNO BRIDGE/);
   assert.match(copiedPackage, /TEXTURE ARC:/);
-  assert.match(copiedPackage, /SECTION LOCKS: 1 section/);
+  assert.match(copiedPackage, /SECTION LOCKS: 2 sections/);
+  assert.match(copiedPackage, /BASS ANCHORS:/);
 
   await click(client, '[data-testid="suno-download-txt"]');
   const textDownload = await waitForDownloadedFile(
@@ -707,6 +746,16 @@ try {
     voicingMode: "dramatic",
     textureMode: "full"
   });
+  assert.deepEqual(exportedArrangement.production.sectionOverrides["B:0"], {
+    energy: expectedSecondSectionEnergy,
+    voicingMode: "stable",
+    textureMode: "sparse"
+  });
+  const firstBassOverrideKey = `${exportedArrangement.sections[0].id}:0`;
+  assert.equal(
+    exportedArrangement.bassOverrides[firstBassOverrideKey],
+    manualBassAnchor.pitchClass
+  );
 
   assert.equal(Math.round(producedMidi.header.tempos[0].bpm), 128);
   assert.deepEqual(
@@ -723,6 +772,21 @@ try {
   assert.equal(producedMidi.tracks.length, 2);
   assert.equal(producedMidi.tracks[0].name, "ChordFlow Harmony");
   assert.equal(producedMidi.tracks[1].name, "ChordFlow Bass Guide");
+  assert.equal(
+    producedMidi.tracks[1].notes[0].midi % 12,
+    manualBassAnchor.pitchClass
+  );
+  assert.equal(producedMidi.header.name, exportedArrangement.title);
+  assert.equal(
+    producedMidi.header.meta.length,
+    exportedArrangement.sections.length
+  );
+  assert.match(producedMidi.header.meta[0].text, /^A \| VERSE \|/);
+  assert.equal(producedMidi.header.meta[0].type, "marker");
+  assert.equal(producedMidi.header.meta[0].ticks, 0);
+  const secondSectionTicks = producedMidi.header.ppq * 3 * 8;
+  assert.equal(producedMidi.header.meta[1].ticks, secondSectionTicks);
+  assert.match(producedMidi.header.meta[1].text, /^B \| CHORUS \|/);
   assert.notDeepEqual(
     producedMidi.tracks[0].notes.map((note) => note.midi),
     baselineMidi.tracks[0].notes.map((note) => note.midi),
@@ -732,6 +796,24 @@ try {
     producedMidi.tracks[0].notes[0].velocity >
       baselineMidi.tracks[0].notes[0].velocity,
     "The section energy increase must raise MIDI velocity"
+  );
+  const producedSecondSectionNote = producedMidi.tracks[0].notes.find(
+    (note) => note.ticks === secondSectionTicks
+  );
+  const baselineSecondSectionNote = baselineMidi.tracks[0].notes.find(
+    (note) => note.ticks === baselineMidi.header.ppq * 4 * 4
+  );
+  assert.ok(
+    producedSecondSectionNote.velocity < baselineSecondSectionNote.velocity,
+    "The second-section energy decrease must lower MIDI velocity"
+  );
+  const producedSecondSectionBass = producedMidi.tracks[1].notes.find(
+    (note) => note.ticks === secondSectionTicks
+  );
+  assert.equal(
+    producedSecondSectionNote.midi % 12,
+    producedSecondSectionBass.midi % 12,
+    "Stable section voicing must begin in root position"
   );
 
   await click(client, '[data-testid="suno-launch"]');
@@ -746,6 +828,16 @@ try {
     `document.querySelector('[data-testid="suno-section-card-0"]')?.dataset.locked === 'false'`,
     "the first section to return to global production settings"
   );
+  assert.match(
+    await textContent(client, '[data-testid="suno-section-lock-summary"]'),
+    /1 段已锁定/
+  );
+  await click(client, '[data-testid="suno-section-lock-1"]');
+  await waitForExpression(
+    client,
+    `document.querySelector('[data-testid="suno-section-card-1"]')?.dataset.locked === 'false'`,
+    "the second section to return to global production settings"
+  );
   assert.doesNotMatch(
     await textContent(client, '[data-testid="suno-blueprint"]'),
     /SECTION LOCKS:/
@@ -758,6 +850,9 @@ try {
       "✓ A saved project imported through the real JSON file input\n" +
       "✓ The JSON import participated in undo and redo history\n" +
       "✓ Production controls updated the Suno prompt and blueprint\n" +
+      "✓ A manual bass anchor matched Suno, JSON, playback and MIDI\n" +
+      "✓ Two section overrides preserved contrasting production directions\n" +
+      "✓ MIDI carried positioned markers for every song section\n" +
       "✓ JSON preserved tempo, meter, voicing, energy and texture\n" +
       "✓ MIDI preserved tempo, meter, duration, voicing and energy\n" +
       "✓ Texture remained prompt/JSON-only without fake MIDI tracks\n" +

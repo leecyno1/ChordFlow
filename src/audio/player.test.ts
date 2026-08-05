@@ -48,6 +48,14 @@ describe("production grid delivery", () => {
 
     expect(midi.header.tempos[0].bpm).toBe(118);
     expect(midi.header.timeSignatures[0].timeSignature).toEqual([6, 8]);
+    expect(midi.header.name).toBe(arrangement.title);
+    expect(midi.header.meta).toHaveLength(arrangement.sections.length);
+    expect(midi.header.meta[0]).toMatchObject({
+      ticks: 0,
+      type: "marker"
+    });
+    expect(midi.header.meta[0].text).toContain("A | VERSE |");
+    expect(midi.header.meta[1].ticks).toBe(secondSectionTicks);
     expect(notes[0].ticks).toBe(0);
     expect(notes[0].durationTicks).toBe(expectedChordTicks);
     expect(noteOnsets[1]).toBe(expectedChordTicks);
@@ -75,11 +83,20 @@ describe("production grid delivery", () => {
         voicingMode: "dramatic"
       }
     });
-    const arrangement = setSectionProductionOverride(generated, 1, {
+    const sectionLocked = setSectionProductionOverride(generated, 1, {
       energy: 100,
       voicingMode: "dramatic",
       textureMode: "full"
     });
+    const anchorPitchClass = chordPitchClasses(
+      sectionLocked.sections[0].chords[0]
+    )[1];
+    const arrangement = setBassOverride(
+      sectionLocked,
+      0,
+      0,
+      anchorPitchClass
+    );
     const schedule = buildPlaybackSchedule(arrangement);
     const voicingPlan = buildVoicingPlan(arrangement);
     const firstStep = schedule.steps[0];
@@ -94,6 +111,8 @@ describe("production grid delivery", () => {
       voicingPlan.sections[0][0].bassNote,
       ...voicingPlan.sections[0][0].noteNames
     ]);
+    expect(voicingPlan.sections[0][0].isBassOverridden).toBe(true);
+    expect(voicingPlan.sections[0][0].bassMidi % 12).toBe(anchorPitchClass);
     expect(schedule.steps[1].offsetMs).toBeCloseTo(
       80 + expectedStepSeconds * 1000
     );

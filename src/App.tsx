@@ -1036,7 +1036,7 @@ function App() {
                 <span>
                   <ArrowDownToLine size={11} />
                   LOWEST NOTE
-                  <b>
+                  <b data-testid="bass-anchor-mode">
                     {currentBassOverride === undefined ? "AUTO" : "MANUAL"}
                   </b>
                 </span>
@@ -1048,6 +1048,7 @@ function App() {
                     }
                     aria-pressed={currentBassOverride === undefined}
                     aria-label="低音锚点 自动"
+                    data-testid="bass-anchor-auto"
                     title={`自动声部：${currentVoicing?.bassName ?? "根音"}`}
                     onClick={() => changeBassAnchor(null)}
                   >
@@ -1062,6 +1063,8 @@ function App() {
                       }
                       aria-pressed={currentBassOverride === option.pitchClass}
                       aria-label={`低音锚点 ${option.name}`}
+                      data-testid={`bass-anchor-pc-${option.pitchClass}`}
+                      data-pitch-class={option.pitchClass}
                       title={`强制 ${option.name} 为最低音`}
                       onClick={() => changeBassAnchor(option.pitchClass)}
                     >
