@@ -6,6 +6,7 @@ import { assessHarmony, mineProgressions } from "../engine/harmonyMining";
 import type { MinedProgression } from "../engine/harmonyMining";
 import { quarterNotesPerBar } from "../domain/production";
 import type { Arrangement, RiffSettings } from "../domain/types";
+import { BlindListening } from "./BlindListening";
 
 interface Props {
   arrangement: Arrangement;
@@ -13,7 +14,7 @@ interface Props {
   playing: boolean;
   playingBeat: number | null;
   onChange: (arrangement: Arrangement) => void;
-  onPreview: (solo: boolean, loop: boolean, preview?: Arrangement) => void;
+  onPreview: (solo: boolean, loop: boolean, preview?: Arrangement, onComplete?: (completed: boolean) => void, matchVoiceLevel?: boolean) => void;
   onStop: () => void;
 }
 
@@ -62,6 +63,9 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
     </form>
     <p className="riff-hint">数字按当前{arrangement.mode === "major" ? "大" : "小"}调音阶配和弦；小调 5 默认为小属和弦，强属请写 V 或 V7。</p>
     {error && <p role="alert" className="riff-error">{error}</p>}
+    <BlindListening arrangement={arrangement} sectionIndex={sectionIndex}
+      onPlay={(preview, done) => onPreview(false, false, preview, done, true)}
+      onStop={onStop} onApply={numerals => apply(numerals, "盲听选择")} />
     <details className="riff-assessment">
       <summary>和弦筛选依据 · 连接 {assessment.motion.toFixed(1)} 半音 / 模板差异 {assessment.catalogDistance === null ? "无同长度参考" : `${Math.round(assessment.catalogDistance * 100)}%`}</summary>
       <p>连接：实际转位下，相邻和弦双向最近音平均距离，较小通常更平滑。模板差异：与同长度内置走向的级数差异（包含循环移位）；不是原创率。</p>

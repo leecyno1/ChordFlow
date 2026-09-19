@@ -34,9 +34,9 @@ export interface ArrangementPlaybackSchedule {
 }
 
 export function buildPlaybackSchedule(
-  arrangement: Arrangement
+  arrangement: Arrangement,
+  startDelayMs = 80
 ): ArrangementPlaybackSchedule {
-  const startDelayMs = 80;
   const voicingPlan = buildVoicingPlan(arrangement);
   const steps: ArrangementPlaybackStep[] = [];
   let elapsedSeconds = 0;
@@ -140,14 +140,18 @@ export async function playArrangement(
   arrangement: Arrangement,
   onStep?: (sectionIndex: number, chordIndex: number) => void,
   riffOnly = false,
-  onRiffNote?: (beat: number) => void
+  onRiffNote?: (beat: number) => void,
+  matchVoiceLevel = false
 ): Promise<number> {
   stopPlayback();
   const run = playbackRun;
   const instrument = await getSynth();
   if (run !== playbackRun) return 0;
   instrument.releaseAll();
-  const schedule = buildPlaybackSchedule(arrangement);
+  // The synth has a 1.3s release. Blind excerpts must not inherit the
+  // previous candidate's tail when the listener switches A/B quickly.
+  const startDelayMs = matchVoiceLevel ? 1400 : 80;
+  const schedule = buildPlaybackSchedule(arrangement, startDelayMs);
 
   schedule.steps.forEach((step) => {
     const timer = window.setTimeout(() => {
@@ -156,7 +160,7 @@ export async function playArrangement(
         step.notes,
         step.durationSeconds * 0.9,
         undefined,
-        step.velocity
+        matchVoiceLevel ? comparisonVelocity(step.velocity, step.notes.length) : step.velocity
       );
       onStep?.(step.sectionIndex, step.chordIndex);
     }, step.offsetMs);
@@ -169,7 +173,7 @@ export async function playArrangement(
       if (playbackRun !== run) return;
       instrument.triggerAttackRelease(440 * 2 ** ((note.midi - 69) / 12), note.duration * secondsPerBeat, undefined, note.velocity);
       onRiffNote?.(note.beat);
-    }, 80 + note.beat * secondsPerBeat * 1000);
+    }, startDelayMs + note.beat * secondsPerBeat * 1000);
     playbackTimers.push(timer);
   });
 
@@ -183,7 +187,11 @@ export function stopPlayback(): void {
   synth?.releaseAll();
 }
 
-function downloadBlob(blob: Blob, filename: string) {
+export function comparisonVelocity(velocity: number, voiceCount: number): number {
+  return Math.min(1, velocity * Math.sqrt(4 / Math.max(1, voiceCount)));
+}
+
+export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;

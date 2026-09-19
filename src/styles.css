@@ -49,6 +49,18 @@
 .riff-grid rect { fill: var(--cyan); }
 .riff-grid .riff-playhead { stroke: var(--rose); stroke-width: 2; }
 .riff-workshop .riff-error { color: var(--rose); }
+.blind-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
+.blind-entry > span { color: var(--muted); font-size: 12px; }
+.blind-dialog { color: var(--ivory); background: #111419; border: 1px solid var(--line-strong); border-radius: 16px; width: min(680px, calc(100vw - 32px)); max-height: 85vh; padding: 24px; }
+.blind-dialog::backdrop { background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px); }
+.blind-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+.blind-sides > div { display: grid; gap: 12px; text-align: center; }
+.blind-sides button { min-height: 64px; font-size: 20px; }
+.blind-sides span { color: var(--cyan); font-size: 13px; }
+.blind-votes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.blind-votes button:disabled { cursor: default; }
+.blind-reveal article { border-top: 1px solid var(--line); padding: 12px 0; }
+.blind-reveal strong { color: var(--cyan); }
 @media (max-width: 760px) {
   .riff-workshop { margin: 16px 10px; padding: 16px; }
   .riff-heading h2 { font-size: 20px; }

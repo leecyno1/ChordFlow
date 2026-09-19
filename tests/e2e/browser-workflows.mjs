@@ -863,6 +863,27 @@ try {
   assert.equal(riffWavFile.content.toString('ascii', 8, 12), 'WAVE');
   assert.ok(riffWavFile.content.length > 44100);
   assert.ok(riffWavFile.content.subarray(44).some(byte => byte !== 0), 'reference audio must not be silent');
+  await click(client, '[data-testid="blind-start"]');
+  await waitForExpression(client, 'document.querySelector(".blind-dialog")?.open === true', 'blind dialog to open');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-reveal]") === null'), true);
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-vote-A]").disabled'), true);
+  await click(client, '[data-testid="blind-play-A"]');
+  await click(client, '[data-testid="blind-play-B"]');
+  await waitForExpression(client, 'document.querySelector("[data-testid=blind-state-B]").textContent === "已听完"', 'B to finish');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-state-A]").textContent'), '待试听');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-vote-A]").disabled'), true);
+  await click(client, '[data-testid="blind-play-A"]');
+  await waitForExpression(client, 'document.querySelector("[data-testid=blind-vote-A]").disabled === false', 'both blind excerpts to finish');
+  await click(client, '[data-testid="blind-vote-A"]');
+  await waitForExpression(client, 'document.querySelector("[data-testid=blind-reveal]") !== null', 'blind choice to reveal the chords');
+  await click(client, '[data-testid="blind-close"]');
+  assert.match(await textContent(client, '[data-testid="listening-summary"]'), /1 次记录 · 1 次有偏好/);
+  await click(client, '[data-testid="listening-export"]');
+  const preferenceFile = await waitForDownloadedFile(downloadDirectory, beforeRiff, name => name === 'chordflow-listening.json', 'listening choices');
+  const preferences = JSON.parse(preferenceFile.content.toString());
+  assert.equal(preferences.records.length, 1);
+  assert.equal(preferences.records[0].choice, 'A');
+  assert.equal(preferences.records[0].trial.candidates.A.arrangement.riff, undefined);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -881,7 +902,8 @@ try {
       "✓ Section lock updated the blueprint\n" +
       "✓ Copied package matched the downloaded TXT\n" +
       "✓ Section unlock restored global production settings\n" +
-      "✓ Chord input, riff playback, mining and real MIDI/WAV downloads worked\n"
+      "✓ Chord input, riff playback, mining and real MIDI/WAV downloads worked\n" +
+      "✓ Blind A/B listening required complete playback before recording and exporting a choice\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

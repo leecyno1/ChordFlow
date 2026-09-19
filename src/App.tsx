@@ -279,22 +279,22 @@ function App() {
 
   useEffect(() => { haltPlayback(); }, [activeSection]);
 
-  async function previewRiff(solo: boolean, loop: boolean, preview = arrangement) {
+  async function previewRiff(solo: boolean, loop: boolean, preview = arrangement, onComplete?: (completed: boolean) => void, matchVoiceLevel = false) {
     haltPlayback();
     const token = playbackToken.current;
     setPlaying(true);
-    const excerpt = { ...preview, sections: [preview.sections[activeSection]] };
+    const excerpt = { ...preview, sections: [preview.sections[activeSection] ?? preview.sections[0]] };
     async function playOnce() {
       try {
         const duration = await playArrangement(excerpt, (_index, chord) => {
           if (playbackToken.current === token) setPlayingPosition({ section: activeSection, chord });
-        }, solo, beat => { if (playbackToken.current === token) setRiffBeat(beat); });
+        }, solo, beat => { if (playbackToken.current === token) setRiffBeat(beat); }, matchVoiceLevel);
         if (playbackToken.current !== token) return;
         window.setTimeout(() => {
           if (playbackToken.current !== token) return;
-          if (loop) void playOnce(); else haltPlayback();
+          if (loop) void playOnce(); else { haltPlayback(); onComplete?.(duration > 0); }
         }, Math.max(0, duration - (loop ? 80 : 0)));
-      } catch { haltPlayback(); setProjectError("无法启动音频，请重试"); }
+      } catch { haltPlayback(); setProjectError("无法启动音频，请重试"); onComplete?.(false); }
     }
     await playOnce();
   }
@@ -1230,7 +1230,7 @@ function App() {
         playing={playing}
         playingBeat={riffBeat}
         onChange={commitArrangement}
-        onPreview={(solo, loop, preview) => void previewRiff(solo, loop, preview)}
+        onPreview={(solo, loop, preview, done, level) => void previewRiff(solo, loop, preview, done, level)}
         onStop={haltPlayback}
       />
 
