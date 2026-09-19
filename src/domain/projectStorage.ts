@@ -1,4 +1,5 @@
 import { bassOverrideKey } from "./bass";
+import { normalizeRiff } from "../engine/riff";
 import { chordPitchClasses, DISPLAY_KEYS, romanToChord } from "./music";
 import {
   normalizeProductionSettings,
@@ -136,6 +137,7 @@ function normalizeArrangement(value: unknown): Arrangement | null {
 
   return {
     title: value.title,
+    ...(normalizeRiff(value.riff) ? { riff: normalizeRiff(value.riff) } : {}),
     key: value.key,
     mode: value.mode,
     formId: value.formId,

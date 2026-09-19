@@ -176,6 +176,8 @@ export function chordPitchClasses(chord: string): number[] {
   else if (quality.includes("sus4")) intervals = [0, 5, 7];
   else if (quality.includes("m")) intervals = [0, 3, 7];
 
+  if (quality.includes("add9")) intervals.push(14);
+
   return intervals.map((interval) => (root + interval) % 12);
 }
 

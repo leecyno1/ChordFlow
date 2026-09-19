@@ -8,6 +8,7 @@ export interface ArrangementComparison {
   chordDifferences: number;
   bassDifferences: number;
   productionChanged: boolean;
+  riffChanged: boolean;
   summary: string;
 }
 
@@ -48,12 +49,14 @@ export function compareArrangements(
   const modeChanged = left.mode !== right.mode;
   const productionChanged =
     JSON.stringify(left.production) !== JSON.stringify(right.production);
+  const riffChanged = JSON.stringify(left.riff) !== JSON.stringify(right.riff);
   const parts = [
     formChanged ? "曲式" : "",
     keyChanged || modeChanged ? "调性" : "",
     chordDifferences > 0 ? `${chordDifferences} 处和声` : "",
     bassDifferences > 0 ? `${bassDifferences} 处低音` : "",
-    productionChanged ? "制作参数" : ""
+    productionChanged ? "制作参数" : "",
+    riffChanged ? "Riff 动机" : ""
   ].filter(Boolean);
 
   return {
@@ -63,6 +66,7 @@ export function compareArrangements(
     chordDifferences,
     bassDifferences,
     productionChanged,
+    riffChanged,
     summary: parts.length > 0 ? parts.join(" · ") : "方案一致"
   };
 }

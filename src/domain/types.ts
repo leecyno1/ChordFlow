@@ -4,6 +4,16 @@ export type TimeSignature = "4/4" | "3/4" | "6/8";
 export type VoicingMode = "stable" | "flowing" | "dramatic";
 export type SectionTextureMode = "sparse" | "balanced" | "full";
 
+export interface RiffSettings {
+  style: "arpeggio" | "syncopated" | "hook";
+  bars: 1 | 2;
+  density: "sparse" | "full";
+  register: "low" | "high";
+  variation: number;
+  rhythmSeed: number;
+  pitchSeed: number;
+}
+
 export interface SectionProductionOverride {
   energy: number;
   voicingMode: VoicingMode;
@@ -70,6 +80,7 @@ export interface SongSection {
 }
 
 export interface Arrangement {
+  riff?: RiffSettings;
   title: string;
   key: string;
   mode: Mode;

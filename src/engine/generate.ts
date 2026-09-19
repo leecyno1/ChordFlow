@@ -106,6 +106,7 @@ export function generateArrangement(options: {
   surprise: number;
   seed: number;
   production?: Partial<ProductionSettings>;
+  riff?: Arrangement["riff"];
 }): Arrangement {
   const random = mulberry32(options.seed);
   const preset = FORM_PRESETS.find((item) => item.id === options.formId);
@@ -162,6 +163,7 @@ export function generateArrangement(options: {
 
   return {
     title: "未命名和声轨道",
+    ...(options.riff ? { riff: options.riff } : {}),
     key: options.key,
     mode: options.mode,
     formId: options.formId,
@@ -267,6 +269,7 @@ export function preserveLockedSections(
 
   return {
     ...regenerated,
+    ...(current.riff ? { riff: current.riff } : {}),
     lockedSymbols: [...current.lockedSymbols],
     bassOverrides: pickBassOverridesForSections(
       current.bassOverrides,

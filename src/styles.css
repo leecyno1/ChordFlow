@@ -22,6 +22,39 @@
   --display: "Bodoni Moda", "Noto Serif SC", serif;
 }
 
+.riff-workshop { margin: 24px 22px; padding: 26px; border: 1px solid var(--line-strong); border-radius: 16px; background: var(--panel); }
+.riff-heading, .riff-controls, .riff-actions, .riff-input, .riff-styles { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.riff-heading { justify-content: space-between; margin-bottom: 18px; }
+.riff-heading h2 { margin: 8px 0; font-size: 24px; }
+.riff-workshop p { color: var(--muted); font-size: 13px; line-height: 1.8; }
+.riff-workshop button, .riff-workshop select, .riff-input input { border: 1px solid var(--line-strong); border-radius: 8px; background: #181a20; color: var(--ivory); padding: 9px 12px; font-size: 13px; }
+.riff-workshop button { cursor: pointer; }
+.riff-workshop button:hover, .riff-workshop button[aria-pressed="true"] { border-color: var(--cyan); color: var(--cyan); }
+.riff-workshop button:disabled { opacity: 0.5; cursor: wait; }
+.riff-input input { flex: 1; min-width: 170px; }
+.riff-input label, .riff-controls label, .riff-actions label { font-size: 12px; }
+.riff-controls label { display: flex; gap: 8px; align-items: center; }
+.riff-styles { margin: 20px 0 14px; }
+.riff-assessment { margin: 16px 0; padding: 12px 0; border-block: 1px solid var(--line); font-size: 12px; }
+.riff-assessment summary { cursor: pointer; color: var(--amber); }
+.riff-candidates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.riff-candidates article { padding: 16px; background: #14161b; border: 1px solid var(--line); border-radius: 10px; }
+.riff-candidates h3 { margin: 0 0 12px; font-size: 16px; }
+.riff-candidates strong { font: 14px var(--mono); color: var(--cyan); }
+.riff-candidates small { color: var(--muted); }
+.riff-candidates article > div { display: flex; gap: 8px; margin-top: 12px; }
+.riff-grid { display: block; width: 100%; min-height: 130px; margin: 18px 0; background: #0c0e12; border: 1px solid var(--line); border-radius: 8px; }
+.riff-grid line { stroke: #343842; stroke-width: 1; }
+.riff-grid text { fill: #b8b8b2; font: 12px var(--mono); }
+.riff-grid rect { fill: var(--cyan); }
+.riff-grid .riff-playhead { stroke: var(--rose); stroke-width: 2; }
+.riff-workshop .riff-error { color: var(--rose); }
+@media (max-width: 760px) {
+  .riff-workshop { margin: 16px 10px; padding: 16px; }
+  .riff-heading h2 { font-size: 20px; }
+  .riff-candidates { grid-template-columns: 1fr; }
+}
+
 * {
   box-sizing: border-box;
 }

@@ -842,6 +842,27 @@ try {
     await textContent(client, '[data-testid="suno-blueprint"]'),
     /SECTION LOCKS:/
   );
+  await click(client, '[data-testid="suno-close"]');
+  await fillInput(client, '#progression-input', '1645');
+  await click(client, '.riff-input button[type="submit"]');
+  await click(client, '.riff-styles button');
+  await waitForExpression(client, 'document.querySelectorAll(".riff-grid rect").length > 0', 'riff notes to appear');
+  await click(client, '[data-testid="riff-solo"]');
+  await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'riff playback to advance');
+  await click(client, '[data-testid="mine-chords"]');
+  await waitForExpression(client, 'document.querySelectorAll(".riff-candidates article").length === 3', 'three mined chord candidates');
+  const beforeRiff = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-midi"]');
+  const riffMidiFile = await waitForDownloadedFile(downloadDirectory, beforeRiff, name => name.endsWith('.mid'), 'riff MIDI');
+  const riffMidi = new Midi(riffMidiFile.content);
+  assert.equal(riffMidi.tracks.length, 3);
+  assert.ok(riffMidi.tracks.find(track => track.name === 'ChordFlow Riff').notes.length > 0);
+  await click(client, '[data-testid="riff-wav"]');
+  const riffWavFile = await waitForDownloadedFile(downloadDirectory, beforeRiff, name => name.endsWith('.wav'), 'riff WAV');
+  assert.equal(riffWavFile.content.toString('ascii', 0, 4), 'RIFF');
+  assert.equal(riffWavFile.content.toString('ascii', 8, 12), 'WAVE');
+  assert.ok(riffWavFile.content.length > 44100);
+  assert.ok(riffWavFile.content.subarray(44).some(byte => byte !== 0), 'reference audio must not be silent');
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -859,7 +880,8 @@ try {
       "✓ Visible Style prompt matched the clipboard\n" +
       "✓ Section lock updated the blueprint\n" +
       "✓ Copied package matched the downloaded TXT\n" +
-      "✓ Section unlock restored global production settings\n"
+      "✓ Section unlock restored global production settings\n" +
+      "✓ Chord input, riff playback, mining and real MIDI/WAV downloads worked\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

@@ -39,6 +39,7 @@ import { FifthsLens } from "./components/FifthsLens";
 import { FormAtlas } from "./components/FormAtlas";
 import { SunoBridge } from "./components/SunoBridge";
 import { TransitionWorkshop } from "./components/TransitionWorkshop";
+import { RiffWorkshop } from "./components/RiffWorkshop";
 import {
   FORM_PRESETS,
   PROGRESSIONS,
@@ -160,6 +161,7 @@ function App() {
   const [view, setView] = useState<ViewMode>("river");
   const [sunoOpen, setSunoOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [riffBeat, setRiffBeat] = useState<number | null>(null);
   const [playingPosition, setPlayingPosition] = useState<{
     section: number;
     chord: number;
@@ -257,6 +259,7 @@ function App() {
   function commitArrangement(
     update: Arrangement | ((current: Arrangement) => Arrangement)
   ) {
+    haltPlayback();
     setProjectError(null);
     setProjectNotice(null);
     setHistory((current) => {
@@ -264,6 +267,36 @@ function App() {
         typeof update === "function" ? update(current.present) : update;
       return commitArrangementHistory(current, next);
     });
+  }
+
+  function haltPlayback() {
+    playbackToken.current += 1;
+    stopPlayback();
+    setPlaying(false);
+    setPlayingPosition(null);
+    setRiffBeat(null);
+  }
+
+  useEffect(() => { haltPlayback(); }, [activeSection]);
+
+  async function previewRiff(solo: boolean, loop: boolean, preview = arrangement) {
+    haltPlayback();
+    const token = playbackToken.current;
+    setPlaying(true);
+    const excerpt = { ...preview, sections: [preview.sections[activeSection]] };
+    async function playOnce() {
+      try {
+        const duration = await playArrangement(excerpt, (_index, chord) => {
+          if (playbackToken.current === token) setPlayingPosition({ section: activeSection, chord });
+        }, solo, beat => { if (playbackToken.current === token) setRiffBeat(beat); });
+        if (playbackToken.current !== token) return;
+        window.setTimeout(() => {
+          if (playbackToken.current !== token) return;
+          if (loop) void playOnce(); else haltPlayback();
+        }, Math.max(0, duration - (loop ? 80 : 0)));
+      } catch { haltPlayback(); setProjectError("无法启动音频，请重试"); }
+    }
+    await playOnce();
   }
 
   function previewArrangement(
@@ -275,10 +308,7 @@ function App() {
   }
 
   function resetProjectFocus() {
-    playbackToken.current += 1;
-    stopPlayback();
-    setPlaying(false);
-    setPlayingPosition(null);
+    haltPlayback();
     setActiveSection(0);
     setActiveChord(0);
   }
@@ -426,7 +456,8 @@ function App() {
       style,
       surprise,
       seed: nextSeed,
-      production: arrangement.production
+      production: arrangement.production,
+      riff: arrangement.riff
     });
     commitArrangement((current) => preserveLockedSections(current, next));
     setActiveSection(0);
@@ -446,7 +477,8 @@ function App() {
         style,
         surprise,
         seed: nextSeed,
-        production: arrangement.production
+        production: arrangement.production,
+        riff: arrangement.riff
       })
     );
     setActiveSection(0);
@@ -472,7 +504,8 @@ function App() {
         style,
         surprise,
         seed: nextSeed,
-        production: arrangement.production
+        production: arrangement.production,
+        riff: arrangement.riff
       })
     );
     setActiveSection(0);
@@ -498,7 +531,8 @@ function App() {
         style,
         surprise,
         seed: nextSeed,
-        production: arrangement.production
+        production: arrangement.production,
+        riff: arrangement.riff
       })
     );
     setActiveSection(0);
@@ -566,10 +600,7 @@ function App() {
 
   async function togglePlayback() {
     if (playing) {
-      playbackToken.current += 1;
-      stopPlayback();
-      setPlaying(false);
-      setPlayingPosition(null);
+      haltPlayback();
       return;
     }
     const token = playbackToken.current + 1;
@@ -1191,6 +1222,17 @@ function App() {
           </section>
         </aside>
       </main>
+
+      <RiffWorkshop
+        key={section.id}
+        arrangement={arrangement}
+        sectionIndex={activeSection}
+        playing={playing}
+        playingBeat={riffBeat}
+        onChange={commitArrangement}
+        onPreview={(solo, loop, preview) => void previewRiff(solo, loop, preview)}
+        onStop={haltPlayback}
+      />
 
       <FormAtlas
         pattern={arrangement.formPattern}

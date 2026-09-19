@@ -1,4 +1,5 @@
 import { PROGRESSIONS } from "./catalog";
+import { RIFF_NAMES } from "../engine/riff";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
   effectiveSectionProductionAt,
@@ -508,6 +509,9 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
           "BASS ANCHORS: Notes marked * are manual lowest-note anchors and should be preserved."
         ]
       : []),
+    ...(arrangement.riff ? [
+      `RIFF: ${RIFF_NAMES[arrangement.riff.style]} / ${arrangement.riff.style}; ${arrangement.riff.bars}-bar repeating motif; ${arrangement.riff.density} rhythm; ${arrangement.riff.register} register. Preserve the rhythmic identity while adapting notes to each chord. Reference MIDI contains a separate ChordFlow Riff track. Use rendered audio as the audible reference; text does not encode exact notes.`
+    ] : []),
     "",
     ...sectionLines,
     "ARRANGEMENT RULE: Keep repeated letter sections recognizable. Let the chorus feel wider than the verse, and make the bridge provide contrast before the final return. Preserve the listed chord order as the harmonic reference."
