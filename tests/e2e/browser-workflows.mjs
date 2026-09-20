@@ -850,6 +850,17 @@ try {
   await selectValue(client, '[data-testid="riff-ornament"]', 'passing');
   await selectValue(client, '[data-testid="riff-ending"]', 'resolve');
   await waitForExpression(client, 'document.querySelector(".riff-grid .riff-passing") !== null && document.querySelector(".riff-grid .riff-resolution") !== null', 'passing tones and final anchor to appear');
+  await selectValue(client, '[data-testid="riff-bars"]', '1');
+  await selectValue(client, '[data-testid="riff-phrase"]', 'call-response');
+  await waitForExpression(client, 'document.querySelector(".riff-phrase-label") !== null', 'call-response labels to appear');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-bars]").value'), '2');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-bars]").disabled'), true);
+  await click(client, '[data-testid="project-undo"]');
+  await waitForExpression(client, 'document.querySelector("[data-testid=riff-phrase]").value === "repeat"', 'undo to restore the loop');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-bars]").value'), '1');
+  await click(client, '[data-testid="project-redo"]');
+  await waitForExpression(client, 'document.querySelector(".riff-grid rect[data-phrase=response].riff-resolution") !== null', 'redo to restore answer roots');
+  const displayedRiffPitches = await client.evaluate('Array.from(document.querySelectorAll(".riff-grid rect"), note => Number(note.querySelector("title").textContent.match(/^MIDI (\\d+)/)[1]))');
   await click(client, '[data-testid="riff-solo"]');
   await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'riff playback to advance');
   await click(client, '[data-testid="mine-chords"]');
@@ -863,6 +874,15 @@ try {
   const riffMidi = new Midi(riffMidiFile.content);
   assert.equal(riffMidi.tracks.length, 3);
   assert.ok(riffMidi.tracks.find(track => track.name === 'ChordFlow Riff').notes.length > 0);
+  const riffTrack = riffMidi.tracks.find(track => track.name === 'ChordFlow Riff');
+  assert.deepEqual(riffTrack.notes.map(note => note.midi), displayedRiffPitches);
+  const [riffNumerator, riffDenominator] = riffMidi.header.timeSignatures[0].timeSignature;
+  const riffBarTicks = riffMidi.header.ppq * riffNumerator * 4 / riffDenominator;
+  const riffPulseTicks = riffMidi.header.ppq * (riffNumerator === 6 && riffDenominator === 8 ? 1.5 : 1);
+  riffTrack.notes.filter(note => Math.floor(note.ticks / riffBarTicks) % 2 === 0).forEach(note => {
+    const callEnd = (Math.floor(note.ticks / riffBarTicks) + 1) * riffBarTicks;
+    assert.ok(note.ticks + note.durationTicks <= callEnd - riffPulseTicks + 1, 'MIDI must preserve the call rest');
+  });
   await click(client, '[data-testid="riff-wav"]');
   const riffWavFile = await waitForDownloadedFile(downloadDirectory, beforeRiff, name => name.endsWith('.wav'), 'riff WAV');
   assert.equal(riffWavFile.content.toString('ascii', 0, 4), 'RIFF');
@@ -902,6 +922,7 @@ try {
   await click(client, '.timeline-section:nth-child(2) .timeline-chord');
   await waitForExpression(client, 'document.querySelector(".riff-grid") === null', 'B to start without the A motif');
   await click(client, '[data-testid="riff-style-hook"]');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-phrase]").value'), 'repeat');
   await selectValue(client, '[data-testid="riff-scope"]', 'global');
   await click(client, '[data-testid="riff-style-syncopated"]');
   await selectValue(client, '[data-testid="riff-scope"]', 'theme');
@@ -914,10 +935,12 @@ try {
   await click(client, '.timeline-section:nth-child(1) .timeline-chord');
   await waitForExpression(client, 'document.querySelector("[data-testid=riff-style-arpeggio]").getAttribute("aria-pressed") === "true"', 'A to retain its independent motif');
   assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-ornament]").value'), 'passing');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-phrase]").value'), 'call-response');
   await click(client, '[data-testid="suno-launch"]');
   const themeBlueprint = await textContent(client, '[data-testid="suno-blueprint"]');
   assert.match(themeBlueprint, /weak-beat stepwise passing tones/);
   assert.match(themeBlueprint, /Riff: silent in this section/);
+  assert.match(themeBlueprint, /call-response: one-bar call with a final main-pulse rest/);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -938,7 +961,8 @@ try {
       "✓ Section unlock restored global production settings\n" +
       "✓ Chord input, riff playback, mining and real MIDI/WAV downloads worked\n" +
       "✓ Blind A/B listening required complete playback before recording and exporting a choice\n" +
-      "✓ Theme motifs, passing tones, muting and inheritance matched the Suno blueprint\n"
+      "✓ Theme motifs, passing tones, muting and inheritance matched the Suno blueprint\n" +
+      "✓ Call-response survived undo/redo and matched visual notes, MIDI rests and Suno directions\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

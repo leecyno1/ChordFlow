@@ -1,5 +1,5 @@
 import { PROGRESSIONS } from "./catalog";
-import { RIFF_NAMES, riffSettingsAt } from "../engine/riff";
+import { RIFF_NAMES, riffSettingsAt, riffMotifBars } from "../engine/riff";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
   effectiveSectionProductionAt,
@@ -494,7 +494,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `Harmonic rhythm: ${harmonicRhythmLabel(arrangement.production, section.chords.length)}`,
     `Direction: ${section.direction}`,
     ...(hasRiff ? [riff
-      ? `Riff: ${RIFF_NAMES[riff.style]} / ${riff.style}; ${riff.bars}-bar motif; ${riff.density}; ${riff.register} register; ${riff.ornament === "passing" ? "weak-beat stepwise passing tones when possible" : "chord-tone anchors"}; ${riff.ending === "resolve" ? "end on the final chord root" : "retain the motif ending"}.`
+      ? `Riff: ${RIFF_NAMES[riff.style]} / ${riff.style}; ${riffMotifBars(riff)}-bar motif; ${riff.density}; ${riff.register} register; ${riff.ornament === "passing" ? "weak-beat stepwise passing tones when possible" : "chord-tone anchors"}; ${riff.phrase === "call-response" ? "call-response: one-bar call with a final main-pulse rest, then a one-bar answer echoing the opening rhythm and contour; end each answer on its last chord root (main pulse is a dotted quarter in 6/8)" : riff.ending === "resolve" ? "end on the final chord root" : "retain the motif ending"}.`
       : "Riff: silent in this section."] : []),
     ""
     ];

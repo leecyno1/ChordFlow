@@ -14,6 +14,7 @@ export interface RiffSettings {
   pitchSeed: number;
   ornament?: "off" | "passing";
   ending?: "open" | "resolve";
+  phrase?: "repeat" | "call-response";
 }
 
 export interface SectionProductionOverride {

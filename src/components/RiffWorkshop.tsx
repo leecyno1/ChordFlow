@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { exportMidi, exportReferenceWav } from "../audio/player";
-import { DEFAULT_RIFF, RIFF_NAMES, buildRiffNotes, riffSettingsAt, setThemeRiff } from "../engine/riff";
+import { DEFAULT_RIFF, RIFF_NAMES, buildRiffNotes, riffSettingsAt, setThemeRiff, riffMotifBars } from "../engine/riff";
 import { applySectionProgression, parseProgression } from "../engine/progressionInput";
 import { assessHarmony, mineProgressions } from "../engine/harmonyMining";
 import type { MinedProgression } from "../engine/harmonyMining";
@@ -104,21 +104,24 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
     </div>
     {controlsEnabled && <>
       <div className="riff-controls">
-        <label>动机长度<select value={settings.bars} onChange={event => update({ bars: Number(event.target.value) as 1 | 2 })}><option value="1">1 小节</option><option value="2">2 小节</option></select></label>
+        <label>乐句组织<select data-testid="riff-phrase" value={settings.phrase ?? "repeat"} onChange={event => update({ phrase: event.target.value as RiffSettings["phrase"], ...(event.target.value === "call-response" ? { bars: 2 } : {}) })}><option value="repeat">循环动机</option><option value="call-response">两小节问答</option></select></label>
+        <label>动机长度<select data-testid="riff-bars" value={riffMotifBars(settings)} disabled={settings.phrase === "call-response"} onChange={event => update({ bars: Number(event.target.value) as 1 | 2 })}><option value="1">1 小节</option><option value="2">2 小节</option></select></label>
         <label>疏密<select value={settings.density} onChange={event => update({ density: event.target.value as RiffSettings["density"] })}><option value="sparse">留白</option><option value="full">紧凑</option></select></label>
         <label>音域<select value={settings.register} onChange={event => update({ register: event.target.value as RiffSettings["register"] })}><option value="low">中低</option><option value="high">中高</option></select></label>
-        <label>句尾变化<select value={settings.variation} onChange={event => update({ variation: Number(event.target.value) })}><option value="0">保持</option><option value="1">少量</option><option value="2">明显</option></select></label>
+        <label>句尾变化<select disabled={settings.phrase === "call-response"} value={settings.variation} onChange={event => update({ variation: Number(event.target.value) })}><option value="0">保持</option><option value="1">少量</option><option value="2">明显</option></select></label>
         <label>弱拍经过音<select data-testid="riff-ornament" value={settings.ornament ?? "off"} onChange={event => update({ ornament: event.target.value as RiffSettings["ornament"] })}><option value="off">关闭</option><option value="passing">级进连接</option></select></label>
-        <label>句尾落点<select data-testid="riff-ending" value={settings.ending ?? "open"} onChange={event => update({ ending: event.target.value as RiffSettings["ending"] })}><option value="open">保留动机</option><option value="resolve">落在末和弦根音</option></select></label>
+        <label>句尾落点<select data-testid="riff-ending" disabled={settings.phrase === "call-response"} value={settings.phrase === "call-response" ? "resolve" : settings.ending ?? "open"} onChange={event => update({ ending: event.target.value as RiffSettings["ending"] })}><option value="open">保留动机</option><option value="resolve">落在末和弦根音</option></select></label>
         <button type="button" onClick={() => update({ rhythmSeed: settings.rhythmSeed + 1 })}>只换节奏</button>
         <button type="button" onClick={() => update({ pitchSeed: settings.pitchSeed + 1 })}>只换音高</button>
       </div>
+      {settings.phrase === "call-response" && <p className="riff-hint">问句末尾留一个主拍；答句呼应开头，再落到该小节最后一个和弦的根音。6/8 的主拍为附点四分音符。问答模式固定句尾，切回循环后恢复原设置。</p>}
       {scope === "global" && arrangement.riffThemes?.[section.symbol] !== undefined && <p className="riff-hint">当前主题已有独立设置；修改全曲默认不会覆盖它。下方试听仍使用当前主题的设置。</p>}
     </>}
     {activeSettings && <>
       <svg className="riff-grid" viewBox="0 0 960 168" role="img" aria-label={`${section.title} Riff 音符网格，${notes.length} 个音符`}>
         {section.chords.map((chord, index) => <g key={index}><line x1={index * 960 / section.chords.length} x2={index * 960 / section.chords.length} y1="0" y2="168" /><text x={index * 960 / section.chords.length + 8} y="18">{chord}</text></g>)}
-        {notes.map((note, index) => <rect key={index} className={note.kind ? `riff-${note.kind}` : undefined} x={note.beat / beats * 960} y={32 + (maxNote - note.midi) / (maxNote - minNote) * 120}
+        {activeSettings.phrase === "call-response" && Array.from({ length: arrangement.production.barsPerSection }, (_, bar) => <text key={bar} className="riff-phrase-label" x={bar * 960 / arrangement.production.barsPerSection + 8} y="35">{bar % 2 === 0 ? "问句" : "答句"}</text>)}
+        {notes.map((note, index) => <rect key={index} data-phrase={note.phrase} className={note.kind ? `riff-${note.kind}` : undefined} x={note.beat / beats * 960} y={46 + (maxNote - note.midi) / (maxNote - minNote) * 104}
           width={Math.max(2, note.duration / beats * 960)} height="6" rx="2"><title>MIDI {note.midi} · 第 {(note.beat + 1).toFixed(1)} 拍</title></rect>)}
         {playingBeat !== null && <line className="riff-playhead" x1={playingBeat / beats * 960} x2={playingBeat / beats * 960} y1="22" y2="168" />}
       </svg>

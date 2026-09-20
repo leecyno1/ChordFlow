@@ -16,6 +16,11 @@ export interface RiffNote {
   sectionIndex: number;
   chordIndex: number;
   kind?: "passing" | "resolution";
+  phrase?: "call" | "response";
+}
+
+export function riffMotifBars(settings: RiffSettings): 1 | 2 {
+  return settings.phrase === "call-response" ? 2 : settings.bars;
 }
 
 export function normalizeRiff(value: unknown): RiffSettings | undefined {
@@ -25,14 +30,15 @@ export function normalizeRiff(value: unknown): RiffSettings | undefined {
   const integer = (name: string, fallback: number) =>
     typeof item[name] === "number" && Number.isFinite(item[name]) ? Math.round(item[name] as number) : fallback;
   return {
-    style: item.style as RiffSettings["style"], bars: item.bars === 1 ? 1 : 2,
+    style: item.style as RiffSettings["style"], bars: item.phrase !== "call-response" && item.bars === 1 ? 1 : 2,
     density: item.density === "full" ? "full" : "sparse",
     register: item.register === "low" ? "low" : "high",
     variation: Math.max(0, Math.min(2, integer("variation", 1))),
     rhythmSeed: Math.abs(integer("rhythmSeed", 0)) % 100000,
     pitchSeed: Math.abs(integer("pitchSeed", 0)) % 100000,
     ...(item.ornament === "off" || item.ornament === "passing" ? { ornament: item.ornament } : {}),
-    ...(item.ending === "open" || item.ending === "resolve" ? { ending: item.ending } : {})
+    ...(item.ending === "open" || item.ending === "resolve" ? { ending: item.ending } : {}),
+    ...(item.phrase === "repeat" || item.phrase === "call-response" ? { phrase: item.phrase } : {})
   };
 }
 
@@ -70,7 +76,8 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
   arrangement.sections.forEach((section, sectionIndex) => {
     const settings = riffSettingsAt(arrangement, sectionIndex);
     if (!settings) return;
-    const motifSlots = slotsPerBar * settings.bars;
+    const callResponse = settings.phrase === "call-response";
+    const motifSlots = slotsPerBar * riffMotifBars(settings);
     const masks = {
       arpeggio: [[0, 2, 4, 6], [0, 2, 5, 6], [0, 3, 4, 6]],
       syncopated: [[0, 3, 6], [0, 3, 5], [0, 2, 5, 7]],
@@ -85,13 +92,22 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
     const contour = contours[settings.pitchSeed % contours.length];
     const production = effectiveSectionProductionAt(arrangement, sectionIndex);
     const center = (settings.register === "high" ? 72 : 60) + chordPitchClasses(arrangement.key)[0] + (section.role === "chorus" ? 3 : 0);
-    const events: { slot: number; motifSlot: number }[] = [];
+    const events: { slot: number; motifSlot: number; answerEnding?: boolean }[] = [];
+    const scaledMask = mask.map(position => Math.floor(position * slotsPerBar / 8));
     for (let slot = 0; slot < sectionSlots; slot++) {
       const motifSlot = slot % motifSlots;
       const local = motifSlot % slotsPerBar;
-      const scaledMask = mask.map(position => Math.floor(position * slotsPerBar / 8));
       const base = scaledMask.includes(local);
       const extra = settings.density === "full" && local % pulse === 1;
+      if (callResponse && local >= slotsPerBar - pulse) {
+        // A call leaves its final pulse silent. Its answer holds a root there;
+        // with fast harmony, delay that anchor until the bar's last chord.
+        const barEnd = slot - local + slotsPerBar;
+        const lastChord = Math.ceil(barEnd / sectionSlots * section.chords.length) - 1;
+        const landing = Math.max(barEnd - pulse, Math.ceil(lastChord * sectionSlots / section.chords.length));
+        if (motifSlot >= slotsPerBar && slot === landing) events.push({ slot, motifSlot, answerEnding: true });
+        continue;
+      }
       if (base || extra) events.push({ slot, motifSlot });
     }
     const finalChordSlot = Math.ceil(sectionSlots * (section.chords.length - 1) / section.chords.length);
@@ -100,13 +116,16 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
     }
     let previous = center;
     const sectionNotes: RiffNote[] = [];
-    events.forEach(({ slot, motifSlot }, index) => {
+    events.forEach(({ slot, motifSlot, answerEnding }, index) => {
       const chordIndex = Math.min(section.chords.length - 1, Math.floor(slot / sectionSlots * section.chords.length));
       const pcs = chordPitchClasses(section.chords[chordIndex]);
-      const motifIndex = events.filter(event => event.slot < motifSlots && event.slot <= motifSlot).length - 1;
-      const tail = slot >= sectionSlots - slotsPerBar && settings.variation > 0;
+      const local = motifSlot % slotsPerBar;
+      const motifIndex = callResponse
+        ? events.filter(event => event.slot < slotsPerBar && event.slot <= local).length - 1
+        : events.filter(event => event.slot < motifSlots && event.slot <= motifSlot).length - 1;
+      const tail = !callResponse && slot >= sectionSlots - slotsPerBar && settings.variation > 0;
       const offset = contour[Math.max(0, motifIndex) % contour.length] + (tail ? settings.variation : 0);
-      const resolving = settings.ending === "resolve" && index === events.length - 1;
+      const resolving = answerEnding || (settings.ending === "resolve" && index === events.length - 1);
       const target = resolving ? previous : center + offset;
       const pool = Array.from({ length: 25 }, (_, i) => center - 12 + i).filter(note => pcs.includes(note % 12));
       const choices = resolving ? pool.filter(note => note % 12 === pcs[0]) : pool;
@@ -117,12 +136,15 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
       previous = midi;
       const boundary = (chordIndex + 1) * sectionSlots / section.chords.length;
       const next = events[index + 1]?.slot ?? sectionSlots;
+      const phrase = motifSlot < slotsPerBar ? "call" : "response";
+      const phraseBoundary = callResponse && phrase === "call" ? slot - local + slotsPerBar - pulse : sectionSlots;
       sectionNotes.push({
         midi, sectionIndex, chordIndex,
         beat: (sectionIndex * sectionSlots + slot) / 2,
-        duration: Math.min(next - slot, boundary - slot, 2) / 2 * 0.85,
+        duration: Math.min(next - slot, boundary - slot, phraseBoundary - slot, answerEnding ? pulse : 2) / 2 * 0.85,
         velocity: Math.min(0.95, 0.4 + production.energy * 0.004 + (slot % pulse === 0 ? 0.08 : 0)),
-        ...(resolving ? { kind: "resolution" as const } : {})
+        ...(resolving ? { kind: "resolution" as const } : {}),
+        ...(callResponse ? { phrase } : {})
       });
     });
     if (settings.ornament === "passing") {
@@ -134,6 +156,7 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
         const to = anchors[i + 1];
         const beat = to.beat - 0.5;
         const localSlot = (beat - sectionIndex * sectionSlots / 2) * 2;
+        if (callResponse && Math.floor(from.beat / barBeats) !== Math.floor(to.beat / barBeats)) continue;
         if (from.chordIndex !== to.chordIndex || to.beat - from.beat < 1 || localSlot % pulse === 0) continue;
         const pcs = chordPitchClasses(section.chords[from.chordIndex]);
         const direction = Math.sign(to.midi - from.midi);

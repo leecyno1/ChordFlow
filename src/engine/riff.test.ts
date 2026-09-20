@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Midi } from "@tonejs/midi";
 import { generateArrangement, transposeArrangement } from "./generate";
 import { parseProgression, applySectionProgression } from "./progressionInput";
-import { DEFAULT_RIFF, buildRiffNotes, riffSettingsAt, setThemeRiff } from "./riff";
+import { DEFAULT_RIFF, buildRiffNotes, riffSettingsAt, setThemeRiff, normalizeRiff } from "./riff";
 import { assessHarmony, mineProgressions, referenceRoughness } from "./harmonyMining";
 import { buildMidi, encodeWav } from "../audio/player";
 import { chordPitchClasses } from "../domain/music";
@@ -14,6 +14,72 @@ import type { Arrangement, TimeSignature } from "../domain/types";
 const base = (): Arrangement => ({ ...generateArrangement({ formId: "aba", key: "C", mode: "major", style: "华语流行", surprise: 34, seed: 12 }), riff: { ...DEFAULT_RIFF } });
 
 describe("chords to riff", () => {
+  it.each<TimeSignature>(["4/4", "3/4", "6/8"])("keeps a call's final pulse empty and answers on the last chord root in %s", meter => {
+    const barBeats = quarterNotesPerBar(meter);
+    const pulseBeats = meter === "6/8" ? 1.5 : 1;
+    for (const style of ["arpeggio", "syncopated", "hook"] as const) {
+      for (const mode of ["major", "minor"] as const) {
+        const original = { ...base(), mode };
+        const a = applySectionProgression(original, 0, parseProgression("1234567", "C", mode));
+        a.production = { ...a.production, timeSignature: meter, barsPerSection: 2 };
+        a.riff = { ...DEFAULT_RIFF, style, phrase: "call-response", density: "full", ornament: "passing", rhythmSeed: 2 };
+        const notes = buildRiffNotes(a).filter(note => note.sectionIndex === 0);
+        const call = notes.filter(note => note.phrase === "call");
+        const response = notes.filter(note => note.phrase === "response");
+        expect(call.length).toBeGreaterThan(0);
+        call.forEach(note => expect(note.beat + note.duration).toBeLessThanOrEqual(barBeats - pulseBeats));
+        const headRhythm = (phrase: typeof notes, offset: number) => phrase.filter(note => note.kind !== "passing" && note.beat - offset < barBeats - pulseBeats).map(note => note.beat - offset);
+        expect(headRhythm(call, 0)).toEqual(headRhythm(response, barBeats));
+        const last = response.at(-1)!;
+        expect(last.kind).toBe("resolution");
+        expect(last.chordIndex).toBe(6);
+        expect(last.midi % 12).toBe(chordPitchClasses(a.sections[0].chords[6])[0]);
+        notes.forEach((note, index) => {
+          expect(note.duration).toBeGreaterThan(0);
+          expect(note.beat + note.duration).toBeLessThanOrEqual((note.chordIndex + 1) * barBeats * 2 / 7 + 1e-9);
+          if (notes[index + 1]) expect(note.beat + note.duration).toBeLessThanOrEqual(notes[index + 1].beat);
+          if (note.kind !== "passing") expect(chordPitchClasses(a.sections[0].chords[note.chordIndex])).toContain(note.midi % 12);
+        });
+      }
+    }
+  });
+
+  it("reuses the phrase opening and preserves every answer through theme storage, transposition and MIDI", () => {
+    const a = setThemeRiff(applySectionProgression(base(), 0, ["I", "I", "I", "I"]), "A", {
+      ...DEFAULT_RIFF, style: "arpeggio", phrase: "call-response", ornament: "passing"
+    });
+    const notes = buildRiffNotes(a);
+    const first = notes.filter(note => note.sectionIndex === 0);
+    const head = (bar: number) => first.filter(note => note.beat >= bar * 4 && note.beat < bar * 4 + 3 && note.kind !== "passing").map(note => [note.beat % 4, note.midi]);
+    expect(head(0)).toEqual(head(1));
+    expect(head(2)).toEqual(head(3));
+    expect(first.filter(note => note.kind === "resolution").map(note => note.beat)).toEqual([7, 15]);
+    expect(notes.filter(note => note.sectionIndex === 1).every(note => note.phrase === undefined)).toBe(true);
+    expect(buildRiffNotes(parseArrangementJson(JSON.stringify(a))!)).toEqual(notes);
+    expect(buildRiffNotes(transposeArrangement(a, "D")).map(note => note.midi)).toEqual(notes.map(note => note.midi + 2));
+    const midi = new Midi(buildMidi(a).toArray());
+    const track = midi.tracks.find(track => track.name === "ChordFlow Riff")!;
+    expect(track.notes).toHaveLength(notes.length);
+    track.notes.forEach((note, i) => {
+      expect(note.midi).toBe(notes[i].midi);
+      expect(note.ticks).toBe(Math.round(notes[i].beat * midi.header.ppq));
+      expect(note.durationTicks).toBe(Math.round(notes[i].duration * midi.header.ppq));
+    });
+    const blueprint = buildSunoPromptKit(a).chordBlueprint;
+    expect(blueprint).toContain("call-response: one-bar call with a final main-pulse rest");
+    expect(blueprint).toContain("end each answer on its last chord root");
+  });
+
+  it("keeps legacy loops unchanged and normalizes call-response to two bars", () => {
+    const a = base();
+    expect(normalizeRiff(DEFAULT_RIFF)).toEqual(DEFAULT_RIFF);
+    expect(buildRiffNotes({ ...a, riff: { ...DEFAULT_RIFF, phrase: "repeat" } })).toEqual(buildRiffNotes(a));
+    expect(normalizeRiff({ ...DEFAULT_RIFF, bars: 1, phrase: "call-response" })?.bars).toBe(2);
+    const direct = { ...a, riff: { ...DEFAULT_RIFF, bars: 1 as const, phrase: "call-response" as const } };
+    expect(buildRiffNotes(parseArrangementJson(JSON.stringify(direct))!)).toEqual(buildRiffNotes(direct));
+    expect(buildSunoPromptKit(direct).chordBlueprint).toContain("2-bar motif");
+  });
+
   it("accepts degrees and chord symbols without losing quality or transposition", () => {
     expect(parseProgression("1645", "C", "major")).toEqual(["I", "vi", "IV", "V"]);
     const a = applySectionProgression(base(), 0, parseProgression("C–Am–F–G", "C", "major"));
