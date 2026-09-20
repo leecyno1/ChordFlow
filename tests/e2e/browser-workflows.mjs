@@ -847,6 +847,9 @@ try {
   await click(client, '.riff-input button[type="submit"]');
   await click(client, '.riff-styles button');
   await waitForExpression(client, 'document.querySelectorAll(".riff-grid rect").length > 0', 'riff notes to appear');
+  await selectValue(client, '[data-testid="riff-ornament"]', 'passing');
+  await selectValue(client, '[data-testid="riff-ending"]', 'resolve');
+  await waitForExpression(client, 'document.querySelector(".riff-grid .riff-passing") !== null && document.querySelector(".riff-grid .riff-resolution") !== null', 'passing tones and final anchor to appear');
   await click(client, '[data-testid="riff-solo"]');
   await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'riff playback to advance');
   await click(client, '[data-testid="mine-chords"]');
@@ -884,6 +887,26 @@ try {
   assert.equal(preferences.records.length, 1);
   assert.equal(preferences.records[0].choice, 'A');
   assert.equal(preferences.records[0].trial.candidates.A.arrangement.riff, undefined);
+  assert.equal(preferences.records[0].trial.candidates.A.arrangement.riffThemes, undefined);
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await waitForExpression(client, 'document.querySelector(".riff-grid") === null', 'B to start without the A motif');
+  await click(client, '[data-testid="riff-style-hook"]');
+  await selectValue(client, '[data-testid="riff-scope"]', 'global');
+  await click(client, '[data-testid="riff-style-syncopated"]');
+  await selectValue(client, '[data-testid="riff-scope"]', 'theme');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-style-hook]").getAttribute("aria-pressed")'), 'true');
+  await click(client, '[data-testid="riff-disable"]');
+  await waitForExpression(client, 'document.querySelector(".riff-grid") === null', 'B to mute independently');
+  await click(client, '[data-testid="riff-inherit"]');
+  await waitForExpression(client, 'document.querySelector("[data-testid=riff-style-syncopated]").getAttribute("aria-pressed") === "true"', 'B to inherit the global motif');
+  await click(client, '[data-testid="riff-disable"]');
+  await click(client, '.timeline-section:nth-child(1) .timeline-chord');
+  await waitForExpression(client, 'document.querySelector("[data-testid=riff-style-arpeggio]").getAttribute("aria-pressed") === "true"', 'A to retain its independent motif');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-ornament]").value'), 'passing');
+  await click(client, '[data-testid="suno-launch"]');
+  const themeBlueprint = await textContent(client, '[data-testid="suno-blueprint"]');
+  assert.match(themeBlueprint, /weak-beat stepwise passing tones/);
+  assert.match(themeBlueprint, /Riff: silent in this section/);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -903,7 +926,8 @@ try {
       "✓ Copied package matched the downloaded TXT\n" +
       "✓ Section unlock restored global production settings\n" +
       "✓ Chord input, riff playback, mining and real MIDI/WAV downloads worked\n" +
-      "✓ Blind A/B listening required complete playback before recording and exporting a choice\n"
+      "✓ Blind A/B listening required complete playback before recording and exporting a choice\n" +
+      "✓ Theme motifs, passing tones, muting and inheritance matched the Suno blueprint\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

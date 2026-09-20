@@ -457,7 +457,8 @@ function App() {
       surprise,
       seed: nextSeed,
       production: arrangement.production,
-      riff: arrangement.riff
+      riff: arrangement.riff,
+      riffThemes: arrangement.riffThemes
     });
     commitArrangement((current) => preserveLockedSections(current, next));
     setActiveSection(0);
@@ -478,7 +479,8 @@ function App() {
         surprise,
         seed: nextSeed,
         production: arrangement.production,
-        riff: arrangement.riff
+        riff: arrangement.riff,
+        riffThemes: arrangement.riffThemes
       })
     );
     setActiveSection(0);
@@ -505,7 +507,8 @@ function App() {
         surprise,
         seed: nextSeed,
         production: arrangement.production,
-        riff: arrangement.riff
+        riff: arrangement.riff,
+        riffThemes: arrangement.riffThemes
       })
     );
     setActiveSection(0);
@@ -532,7 +535,8 @@ function App() {
         surprise,
         seed: nextSeed,
         production: arrangement.production,
-        riff: arrangement.riff
+        riff: arrangement.riff,
+        riffThemes: arrangement.riffThemes
       })
     );
     setActiveSection(0);

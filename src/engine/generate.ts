@@ -11,6 +11,7 @@ import {
   transposeBassOverrides
 } from "../domain/bass";
 import { getCorpusTransitions } from "../domain/corpus";
+import { normalizeRiffThemes } from "./riff";
 import { romanDegree, romanToChord } from "../domain/music";
 import {
   normalizeProductionSettings,
@@ -107,6 +108,7 @@ export function generateArrangement(options: {
   seed: number;
   production?: Partial<ProductionSettings>;
   riff?: Arrangement["riff"];
+  riffThemes?: Arrangement["riffThemes"];
 }): Arrangement {
   const random = mulberry32(options.seed);
   const preset = FORM_PRESETS.find((item) => item.id === options.formId);
@@ -164,6 +166,7 @@ export function generateArrangement(options: {
   return {
     title: "未命名和声轨道",
     ...(options.riff ? { riff: options.riff } : {}),
+    ...(normalizeRiffThemes(options.riffThemes, sections) ? { riffThemes: normalizeRiffThemes(options.riffThemes, sections) } : {}),
     key: options.key,
     mode: options.mode,
     formId: options.formId,
@@ -270,6 +273,7 @@ export function preserveLockedSections(
   return {
     ...regenerated,
     ...(current.riff ? { riff: current.riff } : {}),
+    ...(normalizeRiffThemes(current.riffThemes, regenerated.sections) ? { riffThemes: normalizeRiffThemes(current.riffThemes, regenerated.sections) } : {}),
     lockedSymbols: [...current.lockedSymbols],
     bassOverrides: pickBassOverridesForSections(
       current.bassOverrides,

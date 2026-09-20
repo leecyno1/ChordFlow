@@ -17,7 +17,8 @@ describe("blind chord listening", () => {
   it("randomizes labels and uses equal controls with no riff or bass overrides", () => {
     const original = source();
     original.production.sectionOverrides = { "B:0": { energy: 95, voicingMode: "dramatic" } };
-    const forward = createListeningTrial(original, 1, () => 0);
+    const withTheme = { ...original, riffThemes: { B: DEFAULT_RIFF } };
+    const forward = createListeningTrial(withTheme, 1, () => 0);
     const randomValues = [0.4, 0.8];
     const reverse = createListeningTrial(original, 1, () => randomValues.shift()!);
     expect(forward.candidates.A.name).toBe(reverse.candidates.B.name);
@@ -28,6 +29,7 @@ describe("blind chord listening", () => {
     expect(a.production).toEqual(b.production);
     expect(a.production.sectionOverrides).toEqual({});
     expect(a.riff).toBeUndefined();
+    expect(a.riffThemes).toBeUndefined();
     expect(a.bassOverrides).toEqual({});
     expect(a.sections[0].role).toBe("chorus");
     expect(buildPlaybackSchedule(a).durationMs).toBe(buildPlaybackSchedule(b).durationMs);

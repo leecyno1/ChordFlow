@@ -1,5 +1,5 @@
 import { PROGRESSIONS } from "./catalog";
-import { RIFF_NAMES } from "../engine/riff";
+import { RIFF_NAMES, riffSettingsAt } from "../engine/riff";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
   effectiveSectionProductionAt,
@@ -481,7 +481,10 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     .filter(Boolean)
     .join("，");
 
-  const sectionLines = sections.flatMap((section) => [
+  const hasRiff = arrangement.sections.some((_section, index) => riffSettingsAt(arrangement, index));
+  const sectionLines = sections.flatMap((section, index) => {
+    const riff = riffSettingsAt(arrangement, index);
+    return [
     `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100 | Voicing ${section.voicingLabel}/${section.voicingCode} | Texture ${section.textureLabel}/${section.textureCode}${section.productionLocked ? " LOCKED" : ""}]`,
     `Chords: ${section.chords.join(" - ")}`,
     `Harmony: ${section.numerals.join(" - ")}`,
@@ -490,8 +493,12 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `Instrumentation: ${section.instrumentationDirection}`,
     `Harmonic rhythm: ${harmonicRhythmLabel(arrangement.production, section.chords.length)}`,
     `Direction: ${section.direction}`,
+    ...(hasRiff ? [riff
+      ? `Riff: ${RIFF_NAMES[riff.style]} / ${riff.style}; ${riff.bars}-bar motif; ${riff.density}; ${riff.register} register; ${riff.ornament === "passing" ? "weak-beat stepwise passing tones when possible" : "chord-tone anchors"}; ${riff.ending === "resolve" ? "end on the final chord root" : "retain the motif ending"}.`
+      : "Riff: silent in this section."] : []),
     ""
-  ]);
+    ];
+  });
 
   const chordBlueprint = [
     `SONG FORM: ${arrangement.formPattern}`,
@@ -509,8 +516,8 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
           "BASS ANCHORS: Notes marked * are manual lowest-note anchors and should be preserved."
         ]
       : []),
-    ...(arrangement.riff ? [
-      `RIFF: ${RIFF_NAMES[arrangement.riff.style]} / ${arrangement.riff.style}; ${arrangement.riff.bars}-bar repeating motif; ${arrangement.riff.density} rhythm; ${arrangement.riff.register} register. Preserve the rhythmic identity while adapting notes to each chord. Reference MIDI contains a separate ChordFlow Riff track. Use rendered audio as the audible reference; text does not encode exact notes.`
+    ...(hasRiff ? [
+      "RIFF: Follow each section's motif or silence direction. Repeated letter sections share the same motif settings. Reference MIDI contains a separate ChordFlow Riff track. Use rendered audio as the audible reference; text does not encode exact notes."
     ] : []),
     "",
     ...sectionLines,

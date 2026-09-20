@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Midi } from "@tonejs/midi";
 import { generateArrangement, transposeArrangement } from "./generate";
 import { parseProgression, applySectionProgression } from "./progressionInput";
-import { DEFAULT_RIFF, buildRiffNotes } from "./riff";
+import { DEFAULT_RIFF, buildRiffNotes, riffSettingsAt, setThemeRiff } from "./riff";
 import { assessHarmony, mineProgressions, referenceRoughness } from "./harmonyMining";
 import { buildMidi, encodeWav } from "../audio/player";
 import { chordPitchClasses } from "../domain/music";
@@ -75,6 +75,50 @@ describe("chords to riff", () => {
     const end = midi.header.ppq * 4 * a.production.barsPerSection;
     expect(midi.header.meta[1].ticks).toBe(end);
     expect(midi.tracks[1].notes[6].ticks + midi.tracks[1].notes[6].durationTicks).toBe(end);
+  });
+
+  it("keeps theme motifs independent, preserves silent gaps and restores inheritance", () => {
+    const a = setThemeRiff(base(), "A", { ...DEFAULT_RIFF, style: "arpeggio", ornament: "passing", ending: "resolve" });
+    const muted = setThemeRiff(a, "B", null);
+    expect(riffSettingsAt(muted, 0)).toEqual(riffSettingsAt(muted, 2));
+    expect(riffSettingsAt(muted, 1)).toBeUndefined();
+    const notes = buildRiffNotes(muted);
+    expect(notes.some(note => note.sectionIndex === 1)).toBe(false);
+    expect(notes.find(note => note.sectionIndex === 2)!.beat).toBe(32);
+    expect(buildRiffNotes(parseArrangementJson(JSON.stringify(muted))!)).toEqual(notes);
+    expect(riffSettingsAt(setThemeRiff(muted, "B", undefined), 1)).toEqual(DEFAULT_RIFF);
+    expect(buildSunoPromptKit(muted).chordBlueprint).toContain("Riff: silent in this section.");
+    expect(buildSunoPromptKit(muted).chordBlueprint).toContain("weak-beat stepwise passing tones");
+    const midi = new Midi(buildMidi(muted).toArray());
+    expect(midi.tracks.find(track => track.name === "ChordFlow Riff")!.notes.map(note => note.midi)).toEqual(notes.map(note => note.midi));
+  });
+
+  it.each<TimeSignature>(["4/4", "3/4", "6/8"])("uses weak-beat stepwise passing notes and final roots in %s", meter => {
+    const a = applySectionProgression(base(), 0, ["I", "I", "I", "I"]);
+    a.production.timeSignature = meter;
+    a.riff = { ...DEFAULT_RIFF, style: "arpeggio", rhythmSeed: 2, variation: 0, ornament: "passing", ending: "resolve" };
+    const notes = buildRiffNotes(a).filter(note => note.sectionIndex === 0);
+    const passing = notes.filter(note => note.kind === "passing");
+    expect(passing.length).toBeGreaterThan(0);
+    passing.forEach(note => {
+      const index = notes.indexOf(note);
+      const previous = notes[index - 1];
+      const next = notes[index + 1];
+      expect(note.beat * 2 % (meter === "6/8" ? 3 : 2)).not.toBe(0);
+      expect(Math.abs(note.midi - previous.midi)).toBeLessThanOrEqual(2);
+      expect(Math.abs(next.midi - note.midi)).toBeLessThanOrEqual(2);
+      expect(previous.chordIndex).toBe(next.chordIndex);
+      expect(chordPitchClasses("C")).not.toContain(note.midi % 12);
+      expect(previous.beat + previous.duration).toBeLessThanOrEqual(note.beat);
+      expect(note.beat + note.duration).toBeLessThanOrEqual(next.beat);
+    });
+    expect(notes.at(-1)!.midi % 12).toBe(0);
+    expect(notes.at(-1)!.kind).toBe("resolution");
+    const crowded = applySectionProgression(a, 0, ["I", "ii", "iii", "IV", "V", "vi", "ii", "V"]);
+    crowded.production.barsPerSection = 2;
+    const last = buildRiffNotes(crowded).filter(note => note.sectionIndex === 0).at(-1)!;
+    expect(last.chordIndex).toBe(7);
+    expect(last.midi % 12).toBe(7);
   });
 });
 

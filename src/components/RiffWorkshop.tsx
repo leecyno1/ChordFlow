@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { exportMidi, exportReferenceWav } from "../audio/player";
-import { DEFAULT_RIFF, RIFF_NAMES, buildRiffNotes } from "../engine/riff";
+import { DEFAULT_RIFF, RIFF_NAMES, buildRiffNotes, riffSettingsAt, setThemeRiff } from "../engine/riff";
 import { applySectionProgression, parseProgression } from "../engine/progressionInput";
 import { assessHarmony, mineProgressions } from "../engine/harmonyMining";
 import type { MinedProgression } from "../engine/harmonyMining";
@@ -22,10 +22,13 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [loop, setLoop] = useState(false);
+  const [scope, setScope] = useState<"global" | "theme">("theme");
   const [rendering, setRendering] = useState(false);
   const [mined, setMined] = useState<{ source: Arrangement; candidates: MinedProgression[] } | null>(null);
   const section = arrangement.sections[sectionIndex];
-  const settings = arrangement.riff ?? DEFAULT_RIFF;
+  const activeSettings = riffSettingsAt(arrangement, sectionIndex);
+  const settings = (scope === "theme" ? activeSettings : arrangement.riff) ?? DEFAULT_RIFF;
+  const controlsEnabled = scope === "theme" ? activeSettings !== undefined : arrangement.riff !== undefined;
   const excerpt = useMemo(() => ({ ...arrangement, sections: [section] }), [arrangement, section]);
   const notes = useMemo(() => buildRiffNotes(excerpt), [excerpt]);
   const assessment = useMemo(() => assessHarmony(arrangement, sectionIndex), [arrangement, sectionIndex]);
@@ -33,7 +36,8 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   const minNote = notes.length ? Math.min(...notes.map(note => note.midi)) - 2 : 60;
   const maxNote = notes.length ? Math.max(...notes.map(note => note.midi)) + 2 : 84;
   function update(changes: Partial<RiffSettings>) {
-    onChange({ ...arrangement, riff: { ...settings, ...changes } });
+    const next = { ...settings, ...changes };
+    onChange(scope === "theme" ? setThemeRiff(arrangement, section.symbol, next) : { ...arrangement, riff: next });
   }
   function apply(numerals: string[], label?: string) {
     onChange(applySectionProgression(arrangement, sectionIndex, numerals, label));
@@ -76,31 +80,44 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       {mined.candidates.map(candidate => <article key={candidate.name}>
         <h3>{candidate.name}</h3><strong>{candidate.chords.join(" — ")}</strong><p>{candidate.description}</p>
         <small>连接 {candidate.assessment.motion.toFixed(1)} 半音 · 模板差异 {Math.round((candidate.assessment.catalogDistance ?? 0) * 100)}%</small>
-        <div><button type="button" onClick={() => onPreview(false, false, { ...applySectionProgression(arrangement, sectionIndex, candidate.numerals), riff: undefined })}>试听和弦</button>
+        <div><button type="button" onClick={() => onPreview(false, false, { ...applySectionProgression(arrangement, sectionIndex, candidate.numerals), riff: undefined, riffThemes: undefined })}>试听和弦</button>
           <button type="button" onClick={() => apply(candidate.numerals, candidate.name)}>采用</button></div>
       </article>)}
     </div>}
-    {playing && !arrangement.riff && <button type="button" onClick={onStop}>停止试听</button>}
+    {playing && !activeSettings && <button type="button" onClick={onStop}>停止试听</button>}
+    <div className="riff-controls">
+      <label>编辑范围<select data-testid="riff-scope" value={scope} onChange={event => setScope(event.target.value as "global" | "theme")}>
+        <option value="theme">{section.symbol} · 同主题段落</option><option value="global">全曲默认</option>
+      </select></label>
+      <span className="riff-hint">{arrangement.riffThemes?.[section.symbol] === null ? "本主题已静音" : arrangement.riffThemes?.[section.symbol] ? "本主题使用独立动机" : "本主题跟随全曲默认"}</span>
+      {scope === "theme" && arrangement.riffThemes?.[section.symbol] !== undefined && <button type="button" data-testid="riff-inherit" onClick={() => onChange(setThemeRiff(arrangement, section.symbol, undefined))}>跟随默认</button>}
+    </div>
     <div className="riff-styles" role="group" aria-label="Riff 方向">
       {(Object.keys(RIFF_NAMES) as RiffSettings["style"][]).map(style => <button type="button" key={style}
-        aria-pressed={Boolean(arrangement.riff && settings.style === style)} onClick={() => update({ style })}>{RIFF_NAMES[style]}</button>)}
-      {arrangement.riff && <button type="button" onClick={() => onChange({ ...arrangement, riff: undefined })}>关闭 Riff</button>}
+        data-testid={`riff-style-${style}`} aria-pressed={Boolean(controlsEnabled && settings.style === style)} onClick={() => update({ style })}>{RIFF_NAMES[style]}</button>)}
+      {controlsEnabled && <button type="button" data-testid="riff-disable" onClick={() => onChange(scope === "theme" ? setThemeRiff(arrangement, section.symbol, null) : { ...arrangement, riff: undefined })}>{scope === "theme" ? "静音本主题" : "关闭默认 Riff"}</button>}
     </div>
-    {arrangement.riff && <>
+    {controlsEnabled && <>
       <div className="riff-controls">
         <label>动机长度<select value={settings.bars} onChange={event => update({ bars: Number(event.target.value) as 1 | 2 })}><option value="1">1 小节</option><option value="2">2 小节</option></select></label>
         <label>疏密<select value={settings.density} onChange={event => update({ density: event.target.value as RiffSettings["density"] })}><option value="sparse">留白</option><option value="full">紧凑</option></select></label>
         <label>音域<select value={settings.register} onChange={event => update({ register: event.target.value as RiffSettings["register"] })}><option value="low">中低</option><option value="high">中高</option></select></label>
         <label>句尾变化<select value={settings.variation} onChange={event => update({ variation: Number(event.target.value) })}><option value="0">保持</option><option value="1">少量</option><option value="2">明显</option></select></label>
+        <label>弱拍经过音<select data-testid="riff-ornament" value={settings.ornament ?? "off"} onChange={event => update({ ornament: event.target.value as RiffSettings["ornament"] })}><option value="off">关闭</option><option value="passing">级进连接</option></select></label>
+        <label>句尾落点<select data-testid="riff-ending" value={settings.ending ?? "open"} onChange={event => update({ ending: event.target.value as RiffSettings["ending"] })}><option value="open">保留动机</option><option value="resolve">落在末和弦根音</option></select></label>
         <button type="button" onClick={() => update({ rhythmSeed: settings.rhythmSeed + 1 })}>只换节奏</button>
         <button type="button" onClick={() => update({ pitchSeed: settings.pitchSeed + 1 })}>只换音高</button>
       </div>
+      {scope === "global" && arrangement.riffThemes?.[section.symbol] !== undefined && <p className="riff-hint">当前主题已有独立设置；修改全曲默认不会覆盖它。下方试听仍使用当前主题的设置。</p>}
+    </>}
+    {activeSettings && <>
       <svg className="riff-grid" viewBox="0 0 960 168" role="img" aria-label={`${section.title} Riff 音符网格，${notes.length} 个音符`}>
         {section.chords.map((chord, index) => <g key={index}><line x1={index * 960 / section.chords.length} x2={index * 960 / section.chords.length} y1="0" y2="168" /><text x={index * 960 / section.chords.length + 8} y="18">{chord}</text></g>)}
-        {notes.map((note, index) => <rect key={index} x={note.beat / beats * 960} y={32 + (maxNote - note.midi) / (maxNote - minNote) * 120}
+        {notes.map((note, index) => <rect key={index} className={note.kind ? `riff-${note.kind}` : undefined} x={note.beat / beats * 960} y={32 + (maxNote - note.midi) / (maxNote - minNote) * 120}
           width={Math.max(2, note.duration / beats * 960)} height="6" rx="2"><title>MIDI {note.midi} · 第 {(note.beat + 1).toFixed(1)} 拍</title></rect>)}
         {playingBeat !== null && <line className="riff-playhead" x1={playingBeat / beats * 960} x2={playingBeat / beats * 960} y1="22" y2="168" />}
       </svg>
+      <p className="riff-hint">青色为和弦音，金色为弱拍经过音，粉色为句尾落点。经过音只在相邻和弦音之间有合适的级进空间时插入。</p>
       <div className="riff-actions">
         <button type="button" data-testid="riff-solo" onClick={() => onPreview(true, loop)}>Riff 独奏</button>
         <button type="button" data-testid="riff-mix" onClick={() => onPreview(false, loop)}>和弦合听</button>

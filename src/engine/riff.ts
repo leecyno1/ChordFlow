@@ -15,6 +15,7 @@ export interface RiffNote {
   velocity: number;
   sectionIndex: number;
   chordIndex: number;
+  kind?: "passing" | "resolution";
 }
 
 export function normalizeRiff(value: unknown): RiffSettings | undefined {
@@ -29,34 +30,59 @@ export function normalizeRiff(value: unknown): RiffSettings | undefined {
     register: item.register === "low" ? "low" : "high",
     variation: Math.max(0, Math.min(2, integer("variation", 1))),
     rhythmSeed: Math.abs(integer("rhythmSeed", 0)) % 100000,
-    pitchSeed: Math.abs(integer("pitchSeed", 0)) % 100000
+    pitchSeed: Math.abs(integer("pitchSeed", 0)) % 100000,
+    ...(item.ornament === "off" || item.ornament === "passing" ? { ornament: item.ornament } : {}),
+    ...(item.ending === "open" || item.ending === "resolve" ? { ending: item.ending } : {})
   };
+}
+
+export function riffSettingsAt(arrangement: Arrangement, sectionIndex: number): RiffSettings | undefined {
+  const symbol = arrangement.sections[sectionIndex]?.symbol;
+  const override = arrangement.riffThemes?.[symbol];
+  return override === null ? undefined : override ?? arrangement.riff;
+}
+
+export function normalizeRiffThemes(value: unknown, sections: Arrangement["sections"]): Arrangement["riffThemes"] {
+  if (!value || typeof value !== "object") return undefined;
+  const entries = [...new Set(sections.map(section => section.symbol))].flatMap(symbol => {
+    const raw = (value as Record<string, unknown>)[symbol];
+    const settings = raw === null ? null : normalizeRiff(raw);
+    return settings === undefined ? [] : [[symbol, settings] as const];
+  });
+  return entries.length ? Object.fromEntries(entries) : undefined;
+}
+
+// undefined restores inheritance; null mutes the theme; settings pin its motif.
+export function setThemeRiff(arrangement: Arrangement, symbol: string, settings: RiffSettings | null | undefined): Arrangement {
+  const themes = { ...arrangement.riffThemes };
+  if (settings === undefined) delete themes[symbol]; else themes[symbol] = settings;
+  return { ...arrangement, riffThemes: normalizeRiffThemes(themes, arrangement.sections) };
 }
 
 // Beats are quarter notes throughout, including 6/8 (three quarters per bar).
 // One motif is reused across chords; only its pitch realization follows harmony.
 export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
-  const settings = arrangement.riff;
-  if (!settings) return [];
   const barBeats = quarterNotesPerBar(arrangement.production.timeSignature);
   const slotsPerBar = barBeats * 2;
-  const motifSlots = slotsPerBar * settings.bars;
   const sectionSlots = slotsPerBar * arrangement.production.barsPerSection;
   const pulse = arrangement.production.timeSignature === "6/8" ? 3 : 2;
-  const masks = {
-    arpeggio: [[0, 2, 4, 6], [0, 2, 5, 6], [0, 3, 4, 6]],
-    syncopated: [[0, 3, 6], [0, 3, 5], [0, 2, 5, 7]],
-    hook: [[0, 2, 3, 6], [0, 1, 4, 6], [0, 3, 4, 7]]
-  }[settings.style];
-  const mask = masks[settings.rhythmSeed % masks.length];
-  const contours = {
-    arpeggio: [[0, 4, 7, 4, 0, 4, 7, 0], [7, 4, 0, 4, 7, 4, 2, 0], [0, 7, 4, 7, 0, 4, 7, 0]],
-    syncopated: [[0, 0, 3, 0, 0, 5, 3, 0], [3, 0, 0, 5, 3, 0, 2, 0], [0, 5, 0, 3, 0, 5, 2, 0]],
-    hook: [[0, 2, 4, 2, 0, -1, 2, 0], [0, -2, 0, 3, 5, 3, 2, 0], [2, 2, 0, -2, 0, 3, 2, 0]]
-  }[settings.style];
-  const contour = contours[settings.pitchSeed % contours.length];
   const result: RiffNote[] = [];
   arrangement.sections.forEach((section, sectionIndex) => {
+    const settings = riffSettingsAt(arrangement, sectionIndex);
+    if (!settings) return;
+    const motifSlots = slotsPerBar * settings.bars;
+    const masks = {
+      arpeggio: [[0, 2, 4, 6], [0, 2, 5, 6], [0, 3, 4, 6]],
+      syncopated: [[0, 3, 6], [0, 3, 5], [0, 2, 5, 7]],
+      hook: [[0, 2, 3, 6], [0, 1, 4, 6], [0, 3, 4, 7]]
+    }[settings.style];
+    const mask = masks[settings.rhythmSeed % masks.length];
+    const contours = {
+      arpeggio: [[0, 4, 7, 4, 0, 4, 7, 0], [7, 4, 0, 4, 7, 4, 2, 0], [0, 7, 4, 7, 0, 4, 7, 0]],
+      syncopated: [[0, 0, 3, 0, 0, 5, 3, 0], [3, 0, 0, 5, 3, 0, 2, 0], [0, 5, 0, 3, 0, 5, 2, 0]],
+      hook: [[0, 2, 4, 2, 0, -1, 2, 0], [0, -2, 0, 3, 5, 3, 2, 0], [2, 2, 0, -2, 0, 3, 2, 0]]
+    }[settings.style];
+    const contour = contours[settings.pitchSeed % contours.length];
     const production = effectiveSectionProductionAt(arrangement, sectionIndex);
     const center = (settings.register === "high" ? 72 : 60) + chordPitchClasses(arrangement.key)[0] + (section.role === "chorus" ? 3 : 0);
     const events: { slot: number; motifSlot: number }[] = [];
@@ -68,31 +94,59 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
       const extra = settings.density === "full" && local % pulse === 1;
       if (base || extra) events.push({ slot, motifSlot });
     }
+    const finalChordSlot = Math.ceil(sectionSlots * (section.chords.length - 1) / section.chords.length);
+    if (settings.ending === "resolve" && events.at(-1)!.slot < finalChordSlot) {
+      events.push({ slot: finalChordSlot, motifSlot: finalChordSlot % motifSlots });
+    }
     let previous = center;
+    const sectionNotes: RiffNote[] = [];
     events.forEach(({ slot, motifSlot }, index) => {
       const chordIndex = Math.min(section.chords.length - 1, Math.floor(slot / sectionSlots * section.chords.length));
       const pcs = chordPitchClasses(section.chords[chordIndex]);
       const motifIndex = events.filter(event => event.slot < motifSlots && event.slot <= motifSlot).length - 1;
       const tail = slot >= sectionSlots - slotsPerBar && settings.variation > 0;
       const offset = contour[Math.max(0, motifIndex) % contour.length] + (tail ? settings.variation : 0);
-      const target = center + offset;
+      const resolving = settings.ending === "resolve" && index === events.length - 1;
+      const target = resolving ? previous : center + offset;
       const pool = Array.from({ length: 25 }, (_, i) => center - 12 + i).filter(note => pcs.includes(note % 12));
-      // Chord-tone anchors, small motion and recurring contour are deliberately
-      // favored over random scale notes. Passing tones can be added later.
-      const midi = pool.sort((a, b) =>
+      const choices = resolving ? pool.filter(note => note % 12 === pcs[0]) : pool;
+      const midi = choices.sort((a, b) =>
         (Math.abs(a - target) * 1.5 + Math.abs(a - previous) * 0.5) -
         (Math.abs(b - target) * 1.5 + Math.abs(b - previous) * 0.5) || a - b
       )[0];
       previous = midi;
       const boundary = (chordIndex + 1) * sectionSlots / section.chords.length;
       const next = events[index + 1]?.slot ?? sectionSlots;
-      result.push({
+      sectionNotes.push({
         midi, sectionIndex, chordIndex,
         beat: (sectionIndex * sectionSlots + slot) / 2,
         duration: Math.min(next - slot, boundary - slot, 2) / 2 * 0.85,
-        velocity: Math.min(0.95, 0.4 + production.energy * 0.004 + (slot % pulse === 0 ? 0.08 : 0))
+        velocity: Math.min(0.95, 0.4 + production.energy * 0.004 + (slot % pulse === 0 ? 0.08 : 0)),
+        ...(resolving ? { kind: "resolution" as const } : {})
       });
     });
+    if (settings.ornament === "passing") {
+      const tonic = chordPitchClasses(arrangement.key)[0];
+      const scale = (arrangement.mode === "major" ? [0, 2, 4, 5, 7, 9, 11] : [0, 2, 3, 5, 7, 8, 10]).map(pc => (pc + tonic) % 12);
+      const anchors = [...sectionNotes];
+      for (let i = 0; i < anchors.length - 1; i++) {
+        const from = anchors[i];
+        const to = anchors[i + 1];
+        const beat = to.beat - 0.5;
+        const localSlot = (beat - sectionIndex * sectionSlots / 2) * 2;
+        if (from.chordIndex !== to.chordIndex || to.beat - from.beat < 1 || localSlot % pulse === 0) continue;
+        const pcs = chordPitchClasses(section.chords[from.chordIndex]);
+        const direction = Math.sign(to.midi - from.midi);
+        const midi = [from.midi + direction, from.midi + direction * 2].find(note =>
+          (note - from.midi) * (to.midi - note) > 0 && Math.abs(to.midi - note) <= 2 &&
+          scale.includes(note % 12) && !pcs.includes(note % 12)
+        );
+        if (midi === undefined) continue;
+        from.duration = Math.min(from.duration, (beat - from.beat) * 0.85);
+        sectionNotes.push({ ...from, midi, beat, duration: 0.425, velocity: from.velocity * 0.8, kind: "passing" });
+      }
+    }
+    result.push(...sectionNotes.sort((a, b) => a.beat - b.beat));
   });
   return result;
 }

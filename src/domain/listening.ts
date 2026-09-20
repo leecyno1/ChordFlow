@@ -38,7 +38,7 @@ export function createListeningTrial(arrangement: Arrangement, sectionIndex: num
     const edited = applySectionProgression(arrangement, sectionIndex, candidate.numerals);
     const section = { ...edited.sections[sectionIndex], energy: 60 };
     const excerpt: Arrangement = {
-      ...edited, title: "和弦盲听", riff: undefined, lockedSymbols: [], bassOverrides: {},
+      ...edited, title: "和弦盲听", riff: undefined, riffThemes: undefined, lockedSymbols: [], bassOverrides: {},
       formId: "custom", formPattern: section.symbol, sections: [section],
       production: { ...edited.production, barsPerSection: 2, voicingMode: "flowing", sectionOverrides: {} }
     };

@@ -49,7 +49,7 @@ export function compareArrangements(
   const modeChanged = left.mode !== right.mode;
   const productionChanged =
     JSON.stringify(left.production) !== JSON.stringify(right.production);
-  const riffChanged = JSON.stringify(left.riff) !== JSON.stringify(right.riff);
+  const riffChanged = JSON.stringify([left.riff, left.riffThemes]) !== JSON.stringify([right.riff, right.riffThemes]);
   const parts = [
     formChanged ? "曲式" : "",
     keyChanged || modeChanged ? "调性" : "",

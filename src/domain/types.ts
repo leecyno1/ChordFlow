@@ -12,6 +12,8 @@ export interface RiffSettings {
   variation: number;
   rhythmSeed: number;
   pitchSeed: number;
+  ornament?: "off" | "passing";
+  ending?: "open" | "resolve";
 }
 
 export interface SectionProductionOverride {
@@ -81,6 +83,7 @@ export interface SongSection {
 
 export interface Arrangement {
   riff?: RiffSettings;
+  riffThemes?: Record<string, RiffSettings | null>;
   title: string;
   key: string;
   mode: Mode;

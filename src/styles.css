@@ -47,6 +47,8 @@
 .riff-grid line { stroke: #343842; stroke-width: 1; }
 .riff-grid text { fill: #b8b8b2; font: 12px var(--mono); }
 .riff-grid rect { fill: var(--cyan); }
+.riff-grid .riff-passing { fill: var(--amber); }
+.riff-grid .riff-resolution { fill: var(--rose); }
 .riff-grid .riff-playhead { stroke: var(--rose); stroke-width: 2; }
 .riff-workshop .riff-error { color: var(--rose); }
 .blind-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
