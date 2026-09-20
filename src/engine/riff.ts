@@ -15,7 +15,7 @@ export interface RiffNote {
   velocity: number;
   sectionIndex: number;
   chordIndex: number;
-  kind?: "passing" | "resolution";
+  kind?: "passing" | "resolution" | "anticipation";
   phrase?: "call" | "response";
 }
 
@@ -38,7 +38,8 @@ export function normalizeRiff(value: unknown): RiffSettings | undefined {
     pitchSeed: Math.abs(integer("pitchSeed", 0)) % 100000,
     ...(item.ornament === "off" || item.ornament === "passing" ? { ornament: item.ornament } : {}),
     ...(item.ending === "open" || item.ending === "resolve" ? { ending: item.ending } : {}),
-    ...(item.phrase === "repeat" || item.phrase === "call-response" ? { phrase: item.phrase } : {})
+    ...(item.phrase === "repeat" || item.phrase === "call-response" ? { phrase: item.phrase } : {}),
+    ...(item.connection === "off" || item.connection === "anticipate" ? { connection: item.connection } : {})
   };
 }
 
@@ -169,7 +170,43 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
         sectionNotes.push({ ...from, midi, beat, duration: 0.425, velocity: from.velocity * 0.8, kind: "passing" });
       }
     }
-    result.push(...sectionNotes.sort((a, b) => a.beat - b.beat));
+    const ordered = sectionNotes.sort((a, b) => a.beat - b.beat);
+    result.push(...(settings.connection === "anticipate" ? addAnticipations(ordered, arrangement, sectionIndex) : ordered));
   });
+  return result;
+}
+
+// Anticipate an actual upcoming anchor, not an invented next-chord melody.
+// Keep this section-local so isolated previews and exported excerpts agree.
+function addAnticipations(notes: RiffNote[], arrangement: Arrangement, sectionIndex: number): RiffNote[] {
+  const section = arrangement.sections[sectionIndex];
+  const barBeats = quarterNotesPerBar(arrangement.production.timeSignature);
+  const sectionBeats = barBeats * arrangement.production.barsPerSection;
+  const sectionStart = sectionIndex * sectionBeats;
+  const pulseSlots = arrangement.production.timeSignature === "6/8" ? 3 : 2;
+  const callResponse = riffSettingsAt(arrangement, sectionIndex)?.phrase === "call-response";
+  let result = [...notes];
+  for (let chordIndex = 1; chordIndex < section.chords.length; chordIndex++) {
+    const boundary = sectionStart + chordIndex * sectionBeats / section.chords.length;
+    const beat = boundary - 0.5;
+    const slot = (beat - sectionStart) * 2;
+    // Only eighth-note-grid boundaries with an off-pulse anticipation.
+    if (!Number.isInteger(slot) || slot % pulseSlots === 0) continue;
+    const localBar = Math.floor((beat - sectionStart) / barBeats);
+    const withinBar = (beat - sectionStart) % barBeats;
+    if (callResponse && localBar % 2 === 0 && withinBar >= barBeats - pulseSlots / 2) continue;
+    const target = notes.find(note => Math.abs(note.beat - boundary) < 1e-9 && note.chordIndex === chordIndex);
+    if (!target || target.kind === "passing") continue;
+    const previous = result.filter(note => note.beat < beat).at(-1);
+    if (!previous || previous.chordIndex !== chordIndex - 1 || previous.kind === "resolution") continue;
+    // Distinguish anticipation from common-tone repetition; avoid a large leap.
+    if (chordPitchClasses(section.chords[chordIndex - 1]).includes(target.midi % 12) || Math.abs(previous.midi - target.midi) > 2) continue;
+    const occupied = result.find(note => Math.abs(note.beat - beat) < 1e-9);
+    if (occupied?.kind === "resolution") continue;
+    result = result.filter(note => note !== occupied).map(note => note === previous
+      ? { ...note, duration: Math.min(note.duration, (beat - note.beat) * 0.85) } : note);
+    result.push({ ...previous, midi: target.midi, beat, duration: 0.425, velocity: previous.velocity * 0.8, kind: "anticipation" });
+    result.sort((a, b) => a.beat - b.beat);
+  }
   return result;
 }

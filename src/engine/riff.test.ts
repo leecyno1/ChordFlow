@@ -4,7 +4,7 @@ import { generateArrangement, transposeArrangement } from "./generate";
 import { parseProgression, applySectionProgression } from "./progressionInput";
 import { DEFAULT_RIFF, buildRiffNotes, riffSettingsAt, setThemeRiff, normalizeRiff } from "./riff";
 import { assessHarmony, mineProgressions, referenceRoughness } from "./harmonyMining";
-import { buildMidi, encodeWav } from "../audio/player";
+import { buildMidi, encodeWav, buildReferenceNotes } from "../audio/player";
 import { chordPitchClasses } from "../domain/music";
 import { parseArrangementJson } from "../domain/projectStorage";
 import { quarterNotesPerBar } from "../domain/production";
@@ -14,6 +14,56 @@ import type { Arrangement, TimeSignature } from "../domain/types";
 const base = (): Arrangement => ({ ...generateArrangement({ formId: "aba", key: "C", mode: "major", style: "华语流行", surprise: 34, seed: 12 }), riff: { ...DEFAULT_RIFF } });
 
 describe("chords to riff", () => {
+  it.each<TimeSignature>(["4/4", "3/4", "6/8"])("anticipates real anchors and shares their timing with MIDI, WAV and excerpts in %s", meter => {
+    const a = applySectionProgression(base(), 0, ["I", "ii", "IV", "V"]);
+    a.production.timeSignature = meter;
+    a.riff = { ...DEFAULT_RIFF, style: "arpeggio", variation: 0, connection: "anticipate" };
+    const notes = buildRiffNotes(a);
+    const anticipations = notes.filter(note => note.kind === "anticipation" && note.sectionIndex === 0);
+    expect(anticipations.length).toBeGreaterThan(0);
+    const sectionBeats = quarterNotesPerBar(meter) * a.production.barsPerSection;
+    anticipations.forEach(note => {
+      const boundary = (note.chordIndex + 1) * sectionBeats / 4;
+      const target = notes.find(next => next.sectionIndex === 0 && next.beat === boundary)!;
+      const previous = notes[notes.indexOf(note) - 1];
+      expect(note.beat).toBe(boundary - 0.5);
+      expect(note.beat * 2 % (meter === "6/8" ? 3 : 2)).not.toBe(0);
+      expect(note.midi).toBe(target.midi);
+      expect(Math.abs(note.midi - previous.midi)).toBeLessThanOrEqual(2);
+      expect(chordPitchClasses(a.sections[0].chords[note.chordIndex])).not.toContain(note.midi % 12);
+      expect(previous.beat + previous.duration).toBeLessThanOrEqual(note.beat);
+      expect(note.beat + note.duration).toBeLessThanOrEqual(boundary);
+    });
+    const midi = new Midi(buildMidi(a).toArray());
+    const track = midi.tracks.find(track => track.name === "ChordFlow Riff")!;
+    expect(track.notes.map(note => note.midi)).toEqual(notes.map(note => note.midi));
+    const audio = buildReferenceNotes(a, true);
+    expect(audio).toHaveLength(notes.length);
+    notes.forEach((note, i) => {
+      expect(audio[i].midi).toBe(note.midi);
+      expect(audio[i].seconds).toBeCloseTo(0.08 + note.beat * 60 / a.production.tempoBpm);
+      expect(audio[i].duration).toBeCloseTo(note.duration * 60 / a.production.tempoBpm);
+      expect(track.notes[i].ticks).toBe(Math.round(note.beat * midi.header.ppq));
+    });
+    expect(buildReferenceNotes(a)).toHaveLength(buildReferenceNotes({ ...a, riff: undefined }).length + notes.length);
+    const excerpt = { ...a, sections: [a.sections[1]] };
+    expect(buildRiffNotes(excerpt)).toEqual(notes.filter(note => note.sectionIndex === 1).map(note => ({ ...note, sectionIndex: 0, beat: note.beat - sectionBeats })));
+    expect(buildRiffNotes(parseArrangementJson(JSON.stringify(a))!)).toEqual(notes);
+    expect(buildSunoPromptKit(a).chordBlueprint).toContain("anticipate the next chord's melody anchor");
+  });
+
+  it("does not sacrifice call rests, answer roots or off-grid harmony for an anticipation", () => {
+    const a = applySectionProgression(base(), 0, ["I", "ii", "IV", "V"]);
+    a.riff = { ...DEFAULT_RIFF, phrase: "call-response", connection: "anticipate", ornament: "passing" };
+    const notes = buildRiffNotes(a).filter(note => note.sectionIndex === 0);
+    notes.filter(note => note.phrase === "call").forEach(note => expect(note.beat % 4 + note.duration).toBeLessThanOrEqual(3));
+    const plain = buildRiffNotes({ ...a, riff: { ...a.riff, connection: "off" } }).filter(note => note.sectionIndex === 0);
+    expect(notes.filter(note => note.kind === "resolution")).toEqual(plain.filter(note => note.kind === "resolution"));
+    const irregular = applySectionProgression(a, 0, ["I", "ii", "iii", "IV", "V", "vi", "I"]);
+    expect(buildRiffNotes(irregular).filter(note => note.sectionIndex === 0 && note.kind === "anticipation")).toHaveLength(0);
+    expect(buildRiffNotes({ ...base(), riff: { ...DEFAULT_RIFF, connection: "off" } })).toEqual(buildRiffNotes(base()));
+  });
+
   it.each<TimeSignature>(["4/4", "3/4", "6/8"])("keeps a call's final pulse empty and answers on the last chord root in %s", meter => {
     const barBeats = quarterNotesPerBar(meter);
     const pulseBeats = meter === "6/8" ? 1.5 : 1;
@@ -91,6 +141,11 @@ describe("chords to riff", () => {
     expect(chordPitchClasses("Cadd9")).toContain(2);
     expect(() => parseProgression("C nope F G", "C", "major")).toThrow();
     expect(parseProgression("1564", "A", "minor")).toEqual(["i", "v", "VI", "iv"]);
+    const secondary = applySectionProgression(a, 0, parseProgression("I V7/vi vi vii°7/V V", "C", "major"));
+    expect(secondary.sections[0].chords).toEqual(["C", "E7", "Am", "F#dim7", "G"]);
+    expect(transposeArrangement(secondary, "D").sections[0].chords).toEqual(["D", "F#7", "Bm", "G#dim7", "A"]);
+    expect(parseArrangementJson(JSON.stringify(secondary))?.sections[0].numerals).toEqual(secondary.sections[0].numerals);
+    expect(() => parseProgression("I V7/nope", "C", "major")).toThrow();
   });
 
   it.each<TimeSignature>(["4/4", "3/4", "6/8"])("fits %s, anchors to current harmony and matches MIDI", meter => {

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { Arrangement } from "../domain/types";
 import {
-  createListeningTrial, loadListeningRecords, saveListeningRecord, listeningSummary, templateComparisonSummary
+  createListeningTrial, loadListeningRecords, saveListeningRecord, listeningSummary, templateComparisonSummary, LISTENING_REASONS
 } from "../domain/listening";
-import type { ListeningTrial, ListeningChoice, ListeningSide, ListeningExperiment } from "../domain/listening";
+import type { ListeningTrial, ListeningChoice, ListeningSide, ListeningExperiment, ListeningReason } from "../domain/listening";
 import { downloadBlob } from "../audio/player";
 
 interface Props {
@@ -28,6 +28,7 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
   const [records, setRecords] = useState(loadListeningRecords);
   const [notice, setNotice] = useState("");
   const [experiment, setExperiment] = useState<ListeningExperiment>("template-control");
+  const [reason, setReason] = useState<ListeningReason | "">("");
 
   function stop() {
     run.current++;
@@ -48,6 +49,7 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
     stop();
     voted.current = false;
     setChoice(null);
+    setReason("");
     setHeard([]);
     setNotice("");
     setRecords(loadListeningRecords());
@@ -71,7 +73,7 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
     voted.current = true;
     stop();
     setChoice(value);
-    const saved = saveListeningRecord({ trial, choice: value, recordedAt: new Date().toISOString() });
+    const saved = saveListeningRecord({ trial, choice: value, recordedAt: new Date().toISOString(), ...(reason ? { reason } : {}) });
     if (saved) { setRecords(saved); setNotice("选择已保存在本地"); }
     else setNotice("选择已揭示，但浏览器未能保存这条记录");
   }
@@ -98,10 +100,14 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
           </div>)}
         </div>
         {playingSide && <button type="button" onClick={stop}>停止试听</button>}
+        {!choice && <label>主要判断依据（可选） <select data-testid="blind-reason" value={reason} disabled={heard.length !== 2} onChange={event => setReason(event.target.value as ListeningReason | "")}>
+          <option value="">不填写</option>{Object.entries(LISTENING_REASONS).map(([value, name]) => <option key={value} value={value}>{name}</option>)}
+        </select></label>}
         {!choice ? <div className="blind-votes" role="group" aria-label="选择更喜欢的和弦">
           {(Object.keys(choiceNames) as ListeningChoice[]).map(value => <button type="button" key={value} data-testid={`blind-vote-${value}`} disabled={heard.length !== 2} onClick={() => vote(value)}>{choiceNames[value]}</button>)}
         </div> : <div className="blind-reveal" data-testid="blind-reveal">
           <p>你的选择：{choiceNames[choice]}</p>
+          {reason && <p>判断依据：{LISTENING_REASONS[reason]}</p>}
           {sides.map(side => {
             const candidate = trial.candidates[side];
             const section = candidate.arrangement.sections[0];

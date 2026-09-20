@@ -239,8 +239,8 @@ class CdpClient {
   }
 }
 
-async function waitForExpression(client, expression, description) {
-  const deadline = Date.now() + 7000;
+async function waitForExpression(client, expression, description, timeoutMs = 7000) {
+  const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (await client.evaluate(expression)) return;
     await sleep(50);
@@ -850,6 +850,14 @@ try {
   await selectValue(client, '[data-testid="riff-ornament"]', 'passing');
   await selectValue(client, '[data-testid="riff-ending"]', 'resolve');
   await waitForExpression(client, 'document.querySelector(".riff-grid .riff-passing") !== null && document.querySelector(".riff-grid .riff-resolution") !== null', 'passing tones and final anchor to appear');
+  await fillInput(client, '#progression-input', 'I V7/vi vi vii°7/V V');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.equal(await client.evaluate('document.querySelector(".riff-error") === null'), true);
+  assert.equal(await client.evaluate('document.querySelectorAll(".riff-grid > g").length'), 5);
+  await fillInput(client, '#progression-input', 'I ii IV V');
+  await click(client, '.riff-input button[type="submit"]');
+  await selectValue(client, '[data-testid="riff-connection"]', 'anticipate');
+  await waitForExpression(client, 'document.querySelector(".riff-anticipation") !== null', 'a weak-beat anticipation to appear');
   await selectValue(client, '[data-testid="riff-bars"]', '1');
   await selectValue(client, '[data-testid="riff-phrase"]', 'call-response');
   await waitForExpression(client, 'document.querySelector(".riff-phrase-label") !== null', 'call-response labels to appear');
@@ -889,12 +897,22 @@ try {
   assert.equal(riffWavFile.content.toString('ascii', 8, 12), 'WAVE');
   assert.ok(riffWavFile.content.length > 44100);
   assert.ok(riffWavFile.content.subarray(44).some(byte => byte !== 0), 'reference audio must not be silent');
+  await selectValue(client, '[data-testid="riff-wav-scope"]', 'solo');
+  await click(client, '[data-testid="riff-wav"]');
+  const soloWav = await waitForDownloadedFile(downloadDirectory, beforeRiff, name => name === 'chordflow-riff-solo.wav', 'solo riff WAV');
+  assert.equal(soloWav.content.length, riffWavFile.content.length);
+  assert.ok(soloWav.content.subarray(44).some(byte => byte !== 0));
+  const restSeconds = 0.08 + (riffBarTicks - riffPulseTicks / 2) / riffMidi.header.ppq * 60 / riffMidi.header.tempos[0].bpm;
+  const restByte = 44 + Math.floor(restSeconds * soloWav.content.readUInt32LE(24)) * 2;
+  assert.ok(soloWav.content.subarray(restByte, restByte + 200).every(byte => byte === 0), 'solo WAV must keep the call rest silent');
+  assert.ok(riffWavFile.content.subarray(restByte, restByte + 200).some(byte => byte !== 0), 'mixed WAV should retain the harmony under the riff rest');
   await click(client, '[data-testid="blind-start"]');
   await waitForExpression(client, 'document.querySelector(".blind-dialog")?.open === true', 'blind dialog to open');
   assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-experiment]").value'), 'template-control');
   assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-source]") === null'), true);
   assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-reveal]") === null'), true);
   assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-vote-A]").disabled'), true);
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-reason]").disabled'), true);
   await click(client, '[data-testid="blind-play-A"]');
   await click(client, '[data-testid="blind-play-B"]');
   await waitForExpression(client, 'document.querySelector("[data-testid=blind-state-B]").textContent === "已听完"', 'B to finish');
@@ -902,6 +920,7 @@ try {
   assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-vote-A]").disabled'), true);
   await click(client, '[data-testid="blind-play-A"]');
   await waitForExpression(client, 'document.querySelector("[data-testid=blind-vote-A]").disabled === false', 'both blind excerpts to finish');
+  await selectValue(client, '[data-testid="blind-reason"]', 'flow');
   await click(client, '[data-testid="blind-vote-A"]');
   await waitForExpression(client, 'document.querySelector("[data-testid=blind-reveal]") !== null', 'blind choice to reveal the chords');
   assert.deepEqual(await client.evaluate('Array.from(document.querySelectorAll("[data-testid=blind-source]"), element => element.textContent).sort()'), ['来源：内置模板', '来源：挖掘结果']);
@@ -912,6 +931,7 @@ try {
   const preferences = JSON.parse(preferenceFile.content.toString());
   assert.equal(preferences.records.length, 1);
   assert.equal(preferences.records[0].choice, 'A');
+  assert.equal(preferences.records[0].reason, 'flow');
   assert.equal(preferences.records[0].trial.algorithm, 'chordflow-0.23');
   assert.equal(preferences.records[0].trial.experiment, 'template-control');
   assert.deepEqual(Object.values(preferences.records[0].trial.candidates).map(candidate => candidate.source).sort(), ['mined', 'template']);
@@ -923,6 +943,11 @@ try {
   await waitForExpression(client, 'document.querySelector(".riff-grid") === null', 'B to start without the A motif');
   await click(client, '[data-testid="riff-style-hook"]');
   assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-phrase]").value'), 'repeat');
+  await click(client, '[data-testid="riff-context"]');
+  await waitForExpression(client, 'document.querySelector(".timeline-section:first-child .timeline-chord.playing") !== null', 'context playback to begin in A');
+  assert.equal(await client.evaluate('document.querySelector(".riff-playhead") === null'), true);
+  await waitForExpression(client, 'document.querySelector(".timeline-section:nth-child(2) .timeline-chord.playing") !== null && document.querySelector(".riff-playhead") !== null', 'B context playhead to use local beats', 15000);
+  assert.ok(Number(await client.evaluate('document.querySelector(".riff-playhead").getAttribute("x1")')) < 100, 'the B playhead must start at its own left edge');
   await selectValue(client, '[data-testid="riff-scope"]', 'global');
   await click(client, '[data-testid="riff-style-syncopated"]');
   await selectValue(client, '[data-testid="riff-scope"]', 'theme');
@@ -941,6 +966,7 @@ try {
   assert.match(themeBlueprint, /weak-beat stepwise passing tones/);
   assert.match(themeBlueprint, /Riff: silent in this section/);
   assert.match(themeBlueprint, /call-response: one-bar call with a final main-pulse rest/);
+  assert.match(themeBlueprint, /anticipate the next chord's melody anchor/);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -962,7 +988,8 @@ try {
       "✓ Chord input, riff playback, mining and real MIDI/WAV downloads worked\n" +
       "✓ Blind A/B listening required complete playback before recording and exporting a choice\n" +
       "✓ Theme motifs, passing tones, muting and inheritance matched the Suno blueprint\n" +
-      "✓ Call-response survived undo/redo and matched visual notes, MIDI rests and Suno directions\n"
+      "✓ Call-response survived undo/redo and matched visual notes, MIDI rests and Suno directions\n" +
+      "✓ Secondary input, anticipations, solo WAV rests, local context playhead and listening reasons worked\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

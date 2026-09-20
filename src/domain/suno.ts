@@ -484,6 +484,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   const hasRiff = arrangement.sections.some((_section, index) => riffSettingsAt(arrangement, index));
   const sectionLines = sections.flatMap((section, index) => {
     const riff = riffSettingsAt(arrangement, index);
+    const connection = riff?.connection === "anticipate" ? "; anticipate the next chord's melody anchor by an eighth note where stepwise motion permits, within this section; preserve call rests and phrase endings" : "";
     return [
     `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100 | Voicing ${section.voicingLabel}/${section.voicingCode} | Texture ${section.textureLabel}/${section.textureCode}${section.productionLocked ? " LOCKED" : ""}]`,
     `Chords: ${section.chords.join(" - ")}`,
@@ -494,7 +495,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     `Harmonic rhythm: ${harmonicRhythmLabel(arrangement.production, section.chords.length)}`,
     `Direction: ${section.direction}`,
     ...(hasRiff ? [riff
-      ? `Riff: ${RIFF_NAMES[riff.style]} / ${riff.style}; ${riffMotifBars(riff)}-bar motif; ${riff.density}; ${riff.register} register; ${riff.ornament === "passing" ? "weak-beat stepwise passing tones when possible" : "chord-tone anchors"}; ${riff.phrase === "call-response" ? "call-response: one-bar call with a final main-pulse rest, then a one-bar answer echoing the opening rhythm and contour; end each answer on its last chord root (main pulse is a dotted quarter in 6/8)" : riff.ending === "resolve" ? "end on the final chord root" : "retain the motif ending"}.`
+      ? `Riff: ${RIFF_NAMES[riff.style]} / ${riff.style}; ${riffMotifBars(riff)}-bar motif; ${riff.density}; ${riff.register} register; ${riff.ornament === "passing" ? "weak-beat stepwise passing tones when possible" : "chord-tone anchors"}; ${riff.phrase === "call-response" ? "call-response: one-bar call with a final main-pulse rest, then a one-bar answer echoing the opening rhythm and contour; end each answer on its last chord root (main pulse is a dotted quarter in 6/8)" : riff.ending === "resolve" ? "end on the final chord root" : "retain the motif ending"}${connection}.`
       : "Riff: silent in this section."] : []),
     ""
     ];

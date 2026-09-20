@@ -17,6 +17,16 @@ const source = () => ({
 });
 
 describe("blind chord listening", () => {
+  it("preserves an optional judgment reason without altering preference counts", () => {
+    const trial = createListeningTrial(source(), 0, () => 0, "template-control");
+    const record: ListeningRecord = { trial, choice: "neither", reason: "tension", recordedAt: new Date().toISOString() };
+    let raw: string | null = null;
+    const storage = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
+    expect(saveListeningRecord(record, storage)?.[0].reason).toBe("tension");
+    expect(loadListeningRecords(storage)[0].reason).toBe("tension");
+    expect(templateComparisonSummary(loadListeningRecords(storage))).toContain("都不喜欢 1 次");
+    expect(loadListeningRecords({ getItem: () => JSON.stringify([{ ...record, reason: "unknown" }]) })[0].reason).toBeUndefined();
+  });
   it.each(["major", "minor"] as const)("compares a real %s template rotation under equal playback conditions", mode => {
     const original = { ...source(), mode, bassOverrides: { "B:0:0": 2 } };
     const trial = createListeningTrial(original, 1, () => 0, "template-control");

@@ -15,6 +15,7 @@ export interface RiffSettings {
   ornament?: "off" | "passing";
   ending?: "open" | "resolve";
   phrase?: "repeat" | "call-response";
+  connection?: "off" | "anticipate";
 }
 
 export interface SectionProductionOverride {

@@ -25,6 +25,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   const [loop, setLoop] = useState(false);
   const [scope, setScope] = useState<"global" | "theme">("theme");
   const [rendering, setRendering] = useState(false);
+  const [wavSolo, setWavSolo] = useState(false);
   const [mined, setMined] = useState<{ source: Arrangement; candidates: MinedProgression[] } | null>(null);
   const section = arrangement.sections[sectionIndex];
   const activeSettings = riffSettingsAt(arrangement, sectionIndex);
@@ -47,7 +48,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   async function downloadWav() {
     setRendering(true);
     setError("");
-    try { await exportReferenceWav(excerpt); }
+    try { await exportReferenceWav(excerpt, wavSolo); }
     catch { setError("音频导出失败，请重试或先下载 MIDI"); }
     finally { setRendering(false); }
   }
@@ -66,7 +67,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       <input id="progression-input" value={input} onChange={event => setInput(event.target.value)} placeholder="1645 或 C–Am–F–G" />
       <button type="submit">应用和弦</button>
     </form>
-    <p className="riff-hint">数字按当前{arrangement.mode === "major" ? "大" : "小"}调音阶配和弦；小调 5 默认为小属和弦，强属请写 V 或 V7。</p>
+    <p className="riff-hint">数字按当前{arrangement.mode === "major" ? "大" : "小"}调音阶配和弦；小调 5 默认为小属和弦，强属请写 V 或 V7。支持 V7/vi、vii°7/V 等次属目标。</p>
     {error && <p role="alert" className="riff-error">{error}</p>}
     <BlindListening arrangement={arrangement} sectionIndex={sectionIndex}
       onPlay={(preview, done) => onPreview(false, false, preview, done, true)}
@@ -110,11 +111,13 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
         <label>音域<select value={settings.register} onChange={event => update({ register: event.target.value as RiffSettings["register"] })}><option value="low">中低</option><option value="high">中高</option></select></label>
         <label>句尾变化<select disabled={settings.phrase === "call-response"} value={settings.variation} onChange={event => update({ variation: Number(event.target.value) })}><option value="0">保持</option><option value="1">少量</option><option value="2">明显</option></select></label>
         <label>弱拍经过音<select data-testid="riff-ornament" value={settings.ornament ?? "off"} onChange={event => update({ ornament: event.target.value as RiffSettings["ornament"] })}><option value="off">关闭</option><option value="passing">级进连接</option></select></label>
+        <label>换和弦连接<select data-testid="riff-connection" value={settings.connection ?? "off"} onChange={event => update({ connection: event.target.value as RiffSettings["connection"] })}><option value="off">原动机</option><option value="anticipate">弱拍预示</option></select></label>
         <label>句尾落点<select data-testid="riff-ending" disabled={settings.phrase === "call-response"} value={settings.phrase === "call-response" ? "resolve" : settings.ending ?? "open"} onChange={event => update({ ending: event.target.value as RiffSettings["ending"] })}><option value="open">保留动机</option><option value="resolve">落在末和弦根音</option></select></label>
         <button type="button" onClick={() => update({ rhythmSeed: settings.rhythmSeed + 1 })}>只换节奏</button>
         <button type="button" onClick={() => update({ pitchSeed: settings.pitchSeed + 1 })}>只换音高</button>
       </div>
       {settings.phrase === "call-response" && <p className="riff-hint">问句末尾留一个主拍；答句呼应开头，再落到该小节最后一个和弦的根音。6/8 的主拍为附点四分音符。问答模式固定句尾，切回循环后恢复原设置。</p>}
+      {settings.connection === "anticipate" && <p className="riff-hint">在可级进的换和弦处，提前半拍提示下一个落音；没有合适空间就保留原句，不填满问句留白，也不改写句尾落点。当前仅连接本段内和弦。</p>}
       {scope === "global" && arrangement.riffThemes?.[section.symbol] !== undefined && <p className="riff-hint">当前主题已有独立设置；修改全曲默认不会覆盖它。下方试听仍使用当前主题的设置。</p>}
     </>}
     {activeSettings && <>
@@ -125,13 +128,15 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
           width={Math.max(2, note.duration / beats * 960)} height="6" rx="2"><title>MIDI {note.midi} · 第 {(note.beat + 1).toFixed(1)} 拍</title></rect>)}
         {playingBeat !== null && <line className="riff-playhead" x1={playingBeat / beats * 960} x2={playingBeat / beats * 960} y1="22" y2="168" />}
       </svg>
-      <p className="riff-hint">青色为和弦音，金色为弱拍经过音，粉色为句尾落点。经过音只在相邻和弦音之间有合适的级进空间时插入。</p>
+      <p className="riff-hint">青色为和弦音，金色为弱拍经过音，紫色为提前预示下个和弦的音，粉色为句尾落点。修饰只在条件合适时出现。</p>
       <div className="riff-actions">
         <button type="button" data-testid="riff-solo" onClick={() => onPreview(true, loop)}>Riff 独奏</button>
         <button type="button" data-testid="riff-mix" onClick={() => onPreview(false, loop)}>和弦合听</button>
+        {arrangement.sections.length > 1 && <button type="button" data-testid="riff-context" onClick={() => onContextPreview(arrangement)}>连前后段听 Riff</button>}
         {playing && <button type="button" onClick={onStop}>停止</button>}
         <label><input type="checkbox" checked={loop} onChange={event => setLoop(event.target.checked)} />循环当前段</label>
         <button type="button" data-testid="riff-midi" onClick={() => exportMidi(excerpt, `chordflow-riff-${section.symbol.toLowerCase()}${section.occurrence + 1}.mid`)}>本段 MIDI</button>
+        <label>音频内容<select data-testid="riff-wav-scope" value={wavSolo ? "solo" : "mix"} onChange={event => setWavSolo(event.target.value === "solo")}><option value="mix">和弦 + Riff</option><option value="solo">纯 Riff</option></select></label>
         <button type="button" data-testid="riff-wav" disabled={rendering} onClick={() => void downloadWav()}>{rendering ? "生成音频中…" : "本段 WAV"}</button>
       </div>
       <p className="riff-hint">Riff 设置随工程保存、撤销和移调；整曲 MIDI 自动增加 Riff 轨。WAV 是合成音色参考片段，可在 Suno 支持音频上传的入口使用，具体跟随程度需试听。</p>

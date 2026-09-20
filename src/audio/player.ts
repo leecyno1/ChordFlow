@@ -11,6 +11,7 @@ import type { Arrangement } from "../domain/types";
 import { buildRiffNotes } from "../engine/riff";
 
 let synth: any = null;
+let riffSynth: any = null;
 let toneModule: any = null;
 let playbackRun = 0;
 let playbackTimers: number[] = [];
@@ -101,6 +102,18 @@ async function getSynth(): Promise<any> {
   return synth;
 }
 
+async function getRiffSynth(): Promise<any> {
+  const Tone = await getTone();
+  if (!riffSynth) {
+    riffSynth = new Tone.PolySynth(Tone.Synth, {
+      maxPolyphony: 4, volume: -12,
+      oscillator: { type: "triangle" },
+      envelope: { attack: 0.008, decay: 0.1, sustain: 0.5, release: 0.04 }
+    }).toDestination();
+  }
+  return riffSynth;
+}
+
 export async function auditionChord(chord: string): Promise<void> {
   const instrument = await getSynth();
   instrument.triggerAttackRelease(chordNoteNames(chord, 3), "2n");
@@ -146,6 +159,8 @@ export async function playArrangement(
   stopPlayback();
   const run = playbackRun;
   const instrument = await getSynth();
+  const riffNotes = buildRiffNotes(arrangement);
+  const lead = riffNotes.length ? await getRiffSynth() : null;
   if (run !== playbackRun) return 0;
   instrument.releaseAll();
   // The synth has a 1.3s release. Blind excerpts must not inherit the
@@ -168,10 +183,10 @@ export async function playArrangement(
   });
 
   const secondsPerBeat = 60 / arrangement.production.tempoBpm;
-  buildRiffNotes(arrangement).forEach(note => {
+  riffNotes.forEach(note => {
     const timer = window.setTimeout(() => {
       if (playbackRun !== run) return;
-      instrument.triggerAttackRelease(440 * 2 ** ((note.midi - 69) / 12), note.duration * secondsPerBeat, undefined, note.velocity);
+      lead.triggerAttackRelease(440 * 2 ** ((note.midi - 69) / 12), note.duration * secondsPerBeat, undefined, note.velocity);
       onRiffNote?.(note.beat);
     }, startDelayMs + note.beat * secondsPerBeat * 1000);
     playbackTimers.push(timer);
@@ -185,6 +200,7 @@ export function stopPlayback(): void {
   playbackTimers.forEach((timer) => window.clearTimeout(timer));
   playbackTimers = [];
   synth?.releaseAll();
+  riffSynth?.releaseAll();
 }
 
 export function comparisonVelocity(velocity: number, voiceCount: number): number {
@@ -298,11 +314,8 @@ export function encodeWav(samples: Float32Array, sampleRate: number): ArrayBuffe
   return buffer;
 }
 
-// A lightweight reference rendering for downstream audio upload, not a sampled piano.
-export async function exportReferenceWav(arrangement: Arrangement, riffOnly = false): Promise<void> {
+export function buildReferenceNotes(arrangement: Arrangement, riffOnly = false) {
   const schedule = buildPlaybackSchedule(arrangement);
-  const sampleRate = 44100;
-  const context = new OfflineAudioContext(1, Math.ceil((schedule.durationMs / 1000 + 0.2) * sampleRate), sampleRate);
   const notes: { midi: number; seconds: number; duration: number; gain: number }[] = [];
   if (!riffOnly) {
     const voicings = buildVoicingPlan(arrangement);
@@ -312,6 +325,15 @@ export async function exportReferenceWav(arrangement: Arrangement, riffOnly = fa
     });
   }
   buildRiffNotes(arrangement).forEach(note => notes.push({ midi: note.midi, seconds: 0.08 + note.beat * 60 / arrangement.production.tempoBpm, duration: note.duration * 60 / arrangement.production.tempoBpm, gain: note.velocity * 0.16 }));
+  return notes;
+}
+
+// A lightweight reference rendering for downstream audio upload, not a sampled piano.
+export async function exportReferenceWav(arrangement: Arrangement, riffOnly = false): Promise<void> {
+  const schedule = buildPlaybackSchedule(arrangement);
+  const sampleRate = 44100;
+  const context = new OfflineAudioContext(1, Math.ceil((schedule.durationMs / 1000 + 0.2) * sampleRate), sampleRate);
+  const notes = buildReferenceNotes(arrangement, riffOnly);
   for (const note of notes) {
     const oscillator = context.createOscillator();
     const envelope = context.createGain();
@@ -325,7 +347,7 @@ export async function exportReferenceWav(arrangement: Arrangement, riffOnly = fa
     oscillator.stop(note.seconds + note.duration);
   }
   const audio = await context.startRendering();
-  downloadBlob(new Blob([encodeWav(audio.getChannelData(0), sampleRate)], { type: "audio/wav" }), "chordflow-riff-reference.wav");
+  downloadBlob(new Blob([encodeWav(audio.getChannelData(0), sampleRate)], { type: "audio/wav" }), riffOnly ? "chordflow-riff-solo.wav" : "chordflow-riff-reference.wav");
 }
 
 export function exportMidi(arrangement: Arrangement, filename = "chordflow-" + arrangement.formPattern.toLowerCase() + ".mid"): void {

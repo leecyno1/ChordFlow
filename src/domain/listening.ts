@@ -11,6 +11,8 @@ export const LISTENING_LIMIT = 200;
 export type ListeningSide = "A" | "B";
 export type ListeningChoice = ListeningSide | "tie" | "neither";
 export type ListeningExperiment = "mined-pair" | "template-control";
+export const LISTENING_REASONS = { flow: "和弦连接", color: "和声色彩", familiarity: "熟悉程度", tension: "张力与释放" };
+export type ListeningReason = keyof typeof LISTENING_REASONS;
 
 export interface ListeningCandidate {
   name: string;
@@ -31,6 +33,7 @@ export interface ListeningRecord {
   trial: ListeningTrial;
   choice: ListeningChoice;
   recordedAt: string;
+  reason?: ListeningReason;
 }
 
 // Use isolated excerpts with identical controls, without riff or manual bass.
@@ -104,7 +107,7 @@ export function loadListeningRecords(storage?: Pick<Storage, "getItem">): Listen
         const candidate = record.trial.candidates?.[side];
         return typeof candidate?.name === "string" && parseArrangementJson(JSON.stringify(candidate.arrangement)) !== null;
       });
-    });
+    }).map(record => record.reason && !Object.hasOwn(LISTENING_REASONS, record.reason) ? { ...record, reason: undefined } : record);
   } catch { return []; }
 }
 

@@ -75,6 +75,7 @@ import {
 import {
   effectiveSectionProductionAt,
   normalizeProductionSettings,
+  quarterNotesPerBar,
   setSectionProductionOverride
 } from "./domain/production";
 import { buildVoicingPlan } from "./domain/voicing";
@@ -285,17 +286,27 @@ function App() {
     setPlaying(true);
     const previewStart = includeContext ? Math.max(0, activeSection - 1) : activeSection;
     const excerpt = { ...preview, sections: includeContext ? preview.sections.slice(previewStart, activeSection + 2) : [preview.sections[activeSection] ?? preview.sections[0]] };
+    const sectionBeats = quarterNotesPerBar(excerpt.production.timeSignature) * excerpt.production.barsPerSection;
     async function playOnce() {
       try {
         const duration = await playArrangement(excerpt, (index, chord) => {
-          if (playbackToken.current === token) setPlayingPosition({ section: previewStart + index, chord });
-        }, solo, beat => { if (playbackToken.current === token) setRiffBeat(beat); }, matchVoiceLevel);
+          if (playbackToken.current !== token) return;
+          setPlayingPosition({ section: previewStart + index, chord });
+          if (previewStart + index !== activeSection) setRiffBeat(null);
+        }, solo, beat => {
+          if (playbackToken.current !== token) return;
+          const localBeat = beat - (includeContext ? activeSection - previewStart : 0) * sectionBeats;
+          setRiffBeat(localBeat >= 0 && localBeat < sectionBeats ? localBeat : null);
+        }, matchVoiceLevel);
         if (playbackToken.current !== token) return;
         window.setTimeout(() => {
           if (playbackToken.current !== token) return;
           if (loop) void playOnce(); else { haltPlayback(); onComplete?.(duration > 0); }
         }, Math.max(0, duration - (loop ? 80 : 0)));
-      } catch { haltPlayback(); setProjectError("无法启动音频，请重试"); onComplete?.(false); }
+      } catch {
+        if (playbackToken.current !== token) return;
+        haltPlayback(); setProjectError("无法启动音频，请重试"); onComplete?.(false);
+      }
     }
     await playOnce();
   }
