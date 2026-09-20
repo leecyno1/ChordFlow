@@ -871,6 +871,8 @@ try {
   assert.ok(riffWavFile.content.subarray(44).some(byte => byte !== 0), 'reference audio must not be silent');
   await click(client, '[data-testid="blind-start"]');
   await waitForExpression(client, 'document.querySelector(".blind-dialog")?.open === true', 'blind dialog to open');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-experiment]").value'), 'template-control');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-source]") === null'), true);
   assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-reveal]") === null'), true);
   assert.equal(await client.evaluate('document.querySelector("[data-testid=blind-vote-A]").disabled'), true);
   await click(client, '[data-testid="blind-play-A"]');
@@ -882,6 +884,7 @@ try {
   await waitForExpression(client, 'document.querySelector("[data-testid=blind-vote-A]").disabled === false', 'both blind excerpts to finish');
   await click(client, '[data-testid="blind-vote-A"]');
   await waitForExpression(client, 'document.querySelector("[data-testid=blind-reveal]") !== null', 'blind choice to reveal the chords');
+  assert.deepEqual(await client.evaluate('Array.from(document.querySelectorAll("[data-testid=blind-source]"), element => element.textContent).sort()'), ['来源：内置模板', '来源：挖掘结果']);
   await click(client, '[data-testid="blind-close"]');
   assert.match(await textContent(client, '[data-testid="listening-summary"]'), /1 次记录 · 1 次有偏好/);
   await click(client, '[data-testid="listening-export"]');
@@ -889,7 +892,11 @@ try {
   const preferences = JSON.parse(preferenceFile.content.toString());
   assert.equal(preferences.records.length, 1);
   assert.equal(preferences.records[0].choice, 'A');
-  assert.equal(preferences.records[0].trial.algorithm, 'chordflow-0.22');
+  assert.equal(preferences.records[0].trial.algorithm, 'chordflow-0.23');
+  assert.equal(preferences.records[0].trial.experiment, 'template-control');
+  assert.deepEqual(Object.values(preferences.records[0].trial.candidates).map(candidate => candidate.source).sort(), ['mined', 'template']);
+  const preferredSource = preferences.records[0].trial.candidates.A.source === 'mined' ? '挖掘' : '模板';
+  assert.ok((await textContent(client, '[data-testid="template-summary"]')).includes(`偏好${preferredSource} 1 次`));
   assert.equal(preferences.records[0].trial.candidates.A.arrangement.riff, undefined);
   assert.equal(preferences.records[0].trial.candidates.A.arrangement.riffThemes, undefined);
   await click(client, '.timeline-section:nth-child(2) .timeline-chord');

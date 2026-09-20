@@ -53,6 +53,7 @@
 .riff-workshop .riff-error { color: var(--rose); }
 .blind-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
 .blind-entry > span { color: var(--muted); font-size: 12px; }
+.blind-entry > small { flex-basis: 100%; color: var(--muted); line-height: 1.6; }
 .blind-dialog { color: var(--ivory); background: #111419; border: 1px solid var(--line-strong); border-radius: 16px; width: min(680px, calc(100vw - 32px)); max-height: 85vh; padding: 24px; }
 .blind-dialog::backdrop { background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px); }
 .blind-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }

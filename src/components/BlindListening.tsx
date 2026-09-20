@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { Arrangement } from "../domain/types";
 import {
-  createListeningTrial, loadListeningRecords, saveListeningRecord, listeningSummary
+  createListeningTrial, loadListeningRecords, saveListeningRecord, listeningSummary, templateComparisonSummary
 } from "../domain/listening";
-import type { ListeningTrial, ListeningChoice, ListeningSide } from "../domain/listening";
+import type { ListeningTrial, ListeningChoice, ListeningSide, ListeningExperiment } from "../domain/listening";
 import { downloadBlob } from "../audio/player";
 
 interface Props {
@@ -27,6 +27,7 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
   const [choice, setChoice] = useState<ListeningChoice | null>(null);
   const [records, setRecords] = useState(loadListeningRecords);
   const [notice, setNotice] = useState("");
+  const [experiment, setExperiment] = useState<ListeningExperiment>("template-control");
 
   function stop() {
     run.current++;
@@ -50,7 +51,8 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
     setHeard([]);
     setNotice("");
     setRecords(loadListeningRecords());
-    setTrial(createListeningTrial(arrangement, sectionIndex));
+    try { setTrial(createListeningTrial(arrangement, sectionIndex, Math.random, experiment)); }
+    catch (error) { setNotice((error as Error).message); }
   }
   function play(side: ListeningSide) {
     if (!trial) return;
@@ -79,13 +81,16 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
   }
 
   return <div className="blind-entry">
+    <label>比较方式 <select data-testid="blind-experiment" value={experiment} onChange={event => setExperiment(event.target.value as ListeningExperiment)}><option value="template-control">挖掘 vs 模板</option><option value="mined-pair">候选互选</option></select></label>
     <button type="button" data-testid="blind-start" onClick={start}>A/B 盲听挑和弦</button>
     <span data-testid="listening-summary">{listeningSummary(records)}</span>
+    <small data-testid="template-summary">{templateComparisonSummary(records)}。重复试听计次数，不代表独立样本；尚不能证明算法更好听。</small>
+    {!trial && notice && <span role="status">{notice}</span>}
     {records.length > 0 && <button type="button" data-testid="listening-export" onClick={exportRecords}>导出试听记录</button>}
     <dialog className="blind-dialog" ref={dialog} aria-labelledby="blind-title" onCancel={event => { event.preventDefault(); close(); }}>
       {trial && <>
         <div className="riff-heading"><h2 id="blind-title">先听，再选</h2><button type="button" data-testid="blind-close" onClick={close}>关闭</button></div>
-        <p>相同音色、速度、拍号和 2 小节长度。候选按独立片段生成并收束，不截断跨段解决。A/B 顺序随机，听完两边后再揭示和弦。</p>
+        <p>相同音色、速度、拍号和 2 小节长度，两边均以主和弦收束。{trial.experiment === "template-control" ? "一边为挖掘结果，一边为内置高熟悉度模板的循环移位。" : "比较两组挖掘候选。"}A/B 顺序随机，选择后再揭示来源与和弦。</p>
         <div className="blind-sides">
           {sides.map(side => <div key={side}>
             <button type="button" data-testid={`blind-play-${side}`} onClick={() => play(side)}>播放 {side}</button>
@@ -101,7 +106,7 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
             const candidate = trial.candidates[side];
             const section = candidate.arrangement.sections[0];
             return <article key={side}>
-              <h3>{side} · {candidate.name}</h3><strong>{section.chords.join(" — ")}</strong>
+              <h3>{side} · {candidate.name}</h3><p data-testid="blind-source">{candidate.source === "template" ? "来源：内置模板" : "来源：挖掘结果"}</p><strong>{section.chords.join(" — ")}</strong>
               <p>连接 {candidate.assessment.motion.toFixed(1)} 半音 · 参考粗糙度 {candidate.assessment.roughness.toFixed(4)}</p>
               <button type="button" data-testid={`blind-apply-${side}`} onClick={() => { close(); onApply(section.numerals); }}>采用 {side} 的和弦</button>
             </article>;
