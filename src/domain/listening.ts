@@ -17,7 +17,7 @@ export interface ListeningCandidate {
 
 export interface ListeningTrial {
   id: string;
-  algorithm: "chordflow-0.20";
+  algorithm: "chordflow-0.20" | "chordflow-0.22";
   candidates: Record<ListeningSide, ListeningCandidate>;
 }
 
@@ -30,22 +30,24 @@ export interface ListeningRecord {
 // Use isolated excerpts with identical controls, without riff or manual bass.
 // Assess those same excerpts rather than the voicings of the full song.
 export function createListeningTrial(arrangement: Arrangement, sectionIndex: number, random = Math.random): ListeningTrial {
-  const candidates = mineProgressions(arrangement, sectionIndex);
+  const section = { ...arrangement.sections[sectionIndex], energy: 60 };
+  const baseExcerpt: Arrangement = {
+    ...arrangement, title: "和弦盲听", riff: undefined, riffThemes: undefined, lockedSymbols: [], bassOverrides: {},
+    formId: "custom", formPattern: section.symbol, sections: [section],
+    production: { ...arrangement.production, barsPerSection: 2, voicingMode: "flowing", sectionOverrides: {} }
+  };
+  // A blind excerpt has no following section. Generate in that same context
+  // so an outgoing dominant isn't judged with its resolution cut off.
+  const candidates = mineProgressions(baseExcerpt, 0);
   const first = Math.floor(random() * candidates.length);
   const second = (first + 1 + Math.floor(random() * (candidates.length - 1))) % candidates.length;
   const make = (index: number): ListeningCandidate => {
     const candidate = candidates[index];
-    const edited = applySectionProgression(arrangement, sectionIndex, candidate.numerals);
-    const section = { ...edited.sections[sectionIndex], energy: 60 };
-    const excerpt: Arrangement = {
-      ...edited, title: "和弦盲听", riff: undefined, riffThemes: undefined, lockedSymbols: [], bassOverrides: {},
-      formId: "custom", formPattern: section.symbol, sections: [section],
-      production: { ...edited.production, barsPerSection: 2, voicingMode: "flowing", sectionOverrides: {} }
-    };
+    const excerpt = applySectionProgression(baseExcerpt, 0, candidate.numerals);
     return { name: candidate.name, arrangement: excerpt, assessment: assessHarmony(excerpt, 0) };
   };
   return {
-    id: crypto.randomUUID(), algorithm: "chordflow-0.20",
+    id: crypto.randomUUID(), algorithm: "chordflow-0.22",
     candidates: { A: make(first), B: make(second) }
   };
 }
@@ -60,7 +62,7 @@ export function loadListeningRecords(storage?: Pick<Storage, "getItem">): Listen
     const parsed = JSON.parse((storage ?? window.localStorage).getItem(LISTENING_STORAGE_KEY) ?? "[]") as ListeningRecord[];
     if (!Array.isArray(parsed)) return [];
     return parsed.slice(-LISTENING_LIMIT).filter(record => {
-      if (!record?.trial?.id || record.trial.algorithm !== "chordflow-0.20" ||
+      if (!record?.trial?.id || !["chordflow-0.20", "chordflow-0.22"].includes(record.trial.algorithm) ||
           !["A", "B", "tie", "neither"].includes(record.choice) || typeof record.recordedAt !== "string") return false;
       return (["A", "B"] as const).every(side => {
         const candidate = record.trial.candidates?.[side];

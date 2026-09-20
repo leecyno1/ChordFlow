@@ -42,7 +42,7 @@
 .riff-candidates h3 { margin: 0 0 12px; font-size: 16px; }
 .riff-candidates strong { font: 14px var(--mono); color: var(--cyan); }
 .riff-candidates small { color: var(--muted); }
-.riff-candidates article > div { display: flex; gap: 8px; margin-top: 12px; }
+.riff-candidates article > div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .riff-grid { display: block; width: 100%; min-height: 130px; margin: 18px 0; background: #0c0e12; border: 1px solid var(--line); border-radius: 8px; }
 .riff-grid line { stroke: #343842; stroke-width: 1; }
 .riff-grid text { fill: #b8b8b2; font: 12px var(--mono); }

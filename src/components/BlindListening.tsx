@@ -85,7 +85,7 @@ export function BlindListening({ arrangement, sectionIndex, onPlay, onStop, onAp
     <dialog className="blind-dialog" ref={dialog} aria-labelledby="blind-title" onCancel={event => { event.preventDefault(); close(); }}>
       {trial && <>
         <div className="riff-heading"><h2 id="blind-title">先听，再选</h2><button type="button" data-testid="blind-close" onClick={close}>关闭</button></div>
-        <p>相同音色、速度、拍号和 2 小节长度。A/B 顺序随机，听完两边后再揭示和弦。</p>
+        <p>相同音色、速度、拍号和 2 小节长度。候选按独立片段生成并收束，不截断跨段解决。A/B 顺序随机，听完两边后再揭示和弦。</p>
         <div className="blind-sides">
           {sides.map(side => <div key={side}>
             <button type="button" data-testid={`blind-play-${side}`} onClick={() => play(side)}>播放 {side}</button>

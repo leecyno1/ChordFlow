@@ -16,9 +16,10 @@ interface Props {
   onChange: (arrangement: Arrangement) => void;
   onPreview: (solo: boolean, loop: boolean, preview?: Arrangement, onComplete?: (completed: boolean) => void, matchVoiceLevel?: boolean) => void;
   onStop: () => void;
+  onContextPreview: (preview: Arrangement) => void;
 }
 
-export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, onChange, onPreview, onStop }: Props) {
+export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, onChange, onPreview, onStop, onContextPreview }: Props) {
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [loop, setLoop] = useState(false);
@@ -75,12 +76,16 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       <p>连接：实际转位下，相邻和弦双向最近音平均距离，较小通常更平滑。模板差异：与同长度内置走向的级数差异（包含循环移位）；不是原创率。</p>
       <p>参考粗糙度 {assessment.roughness.toFixed(4)}：用 6 个泛音的假定音色计算干涉，实际音色会改变结果。POP909 已知转移 {assessment.knownTransitions}/{assessment.totalTransitions}，平均惊喜 {assessment.surpriseBits?.toFixed(2) ?? "未知"} bits；未出现不等于优质创新。</p>
       <p>这些是筛选线索，不是好听分数；应结合前后段、风格与听感选择。</p>
+      <p>前段衔接：{assessment.entryMotion === null ? "曲首" : `${assessment.entryMotion.toFixed(1)} 半音`}；后段衔接：{assessment.exitMotion === null ? "曲尾" : `${assessment.exitMotion.toFixed(1)} 半音`}。{assessment.resolutions.length > 0 && `属功能目标：${assessment.resolutions.join("；")}`}</p>
     </details>
     {mined?.source === arrangement && <div className="riff-candidates">
       {mined.candidates.map(candidate => <article key={candidate.name}>
         <h3>{candidate.name}</h3><strong>{candidate.chords.join(" — ")}</strong><p>{candidate.description}</p>
         <small>连接 {candidate.assessment.motion.toFixed(1)} 半音 · 模板差异 {Math.round((candidate.assessment.catalogDistance ?? 0) * 100)}%</small>
+        <p className="mining-context">前段衔接 {candidate.assessment.entryMotion === null ? "曲首" : `${candidate.assessment.entryMotion.toFixed(1)} 半音`} · 后段衔接 {candidate.assessment.exitMotion === null ? "曲尾" : `${candidate.assessment.exitMotion.toFixed(1)} 半音`}</p>
+        {candidate.assessment.resolutions.length > 0 && <p>目标连接：{candidate.assessment.resolutions.join("；")}</p>}
         <div><button type="button" onClick={() => onPreview(false, false, { ...applySectionProgression(arrangement, sectionIndex, candidate.numerals), riff: undefined, riffThemes: undefined })}>试听和弦</button>
+          {arrangement.sections.length > 1 && <button type="button" data-testid="mining-context-preview" onClick={() => onContextPreview({ ...applySectionProgression(arrangement, sectionIndex, candidate.numerals), riff: undefined, riffThemes: undefined })}>连前后段听</button>}
           <button type="button" onClick={() => apply(candidate.numerals, candidate.name)}>采用</button></div>
       </article>)}
     </div>}

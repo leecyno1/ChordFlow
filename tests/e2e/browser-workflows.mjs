@@ -854,6 +854,9 @@ try {
   await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'riff playback to advance');
   await click(client, '[data-testid="mine-chords"]');
   await waitForExpression(client, 'document.querySelectorAll(".riff-candidates article").length === 3', 'three mined chord candidates');
+  assert.match(await textContent(client, '.mining-context'), /前段衔接 曲首 · 后段衔接/);
+  await click(client, '[data-testid="mining-context-preview"]');
+  await waitForExpression(client, 'document.querySelector(".timeline-chord.playing") !== null', 'contextual candidate audition to start');
   const beforeRiff = new Set(await readdir(downloadDirectory));
   await click(client, '[data-testid="riff-midi"]');
   const riffMidiFile = await waitForDownloadedFile(downloadDirectory, beforeRiff, name => name.endsWith('.mid'), 'riff MIDI');
@@ -886,6 +889,7 @@ try {
   const preferences = JSON.parse(preferenceFile.content.toString());
   assert.equal(preferences.records.length, 1);
   assert.equal(preferences.records[0].choice, 'A');
+  assert.equal(preferences.records[0].trial.algorithm, 'chordflow-0.22');
   assert.equal(preferences.records[0].trial.candidates.A.arrangement.riff, undefined);
   assert.equal(preferences.records[0].trial.candidates.A.arrangement.riffThemes, undefined);
   await click(client, '.timeline-section:nth-child(2) .timeline-chord');

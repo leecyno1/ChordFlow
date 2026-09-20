@@ -32,6 +32,8 @@ describe("blind chord listening", () => {
     expect(a.riffThemes).toBeUndefined();
     expect(a.bassOverrides).toEqual({});
     expect(a.sections[0].role).toBe("chorus");
+    expect(a.sections[0].numerals.at(-1)).toBe("i");
+    expect(b.sections[0].numerals.at(-1)).toBe("i");
     expect(buildPlaybackSchedule(a).durationMs).toBe(buildPlaybackSchedule(b).durationMs);
     expect(forward.candidates.A.assessment).toEqual(assessHarmony(a, 0));
     expect(original.production.sectionOverrides["B:0"].energy).toBe(95);
@@ -44,6 +46,7 @@ describe("blind chord listening", () => {
     let raw: string | null = null;
     const storage = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
     expect(saveListeningRecord(record, storage)).toEqual([record]);
+    expect(trial.algorithm).toBe("chordflow-0.22");
     expect(saveListeningRecord({ ...record, choice: "A" }, storage)).toEqual([record]);
     const restored = loadListeningRecords(storage);
     expect(restored[0].choice).toBe("tie");
@@ -53,6 +56,8 @@ describe("blind chord listening", () => {
     const appended = appendListeningRecord(full, record);
     expect(appended).toHaveLength(LISTENING_LIMIT);
     expect(appended[0].trial.id).toBe("1");
+    const legacy = { ...record, trial: { ...trial, algorithm: "chordflow-0.20" } };
+    expect(loadListeningRecords({ getItem: () => JSON.stringify([legacy]) })[0].trial.algorithm).toBe("chordflow-0.20");
   });
 
   it("reports unavailable storage without inventing a saved preference", () => {

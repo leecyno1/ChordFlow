@@ -139,7 +139,8 @@ describe("explainable harmony mining", () => {
       expect(new Set(candidates.map(candidate => candidate.chords.join())).size).toBe(3);
       for (const candidate of candidates) {
         expect(candidate.numerals).toHaveLength(4);
-        expect([mode === "major" ? "I" : "i", "V"]).toContain(candidate.numerals.at(-1));
+        const ending = candidate.numerals.at(-1)!;
+        expect([mode === "major" ? "I" : "i", "V"].includes(ending) || ending.startsWith("V7/")).toBe(true);
         expect(Number.isFinite(candidate.assessment.motion)).toBe(true);
       }
     }

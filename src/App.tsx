@@ -279,15 +279,16 @@ function App() {
 
   useEffect(() => { haltPlayback(); }, [activeSection]);
 
-  async function previewRiff(solo: boolean, loop: boolean, preview = arrangement, onComplete?: (completed: boolean) => void, matchVoiceLevel = false) {
+  async function previewRiff(solo: boolean, loop: boolean, preview = arrangement, onComplete?: (completed: boolean) => void, matchVoiceLevel = false, includeContext = false) {
     haltPlayback();
     const token = playbackToken.current;
     setPlaying(true);
-    const excerpt = { ...preview, sections: [preview.sections[activeSection] ?? preview.sections[0]] };
+    const previewStart = includeContext ? Math.max(0, activeSection - 1) : activeSection;
+    const excerpt = { ...preview, sections: includeContext ? preview.sections.slice(previewStart, activeSection + 2) : [preview.sections[activeSection] ?? preview.sections[0]] };
     async function playOnce() {
       try {
-        const duration = await playArrangement(excerpt, (_index, chord) => {
-          if (playbackToken.current === token) setPlayingPosition({ section: activeSection, chord });
+        const duration = await playArrangement(excerpt, (index, chord) => {
+          if (playbackToken.current === token) setPlayingPosition({ section: previewStart + index, chord });
         }, solo, beat => { if (playbackToken.current === token) setRiffBeat(beat); }, matchVoiceLevel);
         if (playbackToken.current !== token) return;
         window.setTimeout(() => {
@@ -1236,6 +1237,7 @@ function App() {
         onChange={commitArrangement}
         onPreview={(solo, loop, preview, done, level) => void previewRiff(solo, loop, preview, done, level)}
         onStop={haltPlayback}
+        onContextPreview={preview => void previewRiff(false, false, preview, undefined, false, true)}
       />
 
       <FormAtlas
