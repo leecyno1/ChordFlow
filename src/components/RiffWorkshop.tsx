@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { exportMidi, exportReferenceWav } from "../audio/player";
-import { DEFAULT_RIFF, RIFF_NAMES, buildRiffNotes, riffSettingsAt, setThemeRiff, riffMotifBars, nextRiffVariation } from "../engine/riff";
+import { DEFAULT_RIFF, RIFF_NAMES, buildRiffExcerpt, riffSettingsAt, setThemeRiff, riffMotifBars, nextRiffVariation } from "../engine/riff";
 import { riffVariationLabel } from "../engine/riffMotif";
 import { applySectionProgression, parseProgression } from "../engine/progressionInput";
 import { assessHarmony, mineProgressions } from "../engine/harmonyMining";
@@ -32,8 +32,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   const activeSettings = riffSettingsAt(arrangement, sectionIndex);
   const settings = (scope === "theme" ? activeSettings : arrangement.riff) ?? DEFAULT_RIFF;
   const controlsEnabled = scope === "theme" ? activeSettings !== undefined : arrangement.riff !== undefined;
-  const excerpt = useMemo(() => ({ ...arrangement, sections: [section] }), [arrangement, section]);
-  const notes = useMemo(() => buildRiffNotes(excerpt), [excerpt]);
+  const { arrangement: excerpt, riffNotes: notes } = useMemo(() => buildRiffExcerpt(arrangement, sectionIndex), [arrangement, sectionIndex]);
   const assessment = useMemo(() => assessHarmony(arrangement, sectionIndex), [arrangement, sectionIndex]);
   const beats = quarterNotesPerBar(arrangement.production.timeSignature) * arrangement.production.barsPerSection;
   const minNote = notes.length ? Math.min(...notes.map(note => note.midi)) - 2 : 60;
@@ -55,7 +54,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   async function downloadWav() {
     setRendering(true);
     setError("");
-    try { await exportReferenceWav(excerpt, wavSolo); }
+    try { await exportReferenceWav(excerpt, wavSolo, notes); }
     catch { setError("音频导出失败，请重试或先下载 MIDI"); }
     finally { setRendering(false); }
   }
@@ -116,9 +115,10 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
         <label>动机长度<select data-testid="riff-bars" value={riffMotifBars(settings)} disabled={settings.phrase === "call-response"} onChange={event => update({ bars: Number(event.target.value) as 1 | 2 })}><option value="1">1 小节</option><option value="2">2 小节</option></select></label>
         <label>疏密<select value={settings.density} onChange={event => update({ density: event.target.value as RiffSettings["density"] })}><option value="sparse">留白</option><option value="full">紧凑</option></select></label>
         <label>音域<select value={settings.register} onChange={event => update({ register: event.target.value as RiffSettings["register"] })}><option value="low">中低</option><option value="high">中高</option></select></label>
-        <label>句尾变化<select disabled={settings.phrase === "call-response"} value={settings.variation} onChange={event => update({ variation: Number(event.target.value) })}><option value="0">保持</option><option value="1">少量</option><option value="2">明显</option></select></label>
+        <label>句尾变化<select data-testid="riff-tail-variation" disabled={settings.phrase === "call-response"} value={settings.variation} onChange={event => update({ variation: Number(event.target.value) })}><option value="0">保持</option><option value="1">少量</option><option value="2">明显</option></select></label>
         <label>弱拍经过音<select data-testid="riff-ornament" value={settings.ornament ?? "off"} onChange={event => update({ ornament: event.target.value as RiffSettings["ornament"] })}><option value="off">关闭</option><option value="passing">级进连接</option></select></label>
         <label>换和弦连接<select data-testid="riff-connection" value={settings.connection ?? "off"} onChange={event => update({ connection: event.target.value as RiffSettings["connection"] })}><option value="off">原动机</option><option value="anticipate">弱拍预示</option></select></label>
+        <label>段间衔接<select data-testid="riff-handoff" value={settings.handoff ?? "off"} onChange={event => update({ handoff: event.target.value as RiffSettings["handoff"] })}><option value="off">保持独立</option><option value="pickup">段尾引入下一段</option></select></label>
         <label>句尾落点<select data-testid="riff-ending" disabled={settings.phrase === "call-response"} value={settings.phrase === "call-response" ? "resolve" : settings.ending ?? "open"} onChange={event => update({ ending: event.target.value as RiffSettings["ending"] })}><option value="open">保留动机</option><option value="resolve">落在末和弦根音</option></select></label>
         <button type="button" data-testid="riff-rhythm-next" onClick={() => vary("rhythm")}>只换节奏</button>
         <button type="button" data-testid="riff-pitch-next" onClick={() => vary("pitch")}>只换音高</button>
@@ -129,21 +129,25 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       {scope === "global" && arrangement.riffThemes?.[section.symbol] !== undefined && <p className="riff-hint">当前主题已有独立设置；修改全曲默认不会覆盖它。下方试听仍使用当前主题的设置。</p>}
     </>}
     {activeSettings && <>
+      {activeSettings.handoff === "pickup" && <p className="riff-hint" data-testid="riff-handoff-status">
+        {notes.some(note => note.kind === "handoff") ? `已在最后一个八分音符引入「${arrangement.sections[sectionIndex + 1].title}」的首音。` : "本段保留原句尾：问答/根音收束优先；曲尾、后段无起拍音、跨度超过全音或已有相同尾音时不加音。"}
+        单段试听和导出保留整曲中的衔接；修改后段会重新计算。循环当前段也保留此音，不另接回本段开头。
+      </p>}
       <svg className="riff-grid" viewBox="0 0 960 168" role="img" aria-label={`${section.title} Riff 音符网格，${notes.length} 个音符`}>
         {section.chords.map((chord, index) => <g key={index}><line x1={index * 960 / section.chords.length} x2={index * 960 / section.chords.length} y1="0" y2="168" /><text x={index * 960 / section.chords.length + 8} y="18">{chord}</text></g>)}
         {activeSettings.phrase === "call-response" && Array.from({ length: arrangement.production.barsPerSection }, (_, bar) => <text key={bar} className="riff-phrase-label" x={bar * 960 / arrangement.production.barsPerSection + 8} y="35">{bar % 2 === 0 ? "问句" : "答句"}</text>)}
         {notes.map((note, index) => <rect key={index} data-phrase={note.phrase} className={note.kind ? `riff-${note.kind}` : undefined} x={note.beat / beats * 960} y={46 + (maxNote - note.midi) / (maxNote - minNote) * 104}
-          width={Math.max(2, note.duration / beats * 960)} height="6" rx="2"><title>MIDI {note.midi} · 第 {(note.beat + 1).toFixed(1)} 拍</title></rect>)}
+          width={Math.max(2, note.duration / beats * 960)} height="6" rx="2"><title>MIDI {note.midi} · 第 {(note.beat + 1).toFixed(1)} 拍{note.kind === "handoff" ? " · 下一段引入音" : ""}</title></rect>)}
         {playingBeat !== null && <line className="riff-playhead" x1={playingBeat / beats * 960} x2={playingBeat / beats * 960} y1="22" y2="168" />}
       </svg>
-      <p className="riff-hint">青色为和弦音，金色为弱拍经过音，紫色为提前预示下个和弦的音，粉色为句尾落点。修饰只在条件合适时出现。</p>
+      <p className="riff-hint">青色为和弦音，金色为弱拍经过音，紫色为段内预示音，橙色为下一段引入音，粉色为句尾落点。修饰只在条件合适时出现。</p>
       <div className="riff-actions">
         <button type="button" data-testid="riff-solo" onClick={() => onPreview(true, loop)}>Riff 独奏</button>
         <button type="button" data-testid="riff-mix" onClick={() => onPreview(false, loop)}>和弦合听</button>
         {arrangement.sections.length > 1 && <button type="button" data-testid="riff-context" onClick={() => onContextPreview(arrangement)}>连前后段听 Riff</button>}
         {playing && <button type="button" onClick={onStop}>停止</button>}
         <label><input type="checkbox" checked={loop} onChange={event => setLoop(event.target.checked)} />循环当前段</label>
-        <button type="button" data-testid="riff-midi" onClick={() => exportMidi(excerpt, `chordflow-riff-${section.symbol.toLowerCase()}${section.occurrence + 1}.mid`)}>本段 MIDI</button>
+        <button type="button" data-testid="riff-midi" onClick={() => exportMidi(excerpt, `chordflow-riff-${section.symbol.toLowerCase()}${section.occurrence + 1}.mid`, notes)}>本段 MIDI</button>
         <label>音频内容<select data-testid="riff-wav-scope" value={wavSolo ? "solo" : "mix"} onChange={event => setWavSolo(event.target.value === "solo")}><option value="mix">和弦 + Riff</option><option value="solo">纯 Riff</option></select></label>
         <button type="button" data-testid="riff-wav" disabled={rendering} onClick={() => void downloadWav()}>{rendering ? "生成音频中…" : "本段 WAV"}</button>
       </div>

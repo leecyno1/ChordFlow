@@ -16,7 +16,7 @@ export interface RiffNote {
   velocity: number;
   sectionIndex: number;
   chordIndex: number;
-  kind?: "passing" | "resolution" | "anticipation";
+  kind?: "passing" | "resolution" | "anticipation" | "handoff";
   phrase?: "call" | "response";
 }
 
@@ -42,7 +42,8 @@ export function normalizeRiff(value: unknown): RiffSettings | undefined {
     ...(item.ornament === "off" || item.ornament === "passing" ? { ornament: item.ornament } : {}),
     ...(item.ending === "open" || item.ending === "resolve" ? { ending: item.ending } : {}),
     ...(item.phrase === "repeat" || item.phrase === "call-response" ? { phrase: item.phrase } : {}),
-    ...(item.connection === "off" || item.connection === "anticipate" ? { connection: item.connection } : {})
+    ...(item.connection === "off" || item.connection === "anticipate" ? { connection: item.connection } : {}),
+    ...(item.handoff === "off" || item.handoff === "pickup" ? { handoff: item.handoff } : {})
   };
 }
 
@@ -165,7 +166,47 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
     const ordered = sectionNotes.sort((a, b) => a.beat - b.beat);
     result.push(...(settings.connection === "anticipate" ? addAnticipations(ordered, arrangement, sectionIndex) : ordered));
   });
-  return result;
+  return addSectionHandoffs(result, arrangement);
+}
+
+// Plan against the whole song before cutting an excerpt. No contextual notes
+// are persisted: changing the following theme immediately updates its pickup.
+export function buildRiffExcerpt(arrangement: Arrangement, start: number, end = start + 1) {
+  const sectionBeats = quarterNotesPerBar(arrangement.production.timeSignature) * arrangement.production.barsPerSection;
+  return {
+    arrangement: { ...arrangement, sections: arrangement.sections.slice(start, end) },
+    riffNotes: buildRiffNotes(arrangement)
+      .filter(note => note.sectionIndex >= start && note.sectionIndex < end)
+      .map(note => ({ ...note, sectionIndex: note.sectionIndex - start, beat: note.beat - start * sectionBeats }))
+  };
+}
+
+// An optional last-eighth pickup repeats the next section's actual first note.
+// Never rewrite that theme, fill a call rest, or sacrifice a resolved ending.
+function addSectionHandoffs(notes: RiffNote[], arrangement: Arrangement): RiffNote[] {
+  const barBeats = quarterNotesPerBar(arrangement.production.timeSignature);
+  const sectionBeats = barBeats * arrangement.production.barsPerSection;
+  let result = notes;
+  for (let index = 0; index < arrangement.sections.length - 1; index++) {
+    const settings = riffSettingsAt(arrangement, index);
+    if (settings?.handoff !== "pickup") continue;
+    const boundary = (index + 1) * sectionBeats;
+    const beat = boundary - 0.5;
+    const target = notes.find(note => note.sectionIndex === index + 1 && note.beat === boundary);
+    const tail = notes.filter(note => note.sectionIndex === index);
+    const previous = tail.filter(note => note.beat < beat).at(-1);
+    if (!target || !previous || target.kind === "passing") continue;
+    if (settings.phrase === "call-response" || settings.ending === "resolve" || tail.at(-1)?.kind === "resolution") continue;
+    const lastChord = arrangement.sections[index].chords.length - 1;
+    if (previous.chordIndex !== lastChord || beat < index * sectionBeats + lastChord * sectionBeats / (lastChord + 1)) continue;
+    if (Math.abs(previous.midi - target.midi) > 2) continue;
+    // Do not label an already identical last-eighth anchor as new work.
+    if (tail.some(note => note.beat === beat && note.midi === target.midi)) continue;
+    result = result.filter(note => note.sectionIndex !== index || note.beat !== beat)
+      .map(note => note === previous ? { ...note, duration: Math.min(note.duration, (beat - note.beat) * 0.85) } : note);
+    result = [...result, { ...previous, midi: target.midi, beat, duration: 0.425, velocity: previous.velocity * 0.8, kind: "handoff" }];
+  }
+  return result === notes ? notes : result.sort((a, b) => a.beat - b.beat);
 }
 
 export function nextRiffVariation(arrangement: Arrangement, sectionIndex: number, settings: RiffSettings, dimension: "rhythm" | "pitch"): RiffSettings {

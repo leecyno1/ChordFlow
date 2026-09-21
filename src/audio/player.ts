@@ -8,7 +8,7 @@ import {
 } from "../domain/production";
 import { buildVoicingPlan } from "../domain/voicing";
 import type { Arrangement } from "../domain/types";
-import { buildRiffNotes } from "../engine/riff";
+import { buildRiffNotes, type RiffNote } from "../engine/riff";
 
 let synth: any = null;
 let riffSynth: any = null;
@@ -154,12 +154,13 @@ export async function playArrangement(
   onStep?: (sectionIndex: number, chordIndex: number) => void,
   riffOnly = false,
   onRiffNote?: (beat: number) => void,
-  matchVoiceLevel = false
+  matchVoiceLevel = false,
+  plannedRiffNotes?: RiffNote[]
 ): Promise<number> {
   stopPlayback();
   const run = playbackRun;
   const instrument = await getSynth();
-  const riffNotes = buildRiffNotes(arrangement);
+  const riffNotes = plannedRiffNotes ?? buildRiffNotes(arrangement);
   const lead = riffNotes.length ? await getRiffSynth() : null;
   if (run !== playbackRun) return 0;
   instrument.releaseAll();
@@ -227,7 +228,7 @@ export function exportJson(arrangement: Arrangement): void {
   );
 }
 
-export function buildMidi(arrangement: Arrangement): Midi {
+export function buildMidi(arrangement: Arrangement, plannedRiffNotes?: RiffNote[]): Midi {
   const midi = new Midi();
   midi.header.name = arrangement.title;
   midi.header.setTempo(arrangement.production.tempoBpm);
@@ -287,7 +288,7 @@ export function buildMidi(arrangement: Arrangement): Midi {
     ticks = sectionStart + sectionTicks;
   });
 
-  const riffNotes = buildRiffNotes(arrangement);
+  const riffNotes = plannedRiffNotes ?? buildRiffNotes(arrangement);
   if (riffNotes.length) {
     const riffTrack = midi.addTrack();
     riffTrack.name = "ChordFlow Riff";
@@ -314,7 +315,7 @@ export function encodeWav(samples: Float32Array, sampleRate: number): ArrayBuffe
   return buffer;
 }
 
-export function buildReferenceNotes(arrangement: Arrangement, riffOnly = false) {
+export function buildReferenceNotes(arrangement: Arrangement, riffOnly = false, plannedRiffNotes?: RiffNote[]) {
   const schedule = buildPlaybackSchedule(arrangement);
   const notes: { midi: number; seconds: number; duration: number; gain: number }[] = [];
   if (!riffOnly) {
@@ -324,16 +325,16 @@ export function buildReferenceNotes(arrangement: Arrangement, riffOnly = false) 
       [voice.bassMidi, ...voice.midiNotes].forEach(midi => notes.push({ midi, seconds: step.offsetMs / 1000, duration: step.durationSeconds * 0.9, gain: 0.06 * step.velocity }));
     });
   }
-  buildRiffNotes(arrangement).forEach(note => notes.push({ midi: note.midi, seconds: 0.08 + note.beat * 60 / arrangement.production.tempoBpm, duration: note.duration * 60 / arrangement.production.tempoBpm, gain: note.velocity * 0.16 }));
+  (plannedRiffNotes ?? buildRiffNotes(arrangement)).forEach(note => notes.push({ midi: note.midi, seconds: 0.08 + note.beat * 60 / arrangement.production.tempoBpm, duration: note.duration * 60 / arrangement.production.tempoBpm, gain: note.velocity * 0.16 }));
   return notes;
 }
 
 // A lightweight reference rendering for downstream audio upload, not a sampled piano.
-export async function exportReferenceWav(arrangement: Arrangement, riffOnly = false): Promise<void> {
+export async function exportReferenceWav(arrangement: Arrangement, riffOnly = false, plannedRiffNotes?: RiffNote[]): Promise<void> {
   const schedule = buildPlaybackSchedule(arrangement);
   const sampleRate = 44100;
   const context = new OfflineAudioContext(1, Math.ceil((schedule.durationMs / 1000 + 0.2) * sampleRate), sampleRate);
-  const notes = buildReferenceNotes(arrangement, riffOnly);
+  const notes = buildReferenceNotes(arrangement, riffOnly, plannedRiffNotes);
   for (const note of notes) {
     const oscillator = context.createOscillator();
     const envelope = context.createGain();
@@ -350,8 +351,8 @@ export async function exportReferenceWav(arrangement: Arrangement, riffOnly = fa
   downloadBlob(new Blob([encodeWav(audio.getChannelData(0), sampleRate)], { type: "audio/wav" }), riffOnly ? "chordflow-riff-solo.wav" : "chordflow-riff-reference.wav");
 }
 
-export function exportMidi(arrangement: Arrangement, filename = "chordflow-" + arrangement.formPattern.toLowerCase() + ".mid"): void {
-  const midi = buildMidi(arrangement);
+export function exportMidi(arrangement: Arrangement, filename = "chordflow-" + arrangement.formPattern.toLowerCase() + ".mid", plannedRiffNotes?: RiffNote[]): void {
+  const midi = buildMidi(arrangement, plannedRiffNotes);
 
   downloadBlob(
     new Blob([midi.toArray()], { type: "audio/midi" }),

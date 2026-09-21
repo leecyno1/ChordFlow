@@ -40,6 +40,7 @@ import { FormAtlas } from "./components/FormAtlas";
 import { SunoBridge } from "./components/SunoBridge";
 import { TransitionWorkshop } from "./components/TransitionWorkshop";
 import { RiffWorkshop } from "./components/RiffWorkshop";
+import { buildRiffExcerpt } from "./engine/riff";
 import {
   FORM_PRESETS,
   PROGRESSIONS,
@@ -285,7 +286,8 @@ function App() {
     const token = playbackToken.current;
     setPlaying(true);
     const previewStart = includeContext ? Math.max(0, activeSection - 1) : activeSection;
-    const excerpt = { ...preview, sections: includeContext ? preview.sections.slice(previewStart, activeSection + 2) : [preview.sections[activeSection] ?? preview.sections[0]] };
+    const sourceStart = preview.sections[previewStart] ? previewStart : 0;
+    const { arrangement: excerpt, riffNotes } = buildRiffExcerpt(preview, sourceStart, includeContext ? activeSection + 2 : sourceStart + 1);
     const sectionBeats = quarterNotesPerBar(excerpt.production.timeSignature) * excerpt.production.barsPerSection;
     async function playOnce() {
       try {
@@ -297,7 +299,7 @@ function App() {
           if (playbackToken.current !== token) return;
           const localBeat = beat - (includeContext ? activeSection - previewStart : 0) * sectionBeats;
           setRiffBeat(localBeat >= 0 && localBeat < sectionBeats ? localBeat : null);
-        }, matchVoiceLevel);
+        }, matchVoiceLevel, riffNotes);
         if (playbackToken.current !== token) return;
         window.setTimeout(() => {
           if (playbackToken.current !== token) return;

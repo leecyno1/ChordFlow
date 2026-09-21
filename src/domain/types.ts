@@ -18,6 +18,7 @@ export interface RiffSettings {
   ending?: "open" | "resolve";
   phrase?: "repeat" | "call-response";
   connection?: "off" | "anticipate";
+  handoff?: "off" | "pickup";
 }
 
 export interface SectionProductionOverride {

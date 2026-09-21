@@ -982,6 +982,54 @@ try {
   assert.match(themeBlueprint, /call-response: one-bar call with a final main-pulse rest/);
   assert.match(themeBlueprint, /anticipate the next chord's melody anchor/);
   assert.match(themeBlueprint, /motif variation/);
+
+  await click(client, '[data-testid="suno-close"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await click(client, '[data-testid="riff-style-arpeggio"]');
+  await selectValue(client, '[data-testid="riff-tail-variation"]', '0');
+  await fillInput(client, '#progression-input', 'ii ii ii ii');
+  await click(client, '.riff-input button[type="submit"]');
+  await selectValue(client, '[data-testid="riff-handoff"]', 'pickup');
+  await waitForExpression(client, 'document.querySelector(".riff-handoff") !== null', 'the B-to-A pickup to appear');
+  assert.match(await textContent(client, '[data-testid="riff-handoff-status"]'), /已在最后一个八分音符引入/);
+  await click(client, '[data-testid="project-undo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  assert.equal(await client.evaluate('document.querySelector(".riff-handoff") === null'), true);
+  await click(client, '[data-testid="project-redo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await waitForExpression(client, 'document.querySelector(".riff-handoff") !== null', 'redo to restore the pickup');
+  await click(client, '[data-testid="project-save"]');
+  const handoffProject = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')"));
+  assert.equal(handoffProject.arrangement.riffThemes.B.handoff, 'pickup');
+  const handoffPitches = await client.evaluate('Array.from(document.querySelectorAll(".riff-grid rect"), note => Number(note.querySelector("title").textContent.match(/^MIDI (\\d+)/)[1]))');
+  const beforeHandoff = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-midi"]');
+  const handoffFile = await waitForDownloadedFile(downloadDirectory, beforeHandoff, name => name.endsWith('.mid'), 'section MIDI with pickup');
+  beforeHandoff.add(handoffFile.filename);
+  const handoffMidi = new Midi(handoffFile.content);
+  const handoffTrack = handoffMidi.tracks.find(track => track.name === 'ChordFlow Riff');
+  assert.deepEqual(handoffTrack.notes.map(note => note.midi), handoffPitches);
+  const handoffSectionTicks = handoffMidi.header.ppq * 3 * 8; // This workflow is in 6/8, eight bars per section.
+  assert.equal(handoffTrack.notes.at(-1).ticks, handoffSectionTicks - handoffMidi.header.ppq / 2);
+  await click(client, '[data-testid="suno-launch"]');
+  assert.match(await textContent(client, '[data-testid="suno-blueprint"]'), /section handoff: repeat the next section's opening pitch/);
+  const fullHandoffFilename = `chordflow-${handoffProject.arrangement.formPattern.toLowerCase()}.mid`;
+  await rm(join(downloadDirectory, fullHandoffFilename), { force: true });
+  beforeHandoff.delete(fullHandoffFilename);
+  await click(client, '[data-testid="suno-export-midi"]');
+  const handoffSongFile = await waitForDownloadedFile(downloadDirectory, beforeHandoff, name => name.endsWith('.mid'), 'full MIDI with the same pickup');
+  const handoffSong = new Midi(handoffSongFile.content);
+  const songRiff = handoffSong.tracks.find(track => track.name === 'ChordFlow Riff');
+  assert.deepEqual(songRiff.notes.filter(note => note.ticks >= handoffSectionTicks && note.ticks < 2 * handoffSectionTicks)
+    .map(note => [note.midi, note.ticks - handoffSectionTicks, note.durationTicks]),
+  handoffTrack.notes.map(note => [note.midi, note.ticks, note.durationTicks]));
+  assert.equal(handoffTrack.notes.at(-1).midi, songRiff.notes.find(note => note.ticks === 2 * handoffSectionTicks).midi);
+  await click(client, '[data-testid="suno-close"]');
+  await click(client, '.timeline-section:nth-child(3) .timeline-chord');
+  await click(client, '[data-testid="riff-disable"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await waitForExpression(client, 'document.querySelector(".riff-handoff") === null', 'muting the next theme to remove its pickup');
+  assert.match(await textContent(client, '[data-testid="riff-handoff-status"]'), /本段保留原句尾/);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1005,7 +1053,8 @@ try {
       "✓ Theme motifs, passing tones, muting and inheritance matched the Suno blueprint\n" +
       "✓ Call-response survived undo/redo and matched visual notes, MIDI rests and Suno directions\n" +
       "✓ Secondary input, anticipations, solo WAV rests, local context playhead and listening reasons worked\n" +
-      "✓ Versioned motif variants survived undo/redo, saved their independent versions and reached MIDI/WAV/Suno\n"
+      "✓ Versioned motif variants survived undo/redo, saved their independent versions and reached MIDI/WAV/Suno\n" +
+      "✓ Section handoffs survived undo/redo and save, matched the grid and both MIDI exports, and respected next-theme muting\n"
   );
 } finally {
   await client?.close().catch(() => undefined);
