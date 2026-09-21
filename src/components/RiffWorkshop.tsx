@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { exportMidi, exportReferenceWav } from "../audio/player";
-import { DEFAULT_RIFF, RIFF_NAMES, buildRiffNotes, riffSettingsAt, setThemeRiff, riffMotifBars } from "../engine/riff";
+import { DEFAULT_RIFF, RIFF_NAMES, buildRiffNotes, riffSettingsAt, setThemeRiff, riffMotifBars, nextRiffVariation } from "../engine/riff";
+import { riffVariationLabel } from "../engine/riffMotif";
 import { applySectionProgression, parseProgression } from "../engine/progressionInput";
 import { assessHarmony, mineProgressions } from "../engine/harmonyMining";
 import type { MinedProgression } from "../engine/harmonyMining";
@@ -44,6 +45,12 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   function apply(numerals: string[], label?: string) {
     onChange(applySectionProgression(arrangement, sectionIndex, numerals, label));
     setError("");
+  }
+  function vary(dimension: "rhythm" | "pitch") {
+    const next = nextRiffVariation(arrangement, sectionIndex, settings, dimension);
+    if (next === settings) { setError("当前条件下没有不同的动机，请尝试调整疏密或乐句组织"); return; }
+    setError("");
+    update(next);
   }
   async function downloadWav() {
     setRendering(true);
@@ -113,9 +120,10 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
         <label>弱拍经过音<select data-testid="riff-ornament" value={settings.ornament ?? "off"} onChange={event => update({ ornament: event.target.value as RiffSettings["ornament"] })}><option value="off">关闭</option><option value="passing">级进连接</option></select></label>
         <label>换和弦连接<select data-testid="riff-connection" value={settings.connection ?? "off"} onChange={event => update({ connection: event.target.value as RiffSettings["connection"] })}><option value="off">原动机</option><option value="anticipate">弱拍预示</option></select></label>
         <label>句尾落点<select data-testid="riff-ending" disabled={settings.phrase === "call-response"} value={settings.phrase === "call-response" ? "resolve" : settings.ending ?? "open"} onChange={event => update({ ending: event.target.value as RiffSettings["ending"] })}><option value="open">保留动机</option><option value="resolve">落在末和弦根音</option></select></label>
-        <button type="button" onClick={() => update({ rhythmSeed: settings.rhythmSeed + 1 })}>只换节奏</button>
-        <button type="button" onClick={() => update({ pitchSeed: settings.pitchSeed + 1 })}>只换音高</button>
+        <button type="button" data-testid="riff-rhythm-next" onClick={() => vary("rhythm")}>只换节奏</button>
+        <button type="button" data-testid="riff-pitch-next" onClick={() => vary("pitch")}>只换音高</button>
       </div>
+      <p className="riff-hint" data-testid="riff-variation">{riffVariationLabel(settings)}。换节奏保留音高轮廓设置，换音高保留基础节奏；经过音与预示音会重新计算。旧工程仅在点击对应按钮后启用新变体。</p>
       {settings.phrase === "call-response" && <p className="riff-hint">问句末尾留一个主拍；答句呼应开头，再落到该小节最后一个和弦的根音。6/8 的主拍为附点四分音符。问答模式固定句尾，切回循环后恢复原设置。</p>}
       {settings.connection === "anticipate" && <p className="riff-hint">在可级进的换和弦处，提前半拍提示下一个落音；没有合适空间就保留原句，不填满问句留白，也不改写句尾落点。当前仅连接本段内和弦。</p>}
       {scope === "global" && arrangement.riffThemes?.[section.symbol] !== undefined && <p className="riff-hint">当前主题已有独立设置；修改全曲默认不会覆盖它。下方试听仍使用当前主题的设置。</p>}

@@ -868,6 +868,20 @@ try {
   assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-bars]").value'), '1');
   await click(client, '[data-testid="project-redo"]');
   await waitForExpression(client, 'document.querySelector(".riff-grid rect[data-phrase=response].riff-resolution") !== null', 'redo to restore answer roots');
+  for (let i = 0; i < 3; i++) await click(client, '[data-testid="riff-rhythm-next"]');
+  for (let i = 0; i < 3; i++) await click(client, '[data-testid="riff-pitch-next"]');
+  assert.doesNotMatch(await textContent(client, '[data-testid="riff-variation"]'), /经典/);
+  const variationBeforeUndo = await textContent(client, '[data-testid="riff-variation"]');
+  await click(client, '[data-testid="project-undo"]');
+  await waitForExpression(client, `document.querySelector('[data-testid="riff-variation"]').textContent !== ${JSON.stringify(variationBeforeUndo)}`, 'undo to restore the prior pitch variant');
+  await click(client, '[data-testid="project-redo"]');
+  await waitForExpression(client, `document.querySelector('[data-testid="riff-variation"]').textContent === ${JSON.stringify(variationBeforeUndo)}`, 'redo to restore the new pitch variant');
+  await click(client, '[data-testid="project-save"]');
+  const variantProject = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')"));
+  assert.equal(variantProject.arrangement.riffThemes.A.rhythmVersion, 2);
+  assert.equal(variantProject.arrangement.riffThemes.A.pitchVersion, 2);
+  assert.ok(variantProject.arrangement.riffThemes.A.rhythmSeed < 24);
+  assert.ok(variantProject.arrangement.riffThemes.A.pitchSeed < 24);
   const displayedRiffPitches = await client.evaluate('Array.from(document.querySelectorAll(".riff-grid rect"), note => Number(note.querySelector("title").textContent.match(/^MIDI (\\d+)/)[1]))');
   await click(client, '[data-testid="riff-solo"]');
   await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'riff playback to advance');
@@ -967,6 +981,7 @@ try {
   assert.match(themeBlueprint, /Riff: silent in this section/);
   assert.match(themeBlueprint, /call-response: one-bar call with a final main-pulse rest/);
   assert.match(themeBlueprint, /anticipate the next chord's melody anchor/);
+  assert.match(themeBlueprint, /motif variation/);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -989,7 +1004,8 @@ try {
       "✓ Blind A/B listening required complete playback before recording and exporting a choice\n" +
       "✓ Theme motifs, passing tones, muting and inheritance matched the Suno blueprint\n" +
       "✓ Call-response survived undo/redo and matched visual notes, MIDI rests and Suno directions\n" +
-      "✓ Secondary input, anticipations, solo WAV rests, local context playhead and listening reasons worked\n"
+      "✓ Secondary input, anticipations, solo WAV rests, local context playhead and listening reasons worked\n" +
+      "✓ Versioned motif variants survived undo/redo, saved their independent versions and reached MIDI/WAV/Suno\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

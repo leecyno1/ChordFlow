@@ -1,6 +1,7 @@
 import { chordPitchClasses } from "../domain/music";
 import { quarterNotesPerBar, effectiveSectionProductionAt } from "../domain/production";
 import type { Arrangement, RiffSettings } from "../domain/types";
+import { riffRhythmSlots, riffContour, RIFF_VARIANT_COUNT } from "./riffMotif";
 
 export const DEFAULT_RIFF: RiffSettings = {
   style: "hook", bars: 2, density: "sparse", register: "high",
@@ -36,6 +37,8 @@ export function normalizeRiff(value: unknown): RiffSettings | undefined {
     variation: Math.max(0, Math.min(2, integer("variation", 1))),
     rhythmSeed: Math.abs(integer("rhythmSeed", 0)) % 100000,
     pitchSeed: Math.abs(integer("pitchSeed", 0)) % 100000,
+    ...(item.rhythmVersion === 2 ? { rhythmVersion: 2 as const } : {}),
+    ...(item.pitchVersion === 2 ? { pitchVersion: 2 as const } : {}),
     ...(item.ornament === "off" || item.ornament === "passing" ? { ornament: item.ornament } : {}),
     ...(item.ending === "open" || item.ending === "resolve" ? { ending: item.ending } : {}),
     ...(item.phrase === "repeat" || item.phrase === "call-response" ? { phrase: item.phrase } : {}),
@@ -79,22 +82,11 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
     if (!settings) return;
     const callResponse = settings.phrase === "call-response";
     const motifSlots = slotsPerBar * riffMotifBars(settings);
-    const masks = {
-      arpeggio: [[0, 2, 4, 6], [0, 2, 5, 6], [0, 3, 4, 6]],
-      syncopated: [[0, 3, 6], [0, 3, 5], [0, 2, 5, 7]],
-      hook: [[0, 2, 3, 6], [0, 1, 4, 6], [0, 3, 4, 7]]
-    }[settings.style];
-    const mask = masks[settings.rhythmSeed % masks.length];
-    const contours = {
-      arpeggio: [[0, 4, 7, 4, 0, 4, 7, 0], [7, 4, 0, 4, 7, 4, 2, 0], [0, 7, 4, 7, 0, 4, 7, 0]],
-      syncopated: [[0, 0, 3, 0, 0, 5, 3, 0], [3, 0, 0, 5, 3, 0, 2, 0], [0, 5, 0, 3, 0, 5, 2, 0]],
-      hook: [[0, 2, 4, 2, 0, -1, 2, 0], [0, -2, 0, 3, 5, 3, 2, 0], [2, 2, 0, -2, 0, 3, 2, 0]]
-    }[settings.style];
-    const contour = contours[settings.pitchSeed % contours.length];
+    const contour = riffContour(settings);
     const production = effectiveSectionProductionAt(arrangement, sectionIndex);
     const center = (settings.register === "high" ? 72 : 60) + chordPitchClasses(arrangement.key)[0] + (section.role === "chorus" ? 3 : 0);
     const events: { slot: number; motifSlot: number; answerEnding?: boolean }[] = [];
-    const scaledMask = mask.map(position => Math.floor(position * slotsPerBar / 8));
+    const scaledMask = riffRhythmSlots(settings, slotsPerBar);
     for (let slot = 0; slot < sectionSlots; slot++) {
       const motifSlot = slot % motifSlots;
       const local = motifSlot % slotsPerBar;
@@ -174,6 +166,26 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
     result.push(...(settings.connection === "anticipate" ? addAnticipations(ordered, arrangement, sectionIndex) : ordered));
   });
   return result;
+}
+
+export function nextRiffVariation(arrangement: Arrangement, sectionIndex: number, settings: RiffSettings, dimension: "rhythm" | "pitch"): RiffSettings {
+  const excerpt = { ...arrangement, sections: [arrangement.sections[sectionIndex]], riffThemes: undefined };
+  const signature = (riff: RiffSettings) => buildRiffNotes({ ...excerpt, riff })
+    .filter(note => note.kind !== "passing" && note.kind !== "anticipation")
+    .map(note => dimension === "rhythm" ? note.beat : note.midi);
+  const current = signature(settings);
+  const seed = dimension === "rhythm" ? settings.rhythmSeed : settings.pitchSeed;
+  const expanded = (dimension === "rhythm" ? settings.rhythmVersion : settings.pitchVersion) === 2;
+  const start = expanded ? seed % RIFF_VARIANT_COUNT : seed % 3;
+  for (let step = 1; step <= RIFF_VARIANT_COUNT; step++) {
+    const nextSeed = (start + step) % RIFF_VARIANT_COUNT;
+    const candidate: RiffSettings = dimension === "rhythm"
+      ? { ...settings, rhythmVersion: 2, rhythmSeed: nextSeed }
+      : { ...settings, pitchVersion: 2, pitchSeed: nextSeed };
+    const next = signature(candidate);
+    if (next.length !== current.length || next.some((value, i) => value !== current[i])) return candidate;
+  }
+  return settings;
 }
 
 // Anticipate an actual upcoming anchor, not an invented next-chord melody.

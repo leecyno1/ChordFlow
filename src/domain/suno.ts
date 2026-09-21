@@ -1,5 +1,6 @@
 import { PROGRESSIONS } from "./catalog";
 import { RIFF_NAMES, riffSettingsAt, riffMotifBars } from "../engine/riff";
+import { riffVariationPrompt } from "../engine/riffMotif";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
   effectiveSectionProductionAt,
@@ -484,7 +485,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
   const hasRiff = arrangement.sections.some((_section, index) => riffSettingsAt(arrangement, index));
   const sectionLines = sections.flatMap((section, index) => {
     const riff = riffSettingsAt(arrangement, index);
-    const connection = riff?.connection === "anticipate" ? "; anticipate the next chord's melody anchor by an eighth note where stepwise motion permits, within this section; preserve call rests and phrase endings" : "";
+    const connection = (riff?.connection === "anticipate" ? "; anticipate the next chord's melody anchor by an eighth note where stepwise motion permits, within this section; preserve call rests and phrase endings" : "") + (riff ? riffVariationPrompt(riff) : "");
     return [
     `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100 | Voicing ${section.voicingLabel}/${section.voicingCode} | Texture ${section.textureLabel}/${section.textureCode}${section.productionLocked ? " LOCKED" : ""}]`,
     `Chords: ${section.chords.join(" - ")}`,

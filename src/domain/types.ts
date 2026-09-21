@@ -12,6 +12,8 @@ export interface RiffSettings {
   variation: number;
   rhythmSeed: number;
   pitchSeed: number;
+  rhythmVersion?: 2;
+  pitchVersion?: 2;
   ornament?: "off" | "passing";
   ending?: "open" | "resolve";
   phrase?: "repeat" | "call-response";
