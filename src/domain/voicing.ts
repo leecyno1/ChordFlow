@@ -252,7 +252,7 @@ function applyBassOverride(
 }
 
 function inversionLabel(inversion: number): string {
-  return ["原位", "第一转位", "第二转位", "第三转位"][inversion] ?? "转位";
+  return ["原位", "第一转位", "第二转位", "第三转位", "第四转位"][inversion] ?? "转位";
 }
 
 export function buildVoicingPlan(arrangement: Arrangement): VoicingPlan {

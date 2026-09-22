@@ -74,7 +74,8 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       <input id="progression-input" value={input} onChange={event => setInput(event.target.value)} placeholder="1645 或 C–Am–F–G" />
       <button type="submit">应用和弦</button>
     </form>
-    <p className="riff-hint">数字按当前{arrangement.mode === "major" ? "大" : "小"}调音阶配和弦；小调 5 默认为小属和弦，强属请写 V 或 V7。支持 V7/vi、vii°7/V 等次属目标。</p>
+    <p className="riff-hint">数字按当前{arrangement.mode === "major" ? "大" : "小"}调音阶配和弦；小调 5 默认为小属和弦，强属请写 V 或 V7。支持 V7/vi、V9/vi、vii°7/V 等次属目标。</p>
+    <p className="riff-hint">九和弦示例：Cmaj9 Am9 Dm9 G9，或 Imaj9 vi9 ii9 V9。maj9 是大七加九音，m9 是小七加九音，9 是属七加九音；add9 不含七音。数字简写 1645 仍按三和弦生成。</p>
     {error && <p role="alert" className="riff-error">{error}</p>}
     <BlindListening arrangement={arrangement} sectionIndex={sectionIndex}
       onPlay={(preview, done) => onPreview(false, false, preview, done, true)}
@@ -83,7 +84,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       <summary>和弦筛选依据 · 连接 {assessment.motion.toFixed(1)} 半音 / 模板差异 {assessment.catalogDistance === null ? "无同长度参考" : `${Math.round(assessment.catalogDistance * 100)}%`}</summary>
       <p>连接：实际转位下，相邻和弦双向最近音平均距离，较小通常更平滑。模板差异：与同长度内置走向的级数差异（包含循环移位）；不是原创率。</p>
       <p>参考粗糙度 {assessment.roughness.toFixed(4)}：用 6 个泛音的假定音色计算干涉，实际音色会改变结果。POP909 已知转移 {assessment.knownTransitions}/{assessment.totalTransitions}，平均惊喜 {assessment.surpriseBits?.toFixed(2) ?? "未知"} bits；未出现不等于优质创新。</p>
-      <p>这些是筛选线索，不是好听分数；应结合前后段、风格与听感选择。</p>
+      <p>这些是筛选线索，不是好听分数；应结合前后段、风格与听感选择。语料转移按基础和弦家族归并，不代表九和弦等扩展色彩的单独使用率。</p>
       <p>前段衔接：{assessment.entryMotion === null ? "曲首" : `${assessment.entryMotion.toFixed(1)} 半音`}；后段衔接：{assessment.exitMotion === null ? "曲尾" : `${assessment.exitMotion.toFixed(1)} 半音`}。{assessment.resolutions.length > 0 && `属功能目标：${assessment.resolutions.join("；")}`}</p>
     </details>
     {mined?.source === arrangement && <div className="riff-candidates">

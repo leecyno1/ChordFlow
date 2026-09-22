@@ -1050,6 +1050,38 @@ try {
   await click(client, '.timeline-section:nth-child(2) .timeline-chord');
   await waitForExpression(client, 'document.querySelector(".riff-handoff") === null', 'muting the next theme to remove its pickup');
   assert.match(await textContent(client, '[data-testid="riff-handoff-status"]'), /本段保留原句尾/);
+
+  await fillInput(client, '#progression-input', 'Imaj9 vi9 ii9 V9');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.equal(await client.evaluate('document.querySelector(".riff-error") === null'), true);
+  const ninthLabels = 'Array.from(document.querySelectorAll(".riff-grid > g text"), node => node.textContent)';
+  assert.deepEqual(await client.evaluate(ninthLabels), ['Ebmaj9', 'Cm9', 'Fm9', 'Bb9']);
+  await click(client, '[data-testid="project-undo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  assert.deepEqual(await client.evaluate(ninthLabels), ['Fm', 'Fm', 'Fm', 'Fm']);
+  await click(client, '[data-testid="project-redo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  assert.deepEqual(await client.evaluate(ninthLabels), ['Ebmaj9', 'Cm9', 'Fm9', 'Bb9']);
+  await click(client, '[data-testid="project-save"]');
+  const ninthProject = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')"));
+  assert.deepEqual(ninthProject.arrangement.sections[1].numerals, ['Imaj9', 'vi9', 'ii9', 'V9']);
+  await rm(join(downloadDirectory, handoffFile.filename), { force: true });
+  const beforeNinths = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-midi"]');
+  const ninthFile = await waitForDownloadedFile(downloadDirectory, beforeNinths, name => name.endsWith('.mid'), 'ninth-chord MIDI');
+  const ninthMidi = new Midi(ninthFile.content);
+  const ninthHarmony = ninthMidi.tracks.find(track => track.name === 'ChordFlow Harmony');
+  const ninthPitchSets = [[2, 3, 5, 7, 10], [0, 2, 3, 7, 10], [0, 3, 5, 7, 8], [0, 2, 5, 8, 10]];
+  ninthPitchSets.forEach((expected, i) => {
+    const chordNotes = ninthHarmony.notes.filter(note => note.ticks === i * handoffSectionTicks / 4);
+    assert.equal(chordNotes.length, 5);
+    assert.deepEqual(chordNotes.map(note => note.midi % 12).sort((a, b) => a - b), expected);
+  });
+  await click(client, '[data-testid="riff-solo"]');
+  await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'ninth-chord riff playback');
+  await click(client, '[data-testid="suno-launch"]');
+  const ninthBlueprint = await textContent(client, '[data-testid="suno-blueprint"]');
+  for (const chord of ['Ebmaj9', 'Cm9', 'Fm9', 'Bb9']) assert.ok(ninthBlueprint.includes(chord));
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1075,7 +1107,8 @@ try {
       "✓ Secondary input, anticipations, solo WAV rests, local context playhead and listening reasons worked\n" +
       "✓ Versioned motif variants survived undo/redo, saved their independent versions and reached MIDI/WAV/Suno\n" +
       "✓ Section handoffs survived undo/redo and save, matched the grid and both MIDI exports, and respected next-theme muting\n" +
-      "✓ Riff accents changed only dynamics, survived undo/redo and save, and matched visible velocities, MIDI and Suno\n"
+      "✓ Riff accents changed only dynamics, survived undo/redo and save, and matched visible velocities, MIDI and Suno\n" +
+      "✓ Ninth chords survived input, undo/redo and save, played as riffs and retained all five pitches in MIDI and Suno labels\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

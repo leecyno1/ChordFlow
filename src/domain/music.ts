@@ -72,20 +72,20 @@ function degreeFromRoman(roman: string): number {
 
 export function romanToChord(key: string, mode: Mode, rawRoman: string): string {
   const normalized = rawRoman.replaceAll("♭", "b").replaceAll("♯", "#");
-  const secondary = normalized.match(/^(V7|vii°7)\/([b#]*[ivIV]+)$/);
+  const secondary = normalized.match(/^(V7|V9|vii°7)\/([b#]*[ivIV]+)$/);
   if (secondary) {
     const [, approach, targetRoman] = secondary;
     const targetChord = romanToChord(key, mode, targetRoman);
     const targetPitch = PITCH_CLASS[chordRoot(targetChord)] ?? 0;
     const approachPitch =
-      approach === "V7"
+      approach !== "vii°7"
         ? (targetPitch + 7) % 12
         : (targetPitch + 11) % 12;
     const preferFlats =
       targetRoman.startsWith("b") ||
       (FLAT_KEYS.has(key) && !targetRoman.startsWith("#"));
     const root = (preferFlats ? FLAT_NAMES : SHARP_NAMES)[approachPitch];
-    return root + (approach === "V7" ? "7" : "dim7");
+    return root + (approach === "vii°7" ? "dim7" : approach.slice(1));
   }
   const match = normalized.match(/^([b#]*)([ivIV]+)(.*)$/);
   if (!match) return key;
@@ -110,11 +110,13 @@ export function romanToChord(key: string, mode: Mode, rawRoman: string): string 
   if (suffix.includes("ø") || suffix.includes("m7b5")) return root + "m7b5";
   if (suffix.includes("°7") || suffix.includes("dim7")) return root + "dim7";
   if (suffix.includes("°") || suffix.includes("dim")) return root + "dim";
+  if (suffix === "maj9") return root + "maj9";
   if (suffix.startsWith("maj7")) return root + "maj7";
   if (suffix.startsWith("sus2")) return root + "sus2";
   if (suffix.startsWith("sus4")) return root + "sus4";
 
   const base = isMinor ? "m" : "";
+  if (suffix === "9") return root + base + "9";
   if (suffix.startsWith("7")) return root + base + "7";
   if (suffix.startsWith("6")) return root + base + "6";
   if (suffix.startsWith("add9")) return root + base + "add9";
@@ -164,7 +166,10 @@ export function chordPitchClasses(chord: string): number[] {
   const quality = chord.slice(rootName.length).split("/")[0];
   let intervals = [0, 4, 7];
 
-  if (quality.includes("m7b5")) intervals = [0, 3, 6, 10];
+  if (quality === "maj9") intervals = [0, 4, 7, 11, 14];
+  else if (quality === "m9") intervals = [0, 3, 7, 10, 14];
+  else if (quality === "9") intervals = [0, 4, 7, 10, 14];
+  else if (quality.includes("m7b5")) intervals = [0, 3, 6, 10];
   else if (quality.includes("dim7")) intervals = [0, 3, 6, 9];
   else if (quality.includes("dim")) intervals = [0, 3, 6];
   else if (quality.includes("maj7")) intervals = [0, 4, 7, 11];
@@ -202,9 +207,14 @@ export function prefersFlatSpelling(key: string, chord = ""): boolean {
 
 export function chordNoteNames(chord: string, octave = 3): string[] {
   const pitchClasses = chordPitchClasses(chord);
-  return pitchClasses.map((pitch, index) => {
-    const noteOctave = octave + (index > 0 && pitch < pitchClasses[0] ? 1 : 0);
-    return SHARP_NAMES[pitch] + noteOctave;
+  let previous = -Infinity;
+  return pitchClasses.map(pitch => {
+    let midi = (octave + 1) * 12 + pitch;
+    // A ninth belongs above the seventh/fifth, not beside the root. Keep
+    // root-position preview ordering consistent with the voicing planner.
+    while (midi <= previous) midi += 12;
+    previous = midi;
+    return SHARP_NAMES[pitch] + (Math.floor(midi / 12) - 1);
   });
 }
 

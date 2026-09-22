@@ -40,8 +40,8 @@ function voiceMotion(a: number[], b: number[]): number {
 }
 
 function approachTarget(roman: string, arrangement: Arrangement): string | undefined {
-  const secondary = roman.match(/^(?:V7|vii°7)\/([b#]*[ivIV]+)$/);
-  return secondary?.[1] ?? (roman === "V7" ? (arrangement.mode === "major" ? "I" : "i") : undefined);
+  const secondary = roman.match(/^(?:V7|V9|vii°7)\/([b#]*[ivIV]+)$/);
+  return secondary?.[1] ?? (["V7", "V9"].includes(roman) ? (arrangement.mode === "major" ? "I" : "i") : undefined);
 }
 
 function matchesTarget(target: string, next: string | undefined, arrangement: Arrangement): boolean {
@@ -117,7 +117,7 @@ export function buildMiningCandidates(arrangement: Arrangement, sectionIndex: nu
   const next = arrangement.sections[sectionIndex + 1]?.numerals[0];
   const entryTarget = previous ? approachTarget(previous, arrangement) : undefined;
   const starts = entryTarget ? [entryTarget] : [tonic, major ? "vi" : "VI"];
-  const nextTarget = next && /^[b#]*[ivIV]+(?:7|maj7|6|add9)?$/.test(next) ? coarseRoman(next) : undefined;
+  const nextTarget = next && /^[b#]*[ivIV]+(?:7|maj7|9|maj9|6|add9)?$/.test(next) ? coarseRoman(next) : undefined;
   const endings = next ? [...new Set([tonic, "V", ...(nextTarget ? ["V7/" + nextTarget] : [])])] : [tonic];
   const thirdChords = major ? diatonic : [...diatonic, "V"];
   const pool: Omit<MinedProgression, "name" | "description">[] = [];
