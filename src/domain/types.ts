@@ -19,6 +19,7 @@ export interface RiffSettings {
   phrase?: "repeat" | "call-response";
   connection?: "off" | "anticipate";
   handoff?: "off" | "pickup";
+  accent?: "original" | "pulse" | "offbeat";
 }
 
 export interface SectionProductionOverride {

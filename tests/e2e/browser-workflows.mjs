@@ -876,12 +876,30 @@ try {
   await waitForExpression(client, `document.querySelector('[data-testid="riff-variation"]').textContent !== ${JSON.stringify(variationBeforeUndo)}`, 'undo to restore the prior pitch variant');
   await click(client, '[data-testid="project-redo"]');
   await waitForExpression(client, `document.querySelector('[data-testid="riff-variation"]').textContent === ${JSON.stringify(variationBeforeUndo)}`, 'redo to restore the new pitch variant');
+  const riffGeometry = 'Array.from(document.querySelectorAll(".riff-grid rect"), note => [note.getAttribute("x"), note.getAttribute("y"), note.getAttribute("width")])';
+  const riffVelocities = 'Array.from(document.querySelectorAll(".riff-grid rect"), note => Number(note.dataset.velocity))';
+  const geometryBeforeAccent = await client.evaluate(riffGeometry);
+  const velocitiesBeforeAccent = await client.evaluate(riffVelocities);
+  await selectValue(client, '[data-testid="riff-accent"]', 'pulse');
+  const pulseVelocities = await client.evaluate(riffVelocities);
+  assert.notDeepEqual(pulseVelocities, velocitiesBeforeAccent);
+  assert.deepEqual(await client.evaluate(riffGeometry), geometryBeforeAccent);
+  await selectValue(client, '[data-testid="riff-accent"]', 'offbeat');
+  const offbeatVelocities = await client.evaluate(riffVelocities);
+  assert.notDeepEqual(offbeatVelocities, pulseVelocities);
+  assert.deepEqual(await client.evaluate(riffGeometry), geometryBeforeAccent);
+  await click(client, '[data-testid="project-undo"]');
+  assert.deepEqual(await client.evaluate(riffVelocities), pulseVelocities);
+  await click(client, '[data-testid="project-redo"]');
+  assert.deepEqual(await client.evaluate(riffVelocities), offbeatVelocities);
+  assert.match(await textContent(client, '[data-testid="riff-accent-status"]'), /弱拍推动/);
   await click(client, '[data-testid="project-save"]');
   const variantProject = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')"));
   assert.equal(variantProject.arrangement.riffThemes.A.rhythmVersion, 2);
   assert.equal(variantProject.arrangement.riffThemes.A.pitchVersion, 2);
   assert.ok(variantProject.arrangement.riffThemes.A.rhythmSeed < 24);
   assert.ok(variantProject.arrangement.riffThemes.A.pitchSeed < 24);
+  assert.equal(variantProject.arrangement.riffThemes.A.accent, 'offbeat');
   const displayedRiffPitches = await client.evaluate('Array.from(document.querySelectorAll(".riff-grid rect"), note => Number(note.querySelector("title").textContent.match(/^MIDI (\\d+)/)[1]))');
   await click(client, '[data-testid="riff-solo"]');
   await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'riff playback to advance');
@@ -898,6 +916,7 @@ try {
   assert.ok(riffMidi.tracks.find(track => track.name === 'ChordFlow Riff').notes.length > 0);
   const riffTrack = riffMidi.tracks.find(track => track.name === 'ChordFlow Riff');
   assert.deepEqual(riffTrack.notes.map(note => note.midi), displayedRiffPitches);
+  assert.deepEqual(riffTrack.notes.map(note => Math.round(note.velocity * 127)), offbeatVelocities);
   const [riffNumerator, riffDenominator] = riffMidi.header.timeSignatures[0].timeSignature;
   const riffBarTicks = riffMidi.header.ppq * riffNumerator * 4 / riffDenominator;
   const riffPulseTicks = riffMidi.header.ppq * (riffNumerator === 6 && riffDenominator === 8 ? 1.5 : 1);
@@ -982,6 +1001,7 @@ try {
   assert.match(themeBlueprint, /call-response: one-bar call with a final main-pulse rest/);
   assert.match(themeBlueprint, /anticipate the next chord's melody anchor/);
   assert.match(themeBlueprint, /motif variation/);
+  assert.match(themeBlueprint, /riff dynamics: emphasize existing melody attacks between dotted-quarter pulses/);
 
   await click(client, '[data-testid="suno-close"]');
   await click(client, '.timeline-section:nth-child(2) .timeline-chord');
@@ -1054,7 +1074,8 @@ try {
       "✓ Call-response survived undo/redo and matched visual notes, MIDI rests and Suno directions\n" +
       "✓ Secondary input, anticipations, solo WAV rests, local context playhead and listening reasons worked\n" +
       "✓ Versioned motif variants survived undo/redo, saved their independent versions and reached MIDI/WAV/Suno\n" +
-      "✓ Section handoffs survived undo/redo and save, matched the grid and both MIDI exports, and respected next-theme muting\n"
+      "✓ Section handoffs survived undo/redo and save, matched the grid and both MIDI exports, and respected next-theme muting\n" +
+      "✓ Riff accents changed only dynamics, survived undo/redo and save, and matched visible velocities, MIDI and Suno\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

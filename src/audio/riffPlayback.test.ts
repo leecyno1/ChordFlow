@@ -57,8 +57,9 @@ describe("riff articulation", () => {
     });
   });
 
-  it("uses a short-release lead and the generated pitches and durations for solo playback", async () => {
-    const arrangement = source();
+  it.each(["original", "pulse", "offbeat"] as const)("uses a short-release lead with generated pitches, durations and %s dynamics", async accent => {
+    const a = source();
+    const arrangement = { ...a, riff: { ...a.riff, accent } };
     const duration = await playArrangement(arrangement, undefined, true);
     await vi.advanceTimersByTimeAsync(duration);
     const chords = instruments.find(instrument => instrument.release === 1.3)!;

@@ -2,6 +2,7 @@ import { chordPitchClasses } from "../domain/music";
 import { quarterNotesPerBar, effectiveSectionProductionAt } from "../domain/production";
 import type { Arrangement, RiffSettings } from "../domain/types";
 import { riffRhythmSlots, riffContour, RIFF_VARIANT_COUNT } from "./riffMotif";
+import { riffAccentVelocity } from "./riffDynamics";
 
 export const DEFAULT_RIFF: RiffSettings = {
   style: "hook", bars: 2, density: "sparse", register: "high",
@@ -43,7 +44,8 @@ export function normalizeRiff(value: unknown): RiffSettings | undefined {
     ...(item.ending === "open" || item.ending === "resolve" ? { ending: item.ending } : {}),
     ...(item.phrase === "repeat" || item.phrase === "call-response" ? { phrase: item.phrase } : {}),
     ...(item.connection === "off" || item.connection === "anticipate" ? { connection: item.connection } : {}),
-    ...(item.handoff === "off" || item.handoff === "pickup" ? { handoff: item.handoff } : {})
+    ...(item.handoff === "off" || item.handoff === "pickup" ? { handoff: item.handoff } : {}),
+    ...(item.accent === "original" || item.accent === "pulse" || item.accent === "offbeat" ? { accent: item.accent } : {})
   };
 }
 
@@ -166,7 +168,14 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
     const ordered = sectionNotes.sort((a, b) => a.beat - b.beat);
     result.push(...(settings.connection === "anticipate" ? addAnticipations(ordered, arrangement, sectionIndex) : ordered));
   });
-  return addSectionHandoffs(result, arrangement);
+  const dynamics = arrangement.sections.map((_section, index) => ({
+    accent: riffSettingsAt(arrangement, index)?.accent,
+    energy: effectiveSectionProductionAt(arrangement, index).energy
+  }));
+  return addSectionHandoffs(result, arrangement).map(note => ({
+    ...note,
+    velocity: riffAccentVelocity(note, dynamics[note.sectionIndex].accent, dynamics[note.sectionIndex].energy, arrangement.production.timeSignature)
+  }));
 }
 
 // Plan against the whole song before cutting an excerpt. No contextual notes
