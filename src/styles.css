@@ -47,6 +47,7 @@
 .riff-grid line { stroke: #343842; stroke-width: 1; }
 .riff-grid text { fill: #b8b8b2; font: 12px var(--mono); }
 .riff-grid rect { fill: var(--cyan); }
+.riff-grid rect[data-color-tone] { stroke: var(--ivory); stroke-width: 1; }
 .riff-grid .riff-passing { fill: var(--amber); }
 .riff-grid .riff-resolution { fill: var(--rose); }
 .riff-grid .riff-anticipation { fill: #bda1ff; }

@@ -3,6 +3,7 @@ import { quarterNotesPerBar, effectiveSectionProductionAt } from "../domain/prod
 import type { Arrangement, RiffSettings } from "../domain/types";
 import { riffRhythmSlots, riffContour, RIFF_VARIANT_COUNT } from "./riffMotif";
 import { riffAccentVelocity } from "./riffDynamics";
+import { riffPitchChoices } from "./riffPitch";
 
 export const DEFAULT_RIFF: RiffSettings = {
   style: "hook", bars: 2, density: "sparse", register: "high",
@@ -45,7 +46,8 @@ export function normalizeRiff(value: unknown): RiffSettings | undefined {
     ...(item.phrase === "repeat" || item.phrase === "call-response" ? { phrase: item.phrase } : {}),
     ...(item.connection === "off" || item.connection === "anticipate" ? { connection: item.connection } : {}),
     ...(item.handoff === "off" || item.handoff === "pickup" ? { handoff: item.handoff } : {}),
-    ...(item.accent === "original" || item.accent === "pulse" || item.accent === "offbeat" ? { accent: item.accent } : {})
+    ...(item.accent === "original" || item.accent === "pulse" || item.accent === "offbeat" ? { accent: item.accent } : {}),
+    ...(item.toneFocus === "balanced" || item.toneFocus === "core" || item.toneFocus === "color" ? { toneFocus: item.toneFocus } : {})
   };
 }
 
@@ -124,7 +126,8 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
       const resolving = answerEnding || (settings.ending === "resolve" && index === events.length - 1);
       const target = resolving ? previous : center + offset;
       const pool = Array.from({ length: 25 }, (_, i) => center - 12 + i).filter(note => pcs.includes(note % 12));
-      const choices = resolving ? pool.filter(note => note % 12 === pcs[0]) : pool;
+      const choices = resolving ? pool.filter(note => note % 12 === pcs[0])
+        : riffPitchChoices(pool, pcs, settings.toneFocus, slot % pulse === 0, target, previous);
       const midi = choices.sort((a, b) =>
         (Math.abs(a - target) * 1.5 + Math.abs(a - previous) * 0.5) -
         (Math.abs(b - target) * 1.5 + Math.abs(b - previous) * 0.5) || a - b

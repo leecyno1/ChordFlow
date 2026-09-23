@@ -1082,6 +1082,39 @@ try {
   await click(client, '[data-testid="suno-launch"]');
   const ninthBlueprint = await textContent(client, '[data-testid="suno-blueprint"]');
   for (const chord of ['Ebmaj9', 'Cm9', 'Fm9', 'Bb9']) assert.ok(ninthBlueprint.includes(chord));
+  await click(client, '[data-testid="suno-close"]');
+  const riffTiming = 'Array.from(document.querySelectorAll(".riff-grid rect"), note => [note.getAttribute("x"), note.getAttribute("width")])';
+  const timingBeforeFocus = await client.evaluate(riffTiming);
+  await selectValue(client, '[data-testid="riff-tone-focus"]', 'core');
+  assert.equal(await client.evaluate('document.querySelectorAll(".riff-grid [data-color-tone]").length'), 0);
+  assert.deepEqual(await client.evaluate(riffTiming), timingBeforeFocus);
+  await selectValue(client, '[data-testid="riff-tone-focus"]', 'color');
+  await waitForExpression(client, 'document.querySelector(".riff-grid [data-color-tone]") !== null', 'nearby weak-pulse color tones');
+  assert.deepEqual(await client.evaluate(riffTiming), timingBeforeFocus);
+  await click(client, '[data-testid="project-undo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  assert.equal(await client.evaluate('document.querySelector("[data-testid=riff-tone-focus]").value'), 'core');
+  assert.equal(await client.evaluate('document.querySelectorAll(".riff-grid [data-color-tone]").length'), 0);
+  await click(client, '[data-testid="project-redo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await waitForExpression(client, 'document.querySelector(".riff-grid [data-color-tone]") !== null', 'redo to restore tone focus');
+  await click(client, '[data-testid="project-save"]');
+  const focusProject = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')"));
+  assert.equal(focusProject.arrangement.riffThemes.B.toneFocus, 'color');
+  const focusedPitches = await client.evaluate('Array.from(document.querySelectorAll(".riff-grid rect"), note => Number(note.querySelector("title").textContent.match(/^MIDI (\\d+)/)[1]))');
+  await rm(join(downloadDirectory, ninthFile.filename), { force: true });
+  const beforeFocus = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-midi"]');
+  const focusedFile = await waitForDownloadedFile(downloadDirectory, beforeFocus, name => name.endsWith('.mid'), 'tone-focused MIDI');
+  const focusedMidi = new Midi(focusedFile.content);
+  assert.deepEqual(focusedMidi.tracks.find(track => track.name === 'ChordFlow Riff').notes.map(note => note.midi), focusedPitches);
+  assert.deepEqual(focusedMidi.tracks.find(track => track.name === 'ChordFlow Harmony').toJSON(), ninthHarmony.toJSON());
+  await click(client, '[data-testid="riff-solo"]');
+  await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'tone-focused riff playback');
+  await click(client, '[data-testid="suno-launch"]');
+  const focusBlueprint = await textContent(client, '[data-testid="suno-blueprint"]');
+  assert.match(focusBlueprint, /riff tone focus:/);
+  assert.match(focusBlueprint, /within five semitones/);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1108,7 +1141,8 @@ try {
       "✓ Versioned motif variants survived undo/redo, saved their independent versions and reached MIDI/WAV/Suno\n" +
       "✓ Section handoffs survived undo/redo and save, matched the grid and both MIDI exports, and respected next-theme muting\n" +
       "✓ Riff accents changed only dynamics, survived undo/redo and save, and matched visible velocities, MIDI and Suno\n" +
-      "✓ Ninth chords survived input, undo/redo and save, played as riffs and retained all five pitches in MIDI and Suno labels\n"
+      "✓ Ninth chords survived input, undo/redo and save, played as riffs and retained all five pitches in MIDI and Suno labels\n" +
+      "✓ Riff tone focus preserved harmony and base timing, survived undo/redo and save, and matched color markers, MIDI and Suno\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

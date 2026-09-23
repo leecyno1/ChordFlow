@@ -3,6 +3,8 @@ import { exportMidi, exportReferenceWav } from "../audio/player";
 import { DEFAULT_RIFF, RIFF_NAMES, buildRiffExcerpt, riffSettingsAt, setThemeRiff, riffMotifBars, nextRiffVariation } from "../engine/riff";
 import { riffVariationLabel } from "../engine/riffMotif";
 import { RIFF_ACCENT_NAMES } from "../engine/riffDynamics";
+import { RIFF_TONE_FOCUS_NAMES } from "../engine/riffPitch";
+import { chordPitchClasses } from "../domain/music";
 import { applySectionProgression, parseProgression } from "../engine/progressionInput";
 import { assessHarmony, mineProgressions } from "../engine/harmonyMining";
 import type { MinedProgression } from "../engine/harmonyMining";
@@ -30,6 +32,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   const [wavSolo, setWavSolo] = useState(false);
   const [mined, setMined] = useState<{ source: Arrangement; candidates: MinedProgression[] } | null>(null);
   const section = arrangement.sections[sectionIndex];
+  const colorTones = section.chords.map(chord => chordPitchClasses(chord).slice(3));
   const activeSettings = riffSettingsAt(arrangement, sectionIndex);
   const settings = (scope === "theme" ? activeSettings : arrangement.riff) ?? DEFAULT_RIFF;
   const controlsEnabled = scope === "theme" ? activeSettings !== undefined : arrangement.riff !== undefined;
@@ -117,6 +120,9 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
         <label>动机长度<select data-testid="riff-bars" value={riffMotifBars(settings)} disabled={settings.phrase === "call-response"} onChange={event => update({ bars: Number(event.target.value) as 1 | 2 })}><option value="1">1 小节</option><option value="2">2 小节</option></select></label>
         <label>疏密<select value={settings.density} onChange={event => update({ density: event.target.value as RiffSettings["density"] })}><option value="sparse">留白</option><option value="full">紧凑</option></select></label>
         <label>音域<select value={settings.register} onChange={event => update({ register: event.target.value as RiffSettings["register"] })}><option value="low">中低</option><option value="high">中高</option></select></label>
+        <label>取音重心<select data-testid="riff-tone-focus" value={settings.toneFocus ?? "balanced"} onChange={event => update({ toneFocus: event.target.value as RiffSettings["toneFocus"] })}>
+          {Object.entries(RIFF_TONE_FOCUS_NAMES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select></label>
         <label>重音方式<select data-testid="riff-accent" value={settings.accent ?? "original"} onChange={event => update({ accent: event.target.value as RiffSettings["accent"] })}>
           {Object.entries(RIFF_ACCENT_NAMES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select></label>
@@ -134,6 +140,10 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       {scope === "global" && arrangement.riffThemes?.[section.symbol] !== undefined && <p className="riff-hint">当前主题已有独立设置；修改全曲默认不会覆盖它。下方试听仍使用当前主题的设置。</p>}
     </>}
     {activeSettings && <>
+      {activeSettings.toneFocus && activeSettings.toneFocus !== "balanced" && <p className="riff-hint" data-testid="riff-tone-focus-status">
+        {RIFF_TONE_FOCUS_NAMES[activeSettings.toneFocus]}：{activeSettings.toneFocus === "core" ? "旋律主体只取和弦的基础三音，挂留和减和弦保留原性质。" : "主拍取骨干，弱拍优先选与前音和动机目标均不超过 5 半音的六、七、九音；没有合适色彩音就回到骨干。"}
+        不改和弦或基础节奏；问答与根音收束优先，经过音、预示音和段间引入另行重算。
+      </p>}
       {activeSettings.accent && activeSettings.accent !== "original" && <p className="riff-hint" data-testid="riff-accent-status">
         {RIFF_ACCENT_NAMES[activeSettings.accent]}：只调整已有旋律音的力度，不改音高、位置和留白；装饰音保持轻，句尾落点不压弱。6/8 按两个附点四分主拍分组，弱拍推动不自动补音。
       </p>}
@@ -144,11 +154,14 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
       <svg className="riff-grid" viewBox="0 0 960 168" role="img" aria-label={`${section.title} Riff 音符网格，${notes.length} 个音符`}>
         {section.chords.map((chord, index) => <g key={index}><line x1={index * 960 / section.chords.length} x2={index * 960 / section.chords.length} y1="0" y2="168" /><text x={index * 960 / section.chords.length + 8} y="18">{chord}</text></g>)}
         {activeSettings.phrase === "call-response" && Array.from({ length: arrangement.production.barsPerSection }, (_, bar) => <text key={bar} className="riff-phrase-label" x={bar * 960 / arrangement.production.barsPerSection + 8} y="35">{bar % 2 === 0 ? "问句" : "答句"}</text>)}
-        {notes.map((note, index) => <rect key={index} data-phrase={note.phrase} data-velocity={Math.floor(note.velocity * 127)} fillOpacity={0.35 + note.velocity * 0.65} className={note.kind ? `riff-${note.kind}` : undefined} x={note.beat / beats * 960} y={46 + (maxNote - note.midi) / (maxNote - minNote) * 104}
-          width={Math.max(2, note.duration / beats * 960)} height="6" rx="2"><title>MIDI {note.midi} · 第 {(note.beat + 1).toFixed(1)} 拍 · 力度 {Math.floor(note.velocity * 127)}/127{note.kind === "handoff" ? " · 下一段引入音" : ""}</title></rect>)}
+        {notes.map((note, index) => {
+          const colorTone = !note.kind && colorTones[note.chordIndex].includes(note.midi % 12);
+          return <rect key={index} data-color-tone={colorTone || undefined} data-phrase={note.phrase} data-velocity={Math.floor(note.velocity * 127)} fillOpacity={0.35 + note.velocity * 0.65} className={note.kind ? `riff-${note.kind}` : undefined} x={note.beat / beats * 960} y={46 + (maxNote - note.midi) / (maxNote - minNote) * 104}
+            width={Math.max(2, note.duration / beats * 960)} height="6" rx="2"><title>MIDI {note.midi} · 第 {(note.beat + 1).toFixed(1)} 拍 · 力度 {Math.floor(note.velocity * 127)}/127{colorTone ? " · 和弦色彩音" : ""}{note.kind === "handoff" ? " · 下一段引入音" : ""}</title></rect>;
+        })}
         {playingBeat !== null && <line className="riff-playhead" x1={playingBeat / beats * 960} x2={playingBeat / beats * 960} y1="22" y2="168" />}
       </svg>
-      <p className="riff-hint">青色为和弦音，金色为弱拍经过音，紫色为段内预示音，橙色为下一段引入音，粉色为句尾落点。越亮力度越大，悬停可查看数值；修饰只在条件合适时出现。</p>
+      <p className="riff-hint">青色为和弦音，描边标出主体中的六、七、九音；金色为经过音，紫色为段内预示音，橙色为下一段引入音，粉色为句尾落点。越亮力度越大，悬停可查看数值；修饰只在条件合适时出现。</p>
       <div className="riff-actions">
         <button type="button" data-testid="riff-solo" onClick={() => onPreview(true, loop)}>Riff 独奏</button>
         <button type="button" data-testid="riff-mix" onClick={() => onPreview(false, loop)}>和弦合听</button>

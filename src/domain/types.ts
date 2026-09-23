@@ -20,6 +20,7 @@ export interface RiffSettings {
   connection?: "off" | "anticipate";
   handoff?: "off" | "pickup";
   accent?: "original" | "pulse" | "offbeat";
+  toneFocus?: "balanced" | "core" | "color";
 }
 
 export interface SectionProductionOverride {

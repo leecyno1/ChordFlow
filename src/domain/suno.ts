@@ -2,6 +2,7 @@ import { PROGRESSIONS } from "./catalog";
 import { RIFF_NAMES, riffSettingsAt, riffMotifBars, buildRiffNotes } from "../engine/riff";
 import { riffVariationPrompt } from "../engine/riffMotif";
 import { riffAccentPrompt } from "../engine/riffDynamics";
+import { riffToneFocusPrompt } from "../engine/riffPitch";
 import {
   DEFAULT_PRODUCTION_SETTINGS,
   effectiveSectionProductionAt,
@@ -492,7 +493,7 @@ export function buildSunoPromptKit(arrangement: Arrangement): SunoPromptKit {
     const handoffDirection = riff?.handoff !== "pickup" ? "" : handoff
       ? `; section handoff: repeat the next section's opening pitch (MIDI ${handoff.midi}) on this section's last eighth note; leave the next motif unchanged`
       : "; section handoff: retain the original ending here (no eligible pickup)";
-    const connection = (riff?.connection === "anticipate" ? "; anticipate the next chord's melody anchor by an eighth note where stepwise motion permits, within this section; preserve call rests and phrase endings" : "") + (riff ? riffVariationPrompt(riff) + riffAccentPrompt(riff.accent, timeSignature) : "");
+    const connection = (riff?.connection === "anticipate" ? "; anticipate the next chord's melody anchor by an eighth note where stepwise motion permits, within this section; preserve call rests and phrase endings" : "") + (riff ? riffVariationPrompt(riff) + riffAccentPrompt(riff.accent, timeSignature) + riffToneFocusPrompt(riff.toneFocus) : "");
     return [
     `[${section.label} | ${barsPerSection} bars | Energy ${section.energy}/100 | Voicing ${section.voicingLabel}/${section.voicingCode} | Texture ${section.textureLabel}/${section.textureCode}${section.productionLocked ? " LOCKED" : ""}]`,
     `Chords: ${section.chords.join(" - ")}`,
