@@ -1223,6 +1223,64 @@ try {
   await click(client, '[data-testid="suno-launch"]');
   assert.ok((await textContent(client, '[data-testid="suno-blueprint"]')).includes('D7'));
   await click(client, '[data-testid="suno-close"]');
+
+  await selectValue(client, '[data-testid="tonic-select"]', 'C');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await click(client, '[data-testid="riff-style-hook"]');
+  await fillInput(client, '#progression-input', 'C Am F G7');
+  await click(client, '.riff-input button[type="submit"]');
+  const slashGridLabels = 'Array.from(document.querySelectorAll(".riff-grid > g text"), node => node.textContent)';
+  const slashGridNotes = 'Array.from(document.querySelectorAll(".riff-grid rect"), node => [node.getAttribute("x"), node.getAttribute("width"), node.querySelector("title").textContent])';
+  const beforeSlashNotes = await client.evaluate(slashGridNotes);
+  await fillInput(client, '#progression-input', 'C/E Am/C F/A G7/B');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.equal(await client.evaluate('document.querySelector(".riff-error") === null'), true);
+  assert.deepEqual(await client.evaluate(slashGridLabels), ['C/E', 'Am/C', 'F/A', 'G7/B']);
+  assert.deepEqual(await client.evaluate(slashGridNotes), beforeSlashNotes);
+  assert.equal(await textContent(client, '[data-testid="bass-anchor-mode"]'), 'MANUAL');
+  await click(client, '[data-testid="project-save"]');
+  const slashProject = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')")).arrangement;
+  assert.deepEqual([0, 1, 2, 3].map(index => slashProject.bassOverrides[`${slashProject.sections[1].id}:${index}`]), [4, 0, 9, 11]);
+  await fillInput(client, '#progression-input', 'C/E G/A');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.match(await textContent(client, '.riff-error'), /不是 G 的和弦音/);
+  await click(client, '[data-testid="project-save"]');
+  assert.deepEqual(JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')")).arrangement, slashProject);
+  await click(client, '[data-testid="project-undo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  assert.deepEqual(await client.evaluate(slashGridLabels), ['C', 'Am', 'F', 'G7']);
+  assert.equal(await textContent(client, '[data-testid="bass-anchor-mode"]'), 'AUTO');
+  await click(client, '[data-testid="project-redo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  assert.deepEqual(await client.evaluate(slashGridLabels), ['C/E', 'Am/C', 'F/A', 'G7/B']);
+  await rm(join(downloadDirectory, contextExcerptFile.filename), { force: true });
+  const beforeSlashMidi = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-midi"]');
+  const slashMidiFile = await waitForDownloadedFile(downloadDirectory, beforeSlashMidi, name => name.endsWith('.mid'), 'slash-chord MIDI');
+  const slashMidi = new Midi(slashMidiFile.content);
+  assert.deepEqual(slashMidi.tracks.find(track => track.name === 'ChordFlow Bass Guide').notes.map(note => note.midi % 12), [4, 0, 9, 11]);
+  await click(client, '[data-testid="riff-mix"]');
+  await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'slash-chord mixed preview');
+  await click(client, '.play-button');
+  await rm(join(downloadDirectory, 'chordflow-riff-reference.wav'), { force: true });
+  const beforeSlashWav = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-wav"]');
+  const slashWav = await waitForDownloadedFile(downloadDirectory, beforeSlashWav, name => name === 'chordflow-riff-reference.wav', 'slash-chord WAV');
+  assert.ok(slashWav.content.subarray(44).some(byte => byte !== 0));
+  await click(client, '[data-testid="suno-launch"]');
+  const slashBlueprint = await textContent(client, '[data-testid="suno-blueprint"]');
+  for (const chord of ['C/E', 'Am/C', 'F/A', 'G7/B']) assert.ok(slashBlueprint.includes(chord));
+  assert.ok(slashBlueprint.includes('BASS ANCHORS'));
+  await click(client, '[data-testid="suno-close"]');
+  await selectValue(client, '[data-testid="tonic-select"]', 'D');
+  assert.deepEqual(await client.evaluate(slashGridLabels), ['D/F#', 'Bm/D', 'G/B', 'A7/C#']);
+  await click(client, '[data-testid="project-save"]');
+  await fillInput(client, '#progression-input', '1645');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.equal(await textContent(client, '[data-testid="bass-anchor-mode"]'), 'AUTO');
+  await click(client, '[data-testid="project-restore"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  assert.deepEqual(await client.evaluate(slashGridLabels), ['D/F#', 'Bm/D', 'G/B', 'A7/C#']);
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1253,7 +1311,8 @@ try {
       "✓ Riff tone focus preserved harmony and base timing, survived undo/redo and save, and matched color markers, MIDI and Suno\n" +
       "✓ Boundary previews shared stop/navigation controls, did not interrupt newer riffs, and audio failures allowed retry\n" +
       "✓ Excerpt harmony, bass and riff MIDI matched the full-song section after an odd-length lead-in; mixed preview and WAV worked\n" +
-      "✓ Boundary previews matched replacement edits and actual secondary targets, stayed read-only, and survived save/undo/redo into Suno\n"
+      "✓ Boundary previews matched replacement edits and actual secondary targets, stayed read-only, and survived save/undo/redo into Suno\n" +
+      "✓ Slash-chord input preserved riffs, rejected external basses atomically, and carried bass anchors through history, restore, transposition, MIDI/WAV and Suno\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

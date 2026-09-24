@@ -50,6 +50,7 @@ const PITCH_CLASS: Record<string, number> = {
   "A#": 10,
   Bb: 10,
   B: 11,
+  "B#": 0,
   Cb: 11
 };
 

@@ -1,22 +1,47 @@
-import { chordPitchClasses, chordRoot, romanToChord } from "../domain/music";
-import { removeBassOverridesForSections } from "../domain/bass";
+import { chordPitchClasses, chordRoot, pitchClassForName, romanToChord } from "../domain/music";
+import { removeBassOverridesForSections, setBassOverride } from "../domain/bass";
 import type { Arrangement, Mode } from "../domain/types";
 
-export function parseProgression(input: string, key: string, mode: Mode): string[] {
+function progressionTokens(input: string): string[] {
   const text = input.trim().replaceAll("♭", "b").replaceAll("♯", "#");
-  const degrees = mode === "major" ? ["I", "ii", "iii", "IV", "V", "vi", "vii°"] : ["i", "ii°", "III", "iv", "v", "VI", "VII"];
   const tokens = /^[1-7]+$/.test(text) ? [...text] : text.split(/[\s,，|–—-]+/).filter(Boolean);
   if (tokens.length < 2 || tokens.length > 8) throw new Error("请输入 2–8 个和弦，例如 1645 或 C–Am–F–G");
-  return tokens.map(token => {
-    if (/^[1-7]$/.test(token)) return degrees[Number(token) - 1];
-    if (/^(?:V7|V9|vii°7)\/[b#]?(?:VII|III|VI|IV|II|V|I|vii|iii|vi|iv|ii|v|i)$/.test(token)) return token;
-    if (/^[b#]?(?:VII|III|VI|IV|II|V|I)maj9$/.test(token)) return token;
-    if (/^[b#]?(?:VII|III|VI|IV|II|V|I|vii|iii|vi|iv|ii|v|i)(?:maj7|m7b5|sus2|sus4|add9|°7|°|7|6|9)?$/.test(token)) return token;
-    if (!/^[A-G][b#]?(?:maj9|maj7|m7b5|dim7|dim|sus2|sus4|madd9|add9|m9|m7|m6|m|7|6|9)?$/.test(token)) {
-      throw new Error(`无法识别 ${token}；支持级数、罗马数字和基础和弦名`);
+  return tokens;
+}
+
+function parseChordToken(token: string, key: string, mode: Mode): string {
+  const degrees = mode === "major" ? ["I", "ii", "iii", "IV", "V", "vi", "vii°"] : ["i", "ii°", "III", "iv", "v", "VI", "VII"];
+  if (/^[1-7]$/.test(token)) return degrees[Number(token) - 1];
+  if (/^(?:V7|V9|vii°7)\/[b#]?(?:VII|III|VI|IV|II|V|I|vii|iii|vi|iv|ii|v|i)$/.test(token)) return token;
+  if (/^[b#]?(?:VII|III|VI|IV|II|V|I)maj9$/.test(token)) return token;
+  if (/^[b#]?(?:VII|III|VI|IV|II|V|I|vii|iii|vi|iv|ii|v|i)(?:maj7|m7b5|sus2|sus4|add9|°7|°|7|6|9)?$/.test(token)) return token;
+  if (!/^[A-G][b#]?(?:maj9|maj7|m7b5|dim7|dim|sus2|sus4|madd9|add9|m9|m7|m6|m|7|6|9)?$/.test(token)) {
+    throw new Error(`无法识别 ${token}；支持级数、罗马数字和基础和弦名`);
+  }
+  return chordNameToRoman(token, key, mode);
+}
+
+export function parseProgression(input: string, key: string, mode: Mode): string[] {
+  return progressionTokens(input).map(token => parseChordToken(token, key, mode));
+}
+
+// Keep inversions in existing bass overrides, never in Roman secondary targets.
+// Parse the whole input before applying anything so an invalid bass is atomic.
+export function applyProgressionText(arrangement: Arrangement, sectionIndex: number, input: string): Arrangement {
+  const parsed = progressionTokens(input).map(token => {
+    const slash = token.match(/^([A-G][^/]*)\/([A-G][b#]?)$/);
+    const numeral = parseChordToken(slash?.[1] ?? token, arrangement.key, arrangement.mode);
+    if (!slash) return { numeral, bass: null };
+    const bass = pitchClassForName(slash[2]);
+    const chord = romanToChord(arrangement.key, arrangement.mode, numeral);
+    if (bass === null || !chordPitchClasses(chord).includes(bass)) {
+      throw new Error(`${slash[2]} 不是 ${slash[1]} 的和弦音；目前只支持和弦内音转位，如 C/E`);
     }
-    return chordNameToRoman(token, key, mode);
+    return { numeral, bass };
   });
+  const applied = applySectionProgression(arrangement, sectionIndex, parsed.map(item => item.numeral));
+  return parsed.reduce((current, item, index) => item.bass === null
+    ? current : setBassOverride(current, sectionIndex, index, item.bass), applied);
 }
 
 // Resolve an already validated chord name by sounding root, including a

@@ -5,7 +5,7 @@ import { riffVariationLabel } from "../engine/riffMotif";
 import { RIFF_ACCENT_NAMES } from "../engine/riffDynamics";
 import { RIFF_TONE_FOCUS_NAMES } from "../engine/riffPitch";
 import { chordPitchClasses } from "../domain/music";
-import { applySectionProgression, parseProgression } from "../engine/progressionInput";
+import { applySectionProgression, applyProgressionText } from "../engine/progressionInput";
 import { assessHarmony, mineProgressions } from "../engine/harmonyMining";
 import type { MinedProgression } from "../engine/harmonyMining";
 import { quarterNotesPerBar } from "../domain/production";
@@ -37,6 +37,10 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   const settings = (scope === "theme" ? activeSettings : arrangement.riff) ?? DEFAULT_RIFF;
   const controlsEnabled = scope === "theme" ? activeSettings !== undefined : arrangement.riff !== undefined;
   const { arrangement: excerpt, riffNotes: notes, voicingPlan } = useMemo(() => buildRiffExcerpt(arrangement, sectionIndex), [arrangement, sectionIndex]);
+  const chordLabels = section.chords.map((chord, index) => {
+    const voice = voicingPlan.sections[0][index];
+    return voice.isBassOverridden ? voice.displayChord : chord;
+  });
   const assessment = useMemo(() => assessHarmony(arrangement, sectionIndex), [arrangement, sectionIndex]);
   const beats = quarterNotesPerBar(arrangement.production.timeSignature) * arrangement.production.barsPerSection;
   const minNote = notes.length ? Math.min(...notes.map(note => note.midi)) - 2 : 60;
@@ -65,19 +69,20 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   return <section className="riff-workshop" aria-label="和弦与 Riff 工坊">
     <div className="riff-heading">
       <div><span className="eyebrow">CHORDS → RIFF</span><h2>把和弦变成一句记得住的乐句</h2>
-        <p>当前：{section.title} · {section.chords.join(" — ")}。动机保留，音高跟随和弦。</p></div>
+        <p>当前：{section.title} · {chordLabels.join(" — ")}。动机保留，音高跟随和弦。</p></div>
       <button type="button" data-testid="mine-chords" onClick={() => setMined({ source: arrangement, candidates: mineProgressions(arrangement, sectionIndex) })}>挖掘三组和弦</button>
     </div>
     <form className="riff-input" onSubmit={event => {
       event.preventDefault();
-      try { apply(parseProgression(input, arrangement.key, arrangement.mode)); }
+      try { onChange(applyProgressionText(arrangement, sectionIndex, input)); setError(""); }
       catch (cause) { setError((cause as Error).message); }
     }}>
       <label htmlFor="progression-input">写入当前段落</label>
-      <input id="progression-input" value={input} onChange={event => setInput(event.target.value)} placeholder="1645 或 C–Am–F–G" />
+      <input id="progression-input" value={input} onChange={event => setInput(event.target.value)} placeholder="1645 或 C/E–Am/C–F–G" />
       <button type="submit">应用和弦</button>
     </form>
     <p className="riff-hint">数字按当前{arrangement.mode === "major" ? "大" : "小"}调音阶配和弦；小调 5 默认为小属和弦，强属请写 V 或 V7。支持 V7/vi、V9/vi、vii°7/V 等次属目标。</p>
+    <p className="riff-hint">转位可写 C/E、Am/C、G7/B、Cmaj9/D，斜杠后是最低音；仅支持和弦内音，不支持 C/D 等外音低音。V7/vi 的斜杠表示次属目标，不是低音。低音随移调、试听、MIDI 与 Suno 同步，Riff 仍从完整和弦取音；重新输入未写低音的和弦会恢复自动低音。</p>
     <p className="riff-hint">九和弦示例：Cmaj9 Am9 Dm9 G9，或 Imaj9 vi9 ii9 V9。maj9 是大七加九音，m9 是小七加九音，9 是属七加九音；add9 不含七音。数字简写 1645 仍按三和弦生成。</p>
     {error && <p role="alert" className="riff-error">{error}</p>}
     <BlindListening arrangement={arrangement} sectionIndex={sectionIndex}
@@ -152,7 +157,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
         单段试听和导出保留整曲中的衔接；修改后段会重新计算。循环当前段也保留此音，不另接回本段开头。
       </p>}
       <svg className="riff-grid" viewBox="0 0 960 168" role="img" aria-label={`${section.title} Riff 音符网格，${notes.length} 个音符`}>
-        {section.chords.map((chord, index) => <g key={index}><line x1={index * 960 / section.chords.length} x2={index * 960 / section.chords.length} y1="0" y2="168" /><text x={index * 960 / section.chords.length + 8} y="18">{chord}</text></g>)}
+        {chordLabels.map((chord, index) => <g key={index}><line x1={index * 960 / section.chords.length} x2={index * 960 / section.chords.length} y1="0" y2="168" /><text x={index * 960 / section.chords.length + 8} y="18">{chord}</text></g>)}
         {activeSettings.phrase === "call-response" && Array.from({ length: arrangement.production.barsPerSection }, (_, bar) => <text key={bar} className="riff-phrase-label" x={bar * 960 / arrangement.production.barsPerSection + 8} y="35">{bar % 2 === 0 ? "问句" : "答句"}</text>)}
         {notes.map((note, index) => {
           const colorTone = !note.kind && colorTones[note.chordIndex].includes(note.midi % 12);
