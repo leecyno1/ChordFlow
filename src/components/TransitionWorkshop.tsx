@@ -34,7 +34,7 @@ export function TransitionWorkshop({
         <div>
           <span className="eyebrow">05 · TRANSITION WORKSHOP</span>
           <h2>段落边界工坊</h2>
-          <p>改写当前段落最后一拍，为下一个结构入口制造方向、阴影或半音张力。</p>
+          <p>替换当前段落最后一个和弦，保留其原有时长，不新增和弦或小节。预览按「前一和弦 → 新段尾 → 下段首和弦」等时短播，使用应用后的转位与低音，不含 Riff；原速节奏请应用后连段听。</p>
         </div>
         {section && nextSection ? (
           <div className="boundary-route">
@@ -62,6 +62,7 @@ export function TransitionWorkshop({
             const isApplied = section.transitionLabel === suggestion.name;
             return (
               <article
+                data-testid={`transition-${suggestion.id}`}
                 className={"transition-card " + (isApplied ? "applied" : "")}
                 key={suggestion.id}
                 style={{ "--transition-color": suggestion.color } as React.CSSProperties}
@@ -85,7 +86,7 @@ export function TransitionWorkshop({
                     </span>
                   ))}
                 </div>
-                <p>{suggestion.description}</p>
+                <p>{suggestion.description}{suggestion.id === "direct" ? " 保留当前结尾；恢复之前的方案请用撤销。" : " 只替换段尾和弦。"}</p>
                 <div className="tension-meter">
                   <span>张力 {suggestion.tension}</span>
                   <i><b style={{ width: suggestion.tension + "%" }} /></i>

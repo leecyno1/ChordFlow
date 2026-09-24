@@ -6,7 +6,7 @@ import {
   quarterNotesPerBar,
   timeSignatureParts
 } from "../domain/production";
-import { buildVoicingPlan, type VoicingPlan } from "../domain/voicing";
+import { buildVoicingPlan, type ChordVoicing, type VoicingPlan } from "../domain/voicing";
 import type { Arrangement } from "../domain/types";
 import { buildRiffNotes, type RiffNote } from "../engine/riff";
 
@@ -135,7 +135,7 @@ export async function auditionArrangementChord(
   );
 }
 
-export async function auditionProgression(chords: string[]): Promise<number> {
+export async function auditionProgression(chords: string[], plannedVoicings?: ChordVoicing[]): Promise<number> {
   stopPlayback();
   const run = playbackRun;
   const instrument = await getSynth();
@@ -145,7 +145,8 @@ export async function auditionProgression(chords: string[]): Promise<number> {
   chords.forEach((chord, index) => {
     const timer = window.setTimeout(() => {
       if (run !== playbackRun) return;
-      instrument.triggerAttackRelease(chordNoteNames(chord, 3), 0.66);
+      const voice = plannedVoicings?.[index];
+      instrument.triggerAttackRelease(voice ? [voice.bassNote, ...voice.noteNames] : chordNoteNames(chord, 3), 0.66);
     }, 50 + index * 700);
     playbackTimers.push(timer);
   });

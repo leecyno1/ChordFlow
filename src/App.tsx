@@ -90,7 +90,8 @@ import type {
   Arrangement,
   Mode,
   ProductionSettings,
-  SectionProductionOverride
+  SectionProductionOverride,
+  TransitionSuggestion
 } from "./domain/types";
 import {
   generateArrangement,
@@ -102,6 +103,7 @@ import {
 } from "./engine/generate";
 import {
   applyTransitionSuggestion,
+  buildTransitionPreview,
   getTransitionSuggestions
 } from "./engine/transitions";
 
@@ -642,13 +644,14 @@ function App() {
     }
   }
 
-  async function previewBoundary(chords: string[]) {
+  async function previewBoundary(suggestion: TransitionSuggestion) {
     haltPlayback();
     setProjectError(null);
     const token = playbackToken.current;
     setPlaying(true);
     try {
-      const duration = await auditionProgression(chords);
+      const voices = buildTransitionPreview(arrangement, activeSection, suggestion);
+      const duration = await auditionProgression(voices.map(voice => voice.chord), voices);
       if (playbackToken.current !== token) return;
       window.setTimeout(() => {
         if (playbackToken.current === token) haltPlayback();
@@ -1287,7 +1290,7 @@ function App() {
         arrangement={arrangement}
         activeSection={activeSection}
         suggestions={transitionSuggestions}
-        onPreview={(suggestion) => void previewBoundary(suggestion.previewChords)}
+        onPreview={(suggestion) => void previewBoundary(suggestion)}
         onApply={(suggestion) =>
           commitArrangement((current) =>
             applyTransitionSuggestion(current, activeSection, suggestion)

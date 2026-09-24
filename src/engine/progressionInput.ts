@@ -15,18 +15,25 @@ export function parseProgression(input: string, key: string, mode: Mode): string
     if (!/^[A-G][b#]?(?:maj9|maj7|m7b5|dim7|dim|sus2|sus4|madd9|add9|m9|m7|m6|m|7|6|9)?$/.test(token)) {
       throw new Error(`无法识别 ${token}；支持级数、罗马数字和基础和弦名`);
     }
-    const root = chordRoot(token);
-    const quality = token.slice(root.length);
-    const minor = quality.startsWith("m") && !quality.startsWith("maj");
-    const suffix = quality === "m7b5" ? "m7b5" : quality.startsWith("dim") ? quality.replace("dim", "°") : minor ? quality.slice(1) : quality;
-    for (const accidental of ["", "b", "#"]) {
-      for (const degree of ["I", "II", "III", "IV", "V", "VI", "VII"]) {
-        const roman = accidental + (minor ? degree.toLowerCase() : degree) + suffix;
-        if (chordPitchClasses(romanToChord(key, mode, roman))[0] === chordPitchClasses(token)[0]) return roman;
-      }
-    }
-    throw new Error(`无法换算 ${token}`);
+    return chordNameToRoman(token, key, mode);
   });
+}
+
+// Resolve an already validated chord name by sounding root, including a
+// secondary chord used as the entrance of the following section.
+export function chordNameToRoman(chord: string, key: string, mode: Mode): string {
+  const root = chordRoot(chord);
+  const quality = chord.slice(root.length);
+  const minor = quality.startsWith("m") && !quality.startsWith("maj");
+  const suffix = quality === "m7b5" ? "m7b5" : quality.startsWith("dim") ? quality.replace("dim", "°") : minor ? quality.slice(1) : quality;
+  const rootPitch = chordPitchClasses(chord)[0];
+  for (const accidental of ["", "b", "#"]) {
+    for (const degree of ["I", "II", "III", "IV", "V", "VI", "VII"]) {
+      const roman = accidental + (minor ? degree.toLowerCase() : degree) + suffix;
+      if (chordPitchClasses(romanToChord(key, mode, roman))[0] === rootPitch) return roman;
+    }
+  }
+  throw new Error(`无法换算 ${chord}`);
 }
 
 export function applySectionProgression(arrangement: Arrangement, sectionIndex: number, numerals: string[], label = "自定义和弦"): Arrangement {

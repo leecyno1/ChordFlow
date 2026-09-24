@@ -1191,6 +1191,38 @@ try {
   const contextWav = await waitForDownloadedFile(downloadDirectory, beforeContextWav, name => name === 'chordflow-riff-reference.wav', 'context-preserving WAV');
   assert.equal(contextWav.content.toString('ascii', 8, 12), 'WAVE');
   assert.ok(contextWav.content.subarray(44).some(byte => byte !== 0));
+
+  await click(client, '.timeline-section:first-child .timeline-chord');
+  await fillInput(client, '#progression-input', 'I vi IV V');
+  await click(client, '.riff-input button[type="submit"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await fillInput(client, '#progression-input', 'V7/vi IV I V');
+  await click(client, '.riff-input button[type="submit"]');
+  await click(client, '.timeline-section:first-child .timeline-chord');
+  await click(client, '[data-testid="project-save"]');
+  const beforeBoundaryEdit = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')")).arrangement;
+  const dominantCard = '[data-testid="transition-dominant-gate"]';
+  const boundaryChain = 'Array.from(document.querySelectorAll("[data-testid=transition-dominant-gate] .transition-chain b"), node => node.textContent)';
+  assert.deepEqual(await client.evaluate(boundaryChain), ['Ab', 'D7', 'G7']);
+  await click(client, `${dominantCard} .transition-actions button:first-child`);
+  await waitForExpression(client, 'document.querySelector(".play-button").textContent.includes("停止")', 'replacement boundary preview');
+  await click(client, '.play-button');
+  await click(client, '[data-testid="project-save"]');
+  assert.deepEqual(JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')")).arrangement, beforeBoundaryEdit);
+  await click(client, `${dominantCard} .apply-transition`);
+  await click(client, '[data-testid="project-save"]');
+  const afterBoundaryEdit = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')")).arrangement;
+  assert.deepEqual(afterBoundaryEdit.sections[0].chords, ['Eb', 'Cm', 'Ab', 'D7']);
+  assert.deepEqual(afterBoundaryEdit.sections[1], beforeBoundaryEdit.sections[1]);
+  assert.deepEqual(afterBoundaryEdit.production, beforeBoundaryEdit.production);
+  assert.deepEqual(await client.evaluate(boundaryChain), ['Ab', 'D7', 'G7']);
+  await click(client, '[data-testid="project-undo"]');
+  await click(client, '[data-testid="project-save"]');
+  assert.deepEqual(JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')")).arrangement, beforeBoundaryEdit);
+  await click(client, '[data-testid="project-redo"]');
+  await click(client, '[data-testid="suno-launch"]');
+  assert.ok((await textContent(client, '[data-testid="suno-blueprint"]')).includes('D7'));
+  await click(client, '[data-testid="suno-close"]');
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1220,7 +1252,8 @@ try {
       "✓ Ninth chords survived input, undo/redo and save, played as riffs and retained all five pitches in MIDI and Suno labels\n" +
       "✓ Riff tone focus preserved harmony and base timing, survived undo/redo and save, and matched color markers, MIDI and Suno\n" +
       "✓ Boundary previews shared stop/navigation controls, did not interrupt newer riffs, and audio failures allowed retry\n" +
-      "✓ Excerpt harmony, bass and riff MIDI matched the full-song section after an odd-length lead-in; mixed preview and WAV worked\n"
+      "✓ Excerpt harmony, bass and riff MIDI matched the full-song section after an odd-length lead-in; mixed preview and WAV worked\n" +
+      "✓ Boundary previews matched replacement edits and actual secondary targets, stayed read-only, and survived save/undo/redo into Suno\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

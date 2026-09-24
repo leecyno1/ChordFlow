@@ -1,6 +1,8 @@
 import { coarseRoman } from "../domain/corpus";
 import { romanToChord } from "../domain/music";
 import { removeBassOverride } from "../domain/bass";
+import { buildVoicingPlan, type ChordVoicing } from "../domain/voicing";
+import { chordNameToRoman } from "./progressionInput";
 import type {
   Arrangement,
   SongSection,
@@ -19,10 +21,9 @@ export function getTransitionSuggestions(
   const nextSection = arrangement.sections[sectionIndex + 1];
   if (!section || !nextSection) return [];
 
-  const currentChord = section.chords.at(-1) ?? arrangement.key;
   const currentRoman = section.numerals.at(-1) ?? "I";
   const targetChord = nextSection.chords[0] ?? arrangement.key;
-  const targetRoman = coarseRoman(nextSection.numerals[0] ?? "I").replace(
+  const targetRoman = coarseRoman(chordNameToRoman(targetChord, arrangement.key, arrangement.mode)).replace(
     /[°ø]/g,
     ""
   );
@@ -46,10 +47,7 @@ export function getTransitionSuggestions(
     tension: number
   ): TransitionSuggestion => {
     const chord = romanToChord(arrangement.key, arrangement.mode, roman);
-    const previewChords =
-      roman === currentRoman
-        ? [currentChord, targetChord]
-        : [currentChord, chord, targetChord];
+    const previewChords = [...section.chords.slice(-2, -1), chord, targetChord];
     return {
       id,
       name,
@@ -107,6 +105,16 @@ export function getTransitionSuggestions(
       58
     )
   ];
+}
+
+export function buildTransitionPreview(
+  arrangement: Arrangement,
+  sectionIndex: number,
+  suggestion: TransitionSuggestion
+): ChordVoicing[] {
+  const applied = applyTransitionSuggestion(arrangement, sectionIndex, suggestion);
+  const plan = buildVoicingPlan(applied);
+  return [...plan.sections[sectionIndex].slice(-2), ...plan.sections[sectionIndex + 1].slice(0, 1)];
 }
 
 export function applyTransitionSuggestion(

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateArrangement } from "../engine/generate";
 import { applySectionProgression } from "../engine/progressionInput";
 import { buildVoicingPlan } from "../domain/voicing";
+import { buildTransitionPreview, getTransitionSuggestions } from "../engine/transitions";
 import { DEFAULT_RIFF, buildRiffNotes, buildRiffExcerpt } from "../engine/riff";
 import { auditionProgression, playArrangement, stopPlayback } from "./player";
 
@@ -42,6 +43,18 @@ const source = () => ({
 });
 
 describe("riff articulation", () => {
+  it("auditions transition voicings with the applied bass and cancels remaining attacks", async () => {
+    const arrangement = source();
+    const voices = buildTransitionPreview(arrangement, 0, getTransitionSuggestions(arrangement, 0)[1]);
+    await auditionProgression(voices.map(voice => voice.chord), voices);
+    await vi.advanceTimersByTimeAsync(750);
+    const instrument = instruments.find(item => item.release === 1.3)!;
+    expect(instrument.triggerAttackRelease.mock.calls).toEqual(voices.slice(0, 2).map(voice => [[voice.bassNote, ...voice.noteNames], 0.66]));
+    stopPlayback();
+    await vi.runAllTimersAsync();
+    expect(instrument.triggerAttackRelease).toHaveBeenCalledTimes(2);
+  });
+
   it("plays excerpt harmony and bass using the song's actual voicings", async () => {
     const generated = source();
     const arrangement = applySectionProgression({ ...generated,
