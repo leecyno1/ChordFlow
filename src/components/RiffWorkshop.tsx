@@ -36,7 +36,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   const activeSettings = riffSettingsAt(arrangement, sectionIndex);
   const settings = (scope === "theme" ? activeSettings : arrangement.riff) ?? DEFAULT_RIFF;
   const controlsEnabled = scope === "theme" ? activeSettings !== undefined : arrangement.riff !== undefined;
-  const { arrangement: excerpt, riffNotes: notes } = useMemo(() => buildRiffExcerpt(arrangement, sectionIndex), [arrangement, sectionIndex]);
+  const { arrangement: excerpt, riffNotes: notes, voicingPlan } = useMemo(() => buildRiffExcerpt(arrangement, sectionIndex), [arrangement, sectionIndex]);
   const assessment = useMemo(() => assessHarmony(arrangement, sectionIndex), [arrangement, sectionIndex]);
   const beats = quarterNotesPerBar(arrangement.production.timeSignature) * arrangement.production.barsPerSection;
   const minNote = notes.length ? Math.min(...notes.map(note => note.midi)) - 2 : 60;
@@ -58,7 +58,7 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
   async function downloadWav() {
     setRendering(true);
     setError("");
-    try { await exportReferenceWav(excerpt, wavSolo, notes); }
+    try { await exportReferenceWav(excerpt, wavSolo, notes, voicingPlan); }
     catch { setError("音频导出失败，请重试或先下载 MIDI"); }
     finally { setRendering(false); }
   }
@@ -168,11 +168,11 @@ export function RiffWorkshop({ arrangement, sectionIndex, playing, playingBeat, 
         {arrangement.sections.length > 1 && <button type="button" data-testid="riff-context" onClick={() => onContextPreview(arrangement)}>连前后段听 Riff</button>}
         {playing && <button type="button" onClick={onStop}>停止</button>}
         <label><input type="checkbox" checked={loop} onChange={event => setLoop(event.target.checked)} />循环当前段</label>
-        <button type="button" data-testid="riff-midi" onClick={() => exportMidi(excerpt, `chordflow-riff-${section.symbol.toLowerCase()}${section.occurrence + 1}.mid`, notes)}>本段 MIDI</button>
+        <button type="button" data-testid="riff-midi" onClick={() => exportMidi(excerpt, `chordflow-riff-${section.symbol.toLowerCase()}${section.occurrence + 1}.mid`, notes, voicingPlan)}>本段 MIDI</button>
         <label>音频内容<select data-testid="riff-wav-scope" value={wavSolo ? "solo" : "mix"} onChange={event => setWavSolo(event.target.value === "solo")}><option value="mix">和弦 + Riff</option><option value="solo">纯 Riff</option></select></label>
         <button type="button" data-testid="riff-wav" disabled={rendering} onClick={() => void downloadWav()}>{rendering ? "生成音频中…" : "本段 WAV"}</button>
       </div>
-      <p className="riff-hint">Riff 设置随工程保存、撤销和移调；整曲 MIDI 自动增加 Riff 轨。WAV 是合成音色参考片段，可在 Suno 支持音频上传的入口使用，具体跟随程度需试听。</p>
+      <p className="riff-hint">本段合听、MIDI 和 WAV 保留整曲中的和弦转位、低音与 Riff；修改前后段会重新计算，循环不另接回段首。Riff 设置随工程保存、撤销和移调；整曲 MIDI 自动增加 Riff 轨。WAV 是合成音色参考片段，可在 Suno 支持音频上传的入口使用，具体跟随程度需试听。</p>
     </>}
   </section>;
 }

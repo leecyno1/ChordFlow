@@ -1152,6 +1152,45 @@ try {
   await waitForExpression(client, 'document.querySelector(".timeline-chord.playing") !== null', 'song playback to recover after audio retry');
   assert.doesNotMatch(await textContent(client, '[data-testid="project-status"]'), /无法启动音频/);
   await click(client, '.play-button');
+
+  // A three-chord lead-in exposes excerpts that incorrectly restart voicing.
+  await fillInput(client, '#progression-input', 'I vi IV');
+  await click(client, '.riff-input button[type="submit"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord');
+  await fillInput(client, '#progression-input', 'ii9 V9 Imaj9 vi9');
+  await click(client, '.riff-input button[type="submit"]');
+  await click(client, '[data-testid="suno-launch"]');
+  await click(client, '[data-testid="suno-bars-2"]');
+  await click(client, '[data-testid="suno-section-voicing-1-dramatic"]');
+  await rm(join(downloadDirectory, fullHandoffFilename), { force: true });
+  const beforeContextSong = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="suno-export-midi"]');
+  const contextSongFile = await waitForDownloadedFile(downloadDirectory, beforeContextSong, name => name.endsWith('.mid'), 'contextual song MIDI');
+  const contextSong = new Midi(contextSongFile.content);
+  await click(client, '[data-testid="suno-close"]');
+  await rm(join(downloadDirectory, focusedFile.filename), { force: true });
+  const beforeContextExcerpt = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-midi"]');
+  const contextExcerptFile = await waitForDownloadedFile(downloadDirectory, beforeContextExcerpt, name => name.endsWith('.mid'), 'contextual excerpt MIDI');
+  const contextExcerpt = new Midi(contextExcerptFile.content);
+  const contextSectionTicks = contextSong.header.ppq * 3 * 2;
+  for (const track of contextSong.tracks) {
+    const excerptTrack = contextExcerpt.tracks.find(candidate => candidate.name === track.name);
+    assert.ok(excerptTrack, `Missing excerpt track: ${track.name}`);
+    assert.deepEqual(excerptTrack.notes.map(note => [note.midi, note.ticks, note.durationTicks, note.velocity]),
+      track.notes.filter(note => note.ticks >= contextSectionTicks && note.ticks < contextSectionTicks * 2)
+        .map(note => [note.midi, note.ticks - contextSectionTicks, note.durationTicks, note.velocity]));
+  }
+  await click(client, '[data-testid="riff-mix"]');
+  await waitForExpression(client, 'document.querySelector(".riff-playhead") !== null', 'context-preserving harmony preview');
+  await click(client, '.play-button');
+  await selectValue(client, '[data-testid="riff-wav-scope"]', 'mix');
+  await rm(join(downloadDirectory, 'chordflow-riff-reference.wav'), { force: true });
+  const beforeContextWav = new Set(await readdir(downloadDirectory));
+  await click(client, '[data-testid="riff-wav"]');
+  const contextWav = await waitForDownloadedFile(downloadDirectory, beforeContextWav, name => name === 'chordflow-riff-reference.wav', 'context-preserving WAV');
+  assert.equal(contextWav.content.toString('ascii', 8, 12), 'WAVE');
+  assert.ok(contextWav.content.subarray(44).some(byte => byte !== 0));
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1180,7 +1219,8 @@ try {
       "✓ Riff accents changed only dynamics, survived undo/redo and save, and matched visible velocities, MIDI and Suno\n" +
       "✓ Ninth chords survived input, undo/redo and save, played as riffs and retained all five pitches in MIDI and Suno labels\n" +
       "✓ Riff tone focus preserved harmony and base timing, survived undo/redo and save, and matched color markers, MIDI and Suno\n" +
-      "✓ Boundary previews shared stop/navigation controls, did not interrupt newer riffs, and audio failures allowed retry\n"
+      "✓ Boundary previews shared stop/navigation controls, did not interrupt newer riffs, and audio failures allowed retry\n" +
+      "✓ Excerpt harmony, bass and riff MIDI matched the full-song section after an odd-length lead-in; mixed preview and WAV worked\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

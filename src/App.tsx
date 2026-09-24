@@ -288,7 +288,7 @@ function App() {
     setPlaying(true);
     const previewStart = includeContext ? Math.max(0, activeSection - 1) : activeSection;
     const sourceStart = preview.sections[previewStart] ? previewStart : 0;
-    const { arrangement: excerpt, riffNotes } = buildRiffExcerpt(preview, sourceStart, includeContext ? activeSection + 2 : sourceStart + 1);
+    const { arrangement: excerpt, riffNotes, voicingPlan: excerptVoicing } = buildRiffExcerpt(preview, sourceStart, includeContext ? activeSection + 2 : sourceStart + 1);
     const sectionBeats = quarterNotesPerBar(excerpt.production.timeSignature) * excerpt.production.barsPerSection;
     async function playOnce() {
       try {
@@ -300,7 +300,7 @@ function App() {
           if (playbackToken.current !== token) return;
           const localBeat = beat - (includeContext ? activeSection - previewStart : 0) * sectionBeats;
           setRiffBeat(localBeat >= 0 && localBeat < sectionBeats ? localBeat : null);
-        }, matchVoiceLevel, riffNotes);
+        }, matchVoiceLevel, riffNotes, excerptVoicing);
         if (playbackToken.current !== token) return;
         window.setTimeout(() => {
           if (playbackToken.current !== token) return;

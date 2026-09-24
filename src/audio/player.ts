@@ -6,7 +6,7 @@ import {
   quarterNotesPerBar,
   timeSignatureParts
 } from "../domain/production";
-import { buildVoicingPlan } from "../domain/voicing";
+import { buildVoicingPlan, type VoicingPlan } from "../domain/voicing";
 import type { Arrangement } from "../domain/types";
 import { buildRiffNotes, type RiffNote } from "../engine/riff";
 
@@ -36,9 +36,9 @@ export interface ArrangementPlaybackSchedule {
 
 export function buildPlaybackSchedule(
   arrangement: Arrangement,
-  startDelayMs = 80
+  startDelayMs = 80,
+  voicingPlan = buildVoicingPlan(arrangement)
 ): ArrangementPlaybackSchedule {
-  const voicingPlan = buildVoicingPlan(arrangement);
   const steps: ArrangementPlaybackStep[] = [];
   let elapsedSeconds = 0;
 
@@ -158,7 +158,8 @@ export async function playArrangement(
   riffOnly = false,
   onRiffNote?: (beat: number) => void,
   matchVoiceLevel = false,
-  plannedRiffNotes?: RiffNote[]
+  plannedRiffNotes?: RiffNote[],
+  plannedVoicing?: VoicingPlan
 ): Promise<number> {
   stopPlayback();
   const run = playbackRun;
@@ -170,7 +171,7 @@ export async function playArrangement(
   // The synth has a 1.3s release. Blind excerpts must not inherit the
   // previous candidate's tail when the listener switches A/B quickly.
   const startDelayMs = matchVoiceLevel ? 1400 : 80;
-  const schedule = buildPlaybackSchedule(arrangement, startDelayMs);
+  const schedule = buildPlaybackSchedule(arrangement, startDelayMs, plannedVoicing);
 
   schedule.steps.forEach((step) => {
     const timer = window.setTimeout(() => {
@@ -231,7 +232,7 @@ export function exportJson(arrangement: Arrangement): void {
   );
 }
 
-export function buildMidi(arrangement: Arrangement, plannedRiffNotes?: RiffNote[]): Midi {
+export function buildMidi(arrangement: Arrangement, plannedRiffNotes?: RiffNote[], voicingPlan = buildVoicingPlan(arrangement)): Midi {
   const midi = new Midi();
   midi.header.name = arrangement.title;
   midi.header.setTempo(arrangement.production.tempoBpm);
@@ -240,7 +241,6 @@ export function buildMidi(arrangement: Arrangement, plannedRiffNotes?: RiffNote[
     timeSignature: timeSignatureParts(arrangement.production.timeSignature)
   });
   midi.header.update();
-  const voicingPlan = buildVoicingPlan(arrangement);
   const harmonyTrack = midi.addTrack();
   harmonyTrack.name = "ChordFlow Harmony";
   const bassTrack = midi.addTrack();
@@ -318,13 +318,12 @@ export function encodeWav(samples: Float32Array, sampleRate: number): ArrayBuffe
   return buffer;
 }
 
-export function buildReferenceNotes(arrangement: Arrangement, riffOnly = false, plannedRiffNotes?: RiffNote[]) {
-  const schedule = buildPlaybackSchedule(arrangement);
+export function buildReferenceNotes(arrangement: Arrangement, riffOnly = false, plannedRiffNotes?: RiffNote[], voicingPlan = buildVoicingPlan(arrangement)) {
+  const schedule = buildPlaybackSchedule(arrangement, 80, voicingPlan);
   const notes: { midi: number; seconds: number; duration: number; gain: number }[] = [];
   if (!riffOnly) {
-    const voicings = buildVoicingPlan(arrangement);
     schedule.steps.forEach(step => {
-      const voice = voicings.sections[step.sectionIndex][step.chordIndex];
+      const voice = voicingPlan.sections[step.sectionIndex][step.chordIndex];
       [voice.bassMidi, ...voice.midiNotes].forEach(midi => notes.push({ midi, seconds: step.offsetMs / 1000, duration: step.durationSeconds * 0.9, gain: 0.06 * step.velocity }));
     });
   }
@@ -333,11 +332,11 @@ export function buildReferenceNotes(arrangement: Arrangement, riffOnly = false, 
 }
 
 // A lightweight reference rendering for downstream audio upload, not a sampled piano.
-export async function exportReferenceWav(arrangement: Arrangement, riffOnly = false, plannedRiffNotes?: RiffNote[]): Promise<void> {
-  const schedule = buildPlaybackSchedule(arrangement);
+export async function exportReferenceWav(arrangement: Arrangement, riffOnly = false, plannedRiffNotes?: RiffNote[], voicingPlan = buildVoicingPlan(arrangement)): Promise<void> {
+  const schedule = buildPlaybackSchedule(arrangement, 80, voicingPlan);
   const sampleRate = 44100;
   const context = new OfflineAudioContext(1, Math.ceil((schedule.durationMs / 1000 + 0.2) * sampleRate), sampleRate);
-  const notes = buildReferenceNotes(arrangement, riffOnly, plannedRiffNotes);
+  const notes = buildReferenceNotes(arrangement, riffOnly, plannedRiffNotes, voicingPlan);
   for (const note of notes) {
     const oscillator = context.createOscillator();
     const envelope = context.createGain();
@@ -354,8 +353,8 @@ export async function exportReferenceWav(arrangement: Arrangement, riffOnly = fa
   downloadBlob(new Blob([encodeWav(audio.getChannelData(0), sampleRate)], { type: "audio/wav" }), riffOnly ? "chordflow-riff-solo.wav" : "chordflow-riff-reference.wav");
 }
 
-export function exportMidi(arrangement: Arrangement, filename = "chordflow-" + arrangement.formPattern.toLowerCase() + ".mid", plannedRiffNotes?: RiffNote[]): void {
-  const midi = buildMidi(arrangement, plannedRiffNotes);
+export function exportMidi(arrangement: Arrangement, filename = "chordflow-" + arrangement.formPattern.toLowerCase() + ".mid", plannedRiffNotes?: RiffNote[], plannedVoicing?: VoicingPlan): void {
+  const midi = buildMidi(arrangement, plannedRiffNotes, plannedVoicing);
 
   downloadBlob(
     new Blob([midi.toArray()], { type: "audio/midi" }),

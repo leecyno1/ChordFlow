@@ -1,6 +1,7 @@
 import { chordPitchClasses } from "../domain/music";
 import { quarterNotesPerBar, effectiveSectionProductionAt } from "../domain/production";
 import type { Arrangement, RiffSettings } from "../domain/types";
+import { buildVoicingPlan, type VoicingPlan } from "../domain/voicing";
 import { riffRhythmSlots, riffContour, RIFF_VARIANT_COUNT } from "./riffMotif";
 import { riffAccentVelocity } from "./riffDynamics";
 import { riffPitchChoices } from "./riffPitch";
@@ -181,12 +182,22 @@ export function buildRiffNotes(arrangement: Arrangement): RiffNote[] {
   }));
 }
 
-// Plan against the whole song before cutting an excerpt. No contextual notes
-// are persisted: changing the following theme immediately updates its pickup.
+// Plan harmony and riff against the whole song before cutting an excerpt.
+// These plans are not persisted: edits to surrounding sections recalculate them.
 export function buildRiffExcerpt(arrangement: Arrangement, start: number, end = start + 1) {
   const sectionBeats = quarterNotesPerBar(arrangement.production.timeSignature) * arrangement.production.barsPerSection;
+  const fullVoicing = buildVoicingPlan(arrangement);
+  const sections = fullVoicing.sections.slice(start, end)
+    .map((chords, sectionIndex) => chords.map(chord => ({ ...chord, sectionIndex })));
+  const voicingPlan: VoicingPlan = {
+    mode: fullVoicing.mode,
+    sectionModes: fullVoicing.sectionModes.slice(start, end),
+    sections,
+    chords: sections.flat()
+  };
   return {
     arrangement: { ...arrangement, sections: arrangement.sections.slice(start, end) },
+    voicingPlan,
     riffNotes: buildRiffNotes(arrangement)
       .filter(note => note.sectionIndex >= start && note.sectionIndex < end)
       .map(note => ({ ...note, sectionIndex: note.sectionIndex - start, beat: note.beat - start * sectionBeats }))
