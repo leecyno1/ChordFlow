@@ -1115,6 +1115,43 @@ try {
   const focusBlueprint = await textContent(client, '[data-testid="suno-blueprint"]');
   assert.match(focusBlueprint, /riff tone focus:/);
   assert.match(focusBlueprint, /within five semitones/);
+  await click(client, '[data-testid="suno-close"]');
+  const boundaryPreview = '.transition-card:first-child .transition-actions button:first-child';
+  await click(client, boundaryPreview);
+  await waitForExpression(client, 'document.querySelector(".play-button").textContent.includes("停止")', 'boundary preview to enter the shared playing state');
+  await click(client, '.play-button');
+  assert.match(await textContent(client, '.play-button'), /播放整曲/);
+  await click(client, boundaryPreview);
+  await waitForExpression(client, 'document.querySelector(".play-button").textContent.includes("播放整曲")', 'boundary preview to finish automatically');
+  await click(client, boundaryPreview);
+  await click(client, '[data-testid="riff-solo"]');
+  await waitForExpression(client, 'Number(document.querySelector(".riff-playhead")?.getAttribute("x1")) > 240', 'riff playback to outlive the cancelled boundary completion');
+  assert.match(await textContent(client, '.play-button'), /停止/);
+  await click(client, '.play-button');
+  await click(client, boundaryPreview);
+  await click(client, '.section-row');
+  await waitForExpression(client, 'document.querySelector(".play-button").textContent.includes("播放整曲")', 'section navigation to stop the boundary preview');
+
+  // Fail the actual Tone startup promise; do not add a production test hook.
+  await client.evaluate(`(async () => {
+    const url = performance.getEntriesByType('resource').map(entry => entry.name).find(name => new URL(name).pathname.endsWith('/tone.js'));
+    if (!url) throw new Error('Tone module resource not found');
+    const tone = await import(url);
+    const context = tone.getContext();
+    const resume = context.resume;
+    window.__chordflowRestoreAudio = () => { context.resume = resume; };
+    context.resume = () => Promise.reject(new Error('Test audio startup failure'));
+  })()`);
+  await click(client, '.play-button');
+  await waitForExpression(client, 'document.querySelector("[data-testid=project-status]").textContent.includes("无法启动音频")', 'failed song startup to report a recoverable error');
+  assert.match(await textContent(client, '.play-button'), /播放整曲/);
+  await click(client, boundaryPreview);
+  await waitForExpression(client, 'document.querySelector(".play-button").textContent.includes("播放整曲")', 'failed boundary startup to release the playing state');
+  await client.evaluate('window.__chordflowRestoreAudio(); delete window.__chordflowRestoreAudio;');
+  await click(client, '.play-button');
+  await waitForExpression(client, 'document.querySelector(".timeline-chord.playing") !== null', 'song playback to recover after audio retry');
+  assert.doesNotMatch(await textContent(client, '[data-testid="project-status"]'), /无法启动音频/);
+  await click(client, '.play-button');
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1142,7 +1179,8 @@ try {
       "✓ Section handoffs survived undo/redo and save, matched the grid and both MIDI exports, and respected next-theme muting\n" +
       "✓ Riff accents changed only dynamics, survived undo/redo and save, and matched visible velocities, MIDI and Suno\n" +
       "✓ Ninth chords survived input, undo/redo and save, played as riffs and retained all five pitches in MIDI and Suno labels\n" +
-      "✓ Riff tone focus preserved harmony and base timing, survived undo/redo and save, and matched color markers, MIDI and Suno\n"
+      "✓ Riff tone focus preserved harmony and base timing, survived undo/redo and save, and matched color markers, MIDI and Suno\n" +
+      "✓ Boundary previews shared stop/navigation controls, did not interrupt newer riffs, and audio failures allowed retry\n"
   );
 } finally {
   await client?.close().catch(() => undefined);

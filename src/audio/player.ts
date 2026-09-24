@@ -135,18 +135,21 @@ export async function auditionArrangementChord(
   );
 }
 
-export async function auditionProgression(chords: string[]): Promise<void> {
+export async function auditionProgression(chords: string[]): Promise<number> {
+  stopPlayback();
+  const run = playbackRun;
   const instrument = await getSynth();
-  const Tone = await getTone();
-  instrument.releaseAll();
-  const start = Tone.now() + 0.05;
+  if (run !== playbackRun) return 0;
+  // Share cancellation with full-song and riff previews. Scheduling attacks
+  // directly into Tone's future timeline bypasses our pending-note queue.
   chords.forEach((chord, index) => {
-    instrument.triggerAttackRelease(
-      chordNoteNames(chord, 3),
-      0.66,
-      start + index * 0.7
-    );
+    const timer = window.setTimeout(() => {
+      if (run !== playbackRun) return;
+      instrument.triggerAttackRelease(chordNoteNames(chord, 3), 0.66);
+    }, 50 + index * 700);
+    playbackTimers.push(timer);
   });
+  return chords.length ? 50 + (chords.length - 1) * 700 + 660 : 0;
 }
 
 export async function playArrangement(

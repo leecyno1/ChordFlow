@@ -283,6 +283,7 @@ function App() {
 
   async function previewRiff(solo: boolean, loop: boolean, preview = arrangement, onComplete?: (completed: boolean) => void, matchVoiceLevel = false, includeContext = false) {
     haltPlayback();
+    setProjectError(null);
     const token = playbackToken.current;
     setPlaying(true);
     const previewStart = includeContext ? Math.max(0, activeSection - 1) : activeSection;
@@ -621,19 +622,42 @@ function App() {
       haltPlayback();
       return;
     }
-    const token = playbackToken.current + 1;
-    playbackToken.current = token;
+    haltPlayback();
+    setProjectError(null);
+    const token = playbackToken.current;
     setPlaying(true);
-    const duration = await playArrangement(arrangement, (sectionIndex, chordIndex) => {
+    try {
+      const duration = await playArrangement(arrangement, (sectionIndex, chordIndex) => {
+        if (playbackToken.current !== token) return;
+        setPlayingPosition({ section: sectionIndex, chord: chordIndex });
+      });
       if (playbackToken.current !== token) return;
-      setPlayingPosition({ section: sectionIndex, chord: chordIndex });
-    });
-    window.setTimeout(() => {
-      if (playbackToken.current === token) {
-        setPlaying(false);
-        setPlayingPosition(null);
-      }
-    }, duration + 300);
+      window.setTimeout(() => {
+        if (playbackToken.current === token) haltPlayback();
+      }, duration + 300);
+    } catch {
+      if (playbackToken.current !== token) return;
+      haltPlayback();
+      setProjectError("无法启动音频，请重试");
+    }
+  }
+
+  async function previewBoundary(chords: string[]) {
+    haltPlayback();
+    setProjectError(null);
+    const token = playbackToken.current;
+    setPlaying(true);
+    try {
+      const duration = await auditionProgression(chords);
+      if (playbackToken.current !== token) return;
+      window.setTimeout(() => {
+        if (playbackToken.current === token) haltPlayback();
+      }, duration);
+    } catch {
+      if (playbackToken.current !== token) return;
+      haltPlayback();
+      setProjectError("无法启动音频，请重试");
+    }
   }
 
   return (
@@ -1263,9 +1287,7 @@ function App() {
         arrangement={arrangement}
         activeSection={activeSection}
         suggestions={transitionSuggestions}
-        onPreview={(suggestion) =>
-          void auditionProgression(suggestion.previewChords)
-        }
+        onPreview={(suggestion) => void previewBoundary(suggestion.previewChords)}
         onApply={(suggestion) =>
           commitArrangement((current) =>
             applyTransitionSuggestion(current, activeSection, suggestion)

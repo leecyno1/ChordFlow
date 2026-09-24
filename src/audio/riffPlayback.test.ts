@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateArrangement } from "../engine/generate";
 import { DEFAULT_RIFF, buildRiffNotes, buildRiffExcerpt } from "../engine/riff";
-import { playArrangement, stopPlayback } from "./player";
+import { auditionProgression, playArrangement, stopPlayback } from "./player";
 
 const instruments = vi.hoisted(() => [] as {
   release: number;
@@ -9,8 +9,9 @@ const instruments = vi.hoisted(() => [] as {
   releaseAll: ReturnType<typeof vi.fn>;
 }[]);
 
+const startAudio = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("tone", () => ({
-  start: async () => {}, Synth: class {},
+  start: startAudio, Synth: class {},
   Filter: class { toDestination() { return this; } },
   PolySynth: class {
     release: number;
@@ -26,6 +27,7 @@ vi.mock("tone", () => ({
 }));
 
 beforeEach(() => {
+  startAudio.mockReset().mockResolvedValue(undefined);
   vi.useFakeTimers();
   vi.stubGlobal("window", { setTimeout, clearTimeout });
   instruments.forEach(instrument => { instrument.triggerAttackRelease.mockClear(); instrument.releaseAll.mockClear(); });
@@ -38,6 +40,60 @@ const source = () => ({
 });
 
 describe("riff articulation", () => {
+  it("plays boundary chords in order and cancels the remaining attacks on stop", async () => {
+    expect(await auditionProgression(["C", "Dm", "G"])).toBe(2110);
+    const chords = instruments.find(instrument => instrument.release === 1.3)!;
+    await vi.advanceTimersByTimeAsync(49);
+    expect(chords.triggerAttackRelease).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(chords.triggerAttackRelease).toHaveBeenLastCalledWith(["C3", "E3", "G3"], 0.66);
+    await vi.advanceTimersByTimeAsync(700);
+    expect(chords.triggerAttackRelease).toHaveBeenLastCalledWith(["D3", "F3", "A3"], 0.66);
+    stopPlayback();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(chords.triggerAttackRelease).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not start an old boundary preview after a newer preview finishes audio startup", async () => {
+    let ready!: () => void;
+    startAudio.mockImplementationOnce(() => new Promise<void>(resolve => { ready = resolve; }));
+    const pending = auditionProgression(["C", "F"]);
+    await vi.advanceTimersByTimeAsync(0);
+    const duration = await auditionProgression(["Dm", "G"]);
+    ready();
+    expect(await pending).toBe(0);
+    await vi.advanceTimersByTimeAsync(duration);
+    const chords = instruments.find(instrument => instrument.release === 1.3)!;
+    expect(chords.triggerAttackRelease.mock.calls).toEqual([
+      [["D3", "F3", "A3"], 0.66], [["G3", "B3", "D4"], 0.66]
+    ]);
+  });
+
+  it("cancels queued notes in both directions when switching boundary and riff previews", async () => {
+    await auditionProgression(["C", "F", "G"]);
+    const duration = await playArrangement(source(), undefined, true);
+    await vi.advanceTimersByTimeAsync(duration);
+    const chords = instruments.find(instrument => instrument.release === 1.3)!;
+    const lead = instruments.find(instrument => instrument.release === 0.04)!;
+    expect(chords.triggerAttackRelease).not.toHaveBeenCalled();
+    await playArrangement(source(), undefined, true);
+    const played = lead.triggerAttackRelease.mock.calls.length;
+    await auditionProgression(["Dm", "G"]);
+    await vi.runAllTimersAsync();
+    expect(lead.triggerAttackRelease).toHaveBeenCalledTimes(played);
+    expect(chords.triggerAttackRelease).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves no scheduled attacks after audio startup fails and allows retry", async () => {
+    startAudio.mockRejectedValueOnce(new Error("audio unavailable"));
+    await expect(auditionProgression(["C", "F"])).rejects.toThrow("audio unavailable");
+    const duration = await auditionProgression(["G"]);
+    await vi.advanceTimersByTimeAsync(duration);
+    const chords = instruments.find(instrument => instrument.release === 1.3)!;
+    expect(chords.triggerAttackRelease).toHaveBeenCalledTimes(1);
+    expect(chords.triggerAttackRelease).toHaveBeenCalledWith(["G3", "B3", "D4"], 0.66);
+  });
+
   it("plays the full-song excerpt plan, including its outgoing handoff", async () => {
     const a = source();
     a.sections = a.sections.map((section, i) => ({ ...section, chords: [i === 1 ? "Dm" : "C"] }));
