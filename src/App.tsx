@@ -161,7 +161,7 @@ function App() {
   const surprise = arrangement.surprise;
   const seed = arrangement.seed;
   const [activeSection, setActiveSection] = useState(0);
-  const [activeChord, setActiveChord] = useState(0);
+  const [selectedChord, setActiveChord] = useState(0);
   const [view, setView] = useState<ViewMode>("river");
   const [sunoOpen, setSunoOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -180,6 +180,12 @@ function App() {
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const section = arrangement.sections[activeSection] ?? arrangement.sections[0];
+  const activeChord = Math.min(selectedChord, section.chords.length - 1);
+  // Share a valid position with every editor immediately, and forget removed
+  // positions so extending the progression cannot resurrect an old selection.
+  useEffect(() => {
+    if (selectedChord !== activeChord) setActiveChord(activeChord);
+  }, [selectedChord, activeChord]);
   const currentRoman = section?.numerals[activeChord] ?? "I";
   const currentChord = section?.chords[activeChord] ?? keyName;
   const harmonicFn = harmonicFunction(currentRoman);

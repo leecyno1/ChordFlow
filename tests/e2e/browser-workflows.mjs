@@ -1281,6 +1281,38 @@ try {
   await click(client, '[data-testid="project-restore"]');
   await click(client, '.timeline-section:nth-child(2) .timeline-chord');
   assert.deepEqual(await client.evaluate(slashGridLabels), ['D/F#', 'Bm/D', 'G/B', 'A7/C#']);
+
+  await fillInput(client, '#progression-input', 'C Am F G Dm Em Bb Cmaj9');
+  await click(client, '.riff-input button[type="submit"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord:last-child');
+  await fillInput(client, '#progression-input', 'Dm/F G7/B');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.equal(await textContent(client, '.chord-focus > strong'), 'G7/B');
+  assert.equal(await textContent(client, '.river-node.active .river-index'), '02');
+  assert.equal(await textContent(client, '.timeline-section:nth-child(2) .timeline-chord.selected > span'), 'G7');
+  await click(client, '[data-testid="bass-anchor-pc-5"]');
+  assert.equal(await textContent(client, '.chord-focus > strong'), 'G7/F');
+  await click(client, '[data-testid="project-save"]');
+  const shortened = JSON.parse(await client.evaluate("localStorage.getItem('chordflow.project.v1')")).arrangement;
+  assert.deepEqual(shortened.sections[1].chords, ['Dm', 'G7']);
+  assert.equal(shortened.bassOverrides[`${shortened.sections[1].id}:0`], 5);
+  assert.equal(shortened.bassOverrides[`${shortened.sections[1].id}:1`], 5);
+  assert.equal(shortened.bassOverrides[`${shortened.sections[1].id}:7`], undefined);
+  await fillInput(client, '#progression-input', 'C Am F G Dm Em Bb Cmaj9');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.equal(await textContent(client, '.river-node.active .river-index'), '02');
+  await fillInput(client, '#progression-input', 'C/D G');
+  await click(client, '.riff-input button[type="submit"]');
+  assert.equal(await textContent(client, '.river-node.active .river-index'), '02');
+  assert.equal(await client.evaluate('document.querySelectorAll(".timeline-section:nth-child(2) .timeline-chord").length'), 8);
+  await click(client, '[data-testid="project-undo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord:last-child');
+  assert.equal(await textContent(client, '.chord-focus > strong'), 'G7/F');
+  await click(client, '[data-testid="project-redo"]');
+  await click(client, '.timeline-section:nth-child(2) .timeline-chord:last-child');
+  assert.equal(await textContent(client, '.river-node.active .river-index'), '08');
+  await click(client, '.section-row');
+  assert.equal(await textContent(client, '.river-node.active .river-index'), '01');
   assert.deepEqual(runtimeExceptions, [], "The browser flow must not throw");
 
   process.stdout.write(
@@ -1312,7 +1344,8 @@ try {
       "✓ Boundary previews shared stop/navigation controls, did not interrupt newer riffs, and audio failures allowed retry\n" +
       "✓ Excerpt harmony, bass and riff MIDI matched the full-song section after an odd-length lead-in; mixed preview and WAV worked\n" +
       "✓ Boundary previews matched replacement edits and actual secondary targets, stayed read-only, and survived save/undo/redo into Suno\n" +
-      "✓ Slash-chord input preserved riffs, rejected external basses atomically, and carried bass anchors through history, restore, transposition, MIDI/WAV and Suno\n"
+      "✓ Slash-chord input preserved riffs, rejected external basses atomically, and carried bass anchors through history, restore, transposition, MIDI/WAV and Suno\n" +
+      "✓ Shortening a progression kept inspector, river and timeline selection aligned; bass edits, regrowth, invalid input and history remained correct\n"
   );
 } finally {
   await client?.close().catch(() => undefined);
